@@ -10,13 +10,9 @@
     <style>
         :root { --primary-color: #007bff; }
         body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-        
-        /* Splash Screen */
         #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
         #splash-logo { width: 150px; }
         .hidden { display: none !important; }
-        
-        /* Layout Card */
         .card-profile { border-radius: 15px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.08); overflow: hidden; }
         .profile-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid white; background: white; }
         .header-bg { background: linear-gradient(135deg, var(--primary-color), #0056b3); height: 100px; }
@@ -25,8 +21,6 @@
         .info-label { font-size: 0.8rem; color: #6c757d; display: block; }
         .info-value { font-size: 0.95rem; font-weight: 500; }
         .password-toggle { cursor: pointer; z-index: 10; }
-
-        /* Teks Berjalan */
         .scrolling-wrapper { overflow: hidden; white-space: nowrap; width: 100%; }
         .scrolling-text { display: inline-block; padding-left: 100%; animation: scroll-left 15s linear infinite; }
         @keyframes scroll-left { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
@@ -34,6 +28,30 @@
 </head>
 <body>
 
+    <div id="blackBox" style="position:fixed; top:0; left:0; width:100%; max-height:50%; background:rgba(0,0,0,0.9); color:#0f0; z-index:9999999; overflow-y:auto; padding:10px; font-family:monospace; font-size:12px; display:none; border-bottom:3px solid red;">
+        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #0f0; padding-bottom:5px; margin-bottom:5px;">
+            <b class="text-danger">⚠️ BLACK BOX ERROR DETECTED</b>
+            <button onclick="document.getElementById('blackBox').style.display='none'" style="background:red; color:white; border:none; border-radius:3px; padding:2px 8px; cursor:pointer;">Tutup</button>
+        </div>
+        <div id="blackBoxLogs"></div>
+    </div>
+    <script>
+        const bbLogs = document.getElementById('blackBoxLogs');
+        const bbContainer = document.getElementById('blackBox');
+        function printLog(msg, color="lime") {
+            bbContainer.style.display = 'block';
+            bbLogs.innerHTML += `<div style="color:${color}; margin-bottom:4px; line-height:1.2;">=> ${msg}</div>`;
+        }
+        // Menangkap error coding murni (Syntax Error dll)
+        window.onerror = function(msg, url, line) {
+            printLog(`ERROR BERSISTEM pada Baris ${line}: <br> ${msg}`, '#ff4444');
+            return false;
+        };
+        // Menangkap error API/Fetch/Janji (Promise Error)
+        window.addEventListener('unhandledrejection', function(e) {
+            printLog(`ERROR KONEKSI/API: <br> ${e.reason}`, 'orange');
+        });
+    </script>
     <div id="splash-screen">
         <img id="splash-logo" src="IPeKB26-PWA.png" alt="Logo IPKB Buleleng">
         <div class="spinner-border text-primary mt-3" role="status"></div>
@@ -183,14 +201,18 @@
         let dataWilayahGlobal = {}; 
 
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
         }
 
-        document.getElementById('togglePassword').addEventListener('click', function () {
-            const input = document.getElementById('nik');
-            input.setAttribute('type', input.getAttribute('type') === 'password' ? 'text' : 'password');
-            this.classList.toggle('bi-eye'); this.classList.toggle('bi-eye-slash');
-        });
+        // Handle Mata Password
+        const toggleBtn = document.getElementById('togglePassword');
+        if(toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                const input = document.getElementById('nik');
+                input.setAttribute('type', input.getAttribute('type') === 'password' ? 'text' : 'password');
+                this.classList.toggle('bi-eye'); this.classList.toggle('bi-eye-slash');
+            });
+        }
 
         async function fetchWilayah() {
             try {
@@ -199,8 +221,8 @@
                 if(result.status === "sukses") {
                     dataWilayahGlobal = result.data;
                     isiKabupaten();
-                }
-            } catch(e) { console.log("Gagal memuat wilayah", e); }
+                } else { printLog("Gagal baca sheet wilayah: " + result.pesan, "yellow"); }
+            } catch(e) { printLog("Fetch Wilayah Error: " + e, "orange"); }
         }
 
         function isiKabupaten() {
@@ -262,11 +284,7 @@
                 document.getElementById('status-upload').classList.remove('hidden');
                 
                 const base64Data = event.target.result.split(',')[1];
-                fileFotoData = {
-                    filename: file.name,
-                    mimeType: file.type,
-                    fileData: base64Data
-                };
+                fileFotoData = { filename: file.name, mimeType: file.type, fileData: base64Data };
             };
             reader.readAsDataURL(file);
         });
@@ -277,46 +295,55 @@
             window.scrollTo(0,0);
         }
 
+        // PERBAIKAN: Menambahkan Try-Catch pada Data Profil Lokal (Pencegah Crash Blank Screen)
         window.onload = () => {
             fetchWilayah(); 
-            const user = localStorage.getItem('userPKB');
+            const userString = localStorage.getItem('userPKB');
+            
             setTimeout(() => {
                 document.getElementById('splash-screen').classList.add('hidden');
-                user ? tampilkanProfil(JSON.parse(user)) : bukaHalaman('login-page');
+                
+                if(userString) {
+                    try {
+                        const userParsed = JSON.parse(userString);
+                        tampilkanProfil(userParsed);
+                    } catch(e) {
+                        printLog("Data lokal korup, menghapus data dan kembali ke login.", "orange");
+                        localStorage.removeItem('userPKB');
+                        bukaHalaman('login-page');
+                    }
+                } else {
+                    bukaHalaman('login-page');
+                }
             }, 800);
         };
 
-        // --- FUNGSI REFRESH DATA ---
         async function refreshData(isAutoRefresh = false) {
-            const user = JSON.parse(localStorage.getItem('userPKB'));
-            if (!user) return; // Cegah jika belum login
+            const userString = localStorage.getItem('userPKB');
+            if (!userString) return;
+            
+            let user = {};
+            try { user = JSON.parse(userString); } catch(e) { return; }
             
             const btn = document.getElementById('btnRefresh');
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Refreshing...';
-            }
+            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Refresh...'; }
 
             try {
-                // Gunakan NIP dan NIK (Password) yang sudah tersimpan di PWA untuk login di latar belakang
                 const res = await fetch(`${SCRIPT_URL}?action=login&nip=${user.nip}&nik=${user.nik}`, { method: 'POST' });
                 const d = await res.json();
                 
                 if(d.status === "sukses") {
                     localStorage.setItem('userPKB', JSON.stringify(d.dataProfil));
-                    tampilkanProfil(d.dataProfil); // Render ulang tampilan
-                    if(!isAutoRefresh) alert("Data berhasil diperbarui!"); // Beri tahu jika di-klik manual
+                    tampilkanProfil(d.dataProfil); 
+                    if(!isAutoRefresh) alert("Data berhasil diperbarui!"); 
                 } else {
                     alert("Gagal memuat data terbaru. Silakan login ulang.");
                 }
             } catch(e) { 
-                console.error(e);
+                printLog("Gagal Refresh: " + e, "orange");
                 if(!isAutoRefresh) alert("Gagal terhubung ke server."); 
             } finally { 
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh';
-                }
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh'; }
             }
         }
 
@@ -325,18 +352,28 @@
             const nik = document.getElementById('nik').value;
             const btn = document.getElementById('btnLogin');
             if(!nip || !nik) return alert("Isi NIP & NIK");
+            
             btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Mengecek...';
+            document.getElementById('loginError').classList.add('hidden');
+            
             try {
                 const res = await fetch(`${SCRIPT_URL}?action=login&nip=${nip}&nik=${nik}`, { method: 'POST' });
                 const d = await res.json();
                 if(d.status === "sukses") {
                     localStorage.setItem('userPKB', JSON.stringify(d.dataProfil));
                     tampilkanProfil(d.dataProfil);
-                } else { document.getElementById('loginError').classList.remove('hidden'); }
-            } catch(e) { alert("Error Koneksi Server"); } finally { btn.disabled = false; btn.innerText = "MASUK"; }
+                } else { 
+                    document.getElementById('loginError').classList.remove('hidden'); 
+                }
+            } catch(e) { 
+                printLog("Login Fetch Error: " + e, "red");
+            } finally { 
+                btn.disabled = false; btn.innerText = "MASUK"; 
+            }
         }
 
         function tampilkanProfil(d) {
+            bukaHalaman('dashboard-page');
             const namaLengkap = (d.gelar_depan ? d.gelar_depan + " " : "") + d.nama_asli + (d.gelar_belakang ? ", " + d.gelar_belakang : "");
             document.getElementById('view-nama').innerText = namaLengkap;
             document.getElementById('view-role').innerText = d.role;
@@ -377,7 +414,9 @@
         }
 
         function siapkanEditProfil() {
-            const d = JSON.parse(localStorage.getItem('userPKB'));
+            let d = {};
+            try { d = JSON.parse(localStorage.getItem('userPKB')); } catch(e) { return; }
+            
             document.getElementById('edit-id-nip').value = d.nip;
             document.getElementById('edit-g-depan').value = d.gelar_depan;
             document.getElementById('edit-g-belakang').value = d.gelar_belakang;
@@ -433,7 +472,8 @@
                     if(datUpload.status === "sukses") {
                         finalFotoUrl = datUpload.url; 
                     } else {
-                        alert("Gagal mengupload foto. Data lain tetap akan disimpan.");
+                        printLog("Gagal Upload Foto: " + datUpload.pesan, "orange");
+                        alert("Gagal mengupload foto. Data lain tetap disimpan.");
                     }
                 }
 
@@ -461,14 +501,14 @@
                 const d = await res.json();
                 if(d.status === "sukses") {
                     alert("Data Berhasil Diperbarui!");
-                    
-                    // PERUBAHAN DI SINI: Refresh otomatis & langsung buka halaman Detail Profil
                     await refreshData(true); 
                     bukaHalaman('detail-profil-page');
+                } else {
+                    printLog("Gagal Simpan Data: " + d.pesan, "red");
                 }
             } catch(e) { 
+                printLog("Error Simpan Profil: " + e, "red");
                 alert("Koneksi terputus saat menyimpan."); 
-                console.error(e);
             } finally { 
                 btn.disabled = false; btn.innerText = "SIMPAN PERUBAHAN"; 
             }
