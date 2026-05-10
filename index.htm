@@ -26,7 +26,7 @@
         .info-value { font-size: 0.95rem; font-weight: 500; }
         .password-toggle { cursor: pointer; z-index: 10; }
 
-        /* Teks Berjalan (Pengganti Marquee yang rusak di Mobile) */
+        /* Teks Berjalan */
         .scrolling-wrapper { overflow: hidden; white-space: nowrap; width: 100%; }
         .scrolling-text { display: inline-block; padding-left: 100%; animation: scroll-left 15s linear infinite; }
         @keyframes scroll-left { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
@@ -69,7 +69,10 @@
     <div id="dashboard-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="fw-bold m-0 text-dark">Beranda</h4>
-            <button onclick="logout()" class="btn btn-sm btn-outline-danger fw-bold">Keluar</button>
+            <div>
+                <button onclick="refreshData()" id="btnRefresh" class="btn btn-sm btn-outline-primary fw-bold me-2 shadow-sm"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+                <button onclick="logout()" class="btn btn-sm btn-outline-danger fw-bold shadow-sm">Keluar</button>
+            </div>
         </div>
 
         <div class="card card-profile mb-3">
@@ -176,22 +179,19 @@
     </div>
 
     <script>
-        // GANTI URL JIKA BERUBAH
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        let dataWilayahGlobal = {}; // Untuk menyimpan data wilayah
+        let dataWilayahGlobal = {}; 
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
         }
 
-        // --- MATA PASSWORD ---
         document.getElementById('togglePassword').addEventListener('click', function () {
             const input = document.getElementById('nik');
             input.setAttribute('type', input.getAttribute('type') === 'password' ? 'text' : 'password');
             this.classList.toggle('bi-eye'); this.classList.toggle('bi-eye-slash');
         });
 
-        // --- AMBIL DATA WILAYAH DARI SERVER ---
         async function fetchWilayah() {
             try {
                 const res = await fetch(`${SCRIPT_URL}?action=get_wilayah`);
@@ -203,7 +203,6 @@
             } catch(e) { console.log("Gagal memuat wilayah", e); }
         }
 
-        // --- LOGIKA DROPDOWN WILAYAH BERJENJANG ---
         function isiKabupaten() {
             const selKab = document.getElementById('wil-kab');
             selKab.innerHTML = '<option value="">Pilih Kabupaten</option>';
@@ -235,7 +234,6 @@
             }
         }
 
-        // --- LOGIKA DROPDOWN GOLONGAN ---
         function aturGolongan() {
             const status = document.getElementById('edit-status').value;
             const selGol = document.getElementById('edit-gol');
@@ -251,21 +249,18 @@
             }
         }
 
-        // --- KAMERA & UPLOAD FOTO ---
         function bukaKamera() { document.getElementById('inputFoto').click(); }
         
-        let fileFotoData = null; // Menyimpan base64 sebelum dikirim
+        let fileFotoData = null; 
         document.getElementById('inputFoto').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if(!file) return;
             const reader = new FileReader();
             reader.onload = function(event) {
-                // Tampilkan di preview lokal seketika
                 document.getElementById('view-foto').src = event.target.result;
                 document.getElementById('preview-foto-edit').src = event.target.result;
                 document.getElementById('status-upload').classList.remove('hidden');
                 
-                // Pisahkan base64 murni tanpa header data:image/jpeg;base64,
                 const base64Data = event.target.result.split(',')[1];
                 fileFotoData = {
                     filename: file.name,
@@ -276,8 +271,6 @@
             reader.readAsDataURL(file);
         });
 
-
-        // --- NAVIGASI ---
         function bukaHalaman(id) {
             ['login-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page'].forEach(pg => document.getElementById(pg).classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
@@ -285,7 +278,7 @@
         }
 
         window.onload = () => {
-            fetchWilayah(); // Load data wilayah di background
+            fetchWilayah(); 
             const user = localStorage.getItem('userPKB');
             setTimeout(() => {
                 document.getElementById('splash-screen').classList.add('hidden');
@@ -293,7 +286,40 @@
             }, 800);
         };
 
-        // --- LOGIN ---
+        // --- FUNGSI REFRESH DATA ---
+        async function refreshData(isAutoRefresh = false) {
+            const user = JSON.parse(localStorage.getItem('userPKB'));
+            if (!user) return; // Cegah jika belum login
+            
+            const btn = document.getElementById('btnRefresh');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Refreshing...';
+            }
+
+            try {
+                // Gunakan NIP dan NIK (Password) yang sudah tersimpan di PWA untuk login di latar belakang
+                const res = await fetch(`${SCRIPT_URL}?action=login&nip=${user.nip}&nik=${user.nik}`, { method: 'POST' });
+                const d = await res.json();
+                
+                if(d.status === "sukses") {
+                    localStorage.setItem('userPKB', JSON.stringify(d.dataProfil));
+                    tampilkanProfil(d.dataProfil); // Render ulang tampilan
+                    if(!isAutoRefresh) alert("Data berhasil diperbarui!"); // Beri tahu jika di-klik manual
+                } else {
+                    alert("Gagal memuat data terbaru. Silakan login ulang.");
+                }
+            } catch(e) { 
+                console.error(e);
+                if(!isAutoRefresh) alert("Gagal terhubung ke server."); 
+            } finally { 
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh';
+                }
+            }
+        }
+
         async function prosesLogin() {
             const nip = document.getElementById('nip').value;
             const nik = document.getElementById('nik').value;
@@ -310,9 +336,7 @@
             } catch(e) { alert("Error Koneksi Server"); } finally { btn.disabled = false; btn.innerText = "MASUK"; }
         }
 
-        // --- TAMPILKAN PROFIL ---
         function tampilkanProfil(d) {
-            bukaHalaman('dashboard-page');
             const namaLengkap = (d.gelar_depan ? d.gelar_depan + " " : "") + d.nama_asli + (d.gelar_belakang ? ", " + d.gelar_belakang : "");
             document.getElementById('view-nama').innerText = namaLengkap;
             document.getElementById('view-role').innerText = d.role;
@@ -322,7 +346,7 @@
             const defFoto = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
             document.getElementById('view-foto').src = d.foto && d.foto !== "-" ? d.foto : defFoto;
             document.getElementById('preview-foto-edit').src = d.foto && d.foto !== "-" ? d.foto : defFoto;
-            document.getElementById('edit-foto-url').value = d.foto || ""; // simpan url lama
+            document.getElementById('edit-foto-url').value = d.foto || ""; 
 
             let html = `<h6 class="fw-bold text-primary border-bottom pb-2">DATA PEGAWAI</h6>`;
             const fields = [
@@ -352,7 +376,6 @@
             `).join('');
         }
 
-        // --- SIAPKAN FORM EDIT ---
         function siapkanEditProfil() {
             const d = JSON.parse(localStorage.getItem('userPKB'));
             document.getElementById('edit-id-nip').value = d.nip;
@@ -361,20 +384,18 @@
             document.getElementById('edit-jk').value = d.jenis_kelamin;
             
             document.getElementById('edit-status').value = d.status_asn;
-            aturGolongan(); // Set pilihan golongan berdasarkan status
+            aturGolongan(); 
             setTimeout(() => document.getElementById('edit-gol').value = d.golongan, 100);
             
             document.getElementById('edit-jabatan').value = d.jabatan;
             document.getElementById('edit-t-lahir').value = d.tempat_lahir;
-            document.getElementById('edit-tgl-lahir').value = d.tanggal_lahir; // Karena sudah format YYYY-MM-DD
+            document.getElementById('edit-tgl-lahir').value = d.tanggal_lahir; 
             document.getElementById('edit-almt-asal').value = d.alamat_asal;
             document.getElementById('edit-almt-dom').value = d.alamat_domisili;
             
-            // Set Dropdown Wilayah Binaan
             setTimeout(() => {
-               // Anggap semua di Buleleng, kita tembak jika wilayah_binaan_kecamatan tidak kosong
                if(d.wilayah_binaan_kecamatan && d.wilayah_binaan_kecamatan !== "-") {
-                   document.getElementById('wil-kab').value = "BULELENG"; // Default atau deteksi
+                   document.getElementById('wil-kab').value = "BULELENG"; 
                    isiKecamatan();
                    setTimeout(() => {
                        document.getElementById('wil-kec').value = d.wilayah_binaan_kecamatan;
@@ -388,11 +409,10 @@
             document.getElementById('edit-email').value = d.email;
             
             document.getElementById('status-upload').classList.add('hidden');
-            fileFotoData = null; // reset file unggahan
+            fileFotoData = null; 
             bukaHalaman('edit-profil-page');
         }
 
-        // --- SIMPAN PROFIL & UPLOAD ---
         async function simpanProfil() {
             const btn = document.getElementById('btnSimpan');
             btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
@@ -400,7 +420,6 @@
             let finalFotoUrl = document.getElementById('edit-foto-url').value;
 
             try {
-                // 1. Jika ada foto baru, upload dulu ke server
                 if (fileFotoData) {
                     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Mengupload Foto...';
                     const fd = new URLSearchParams();
@@ -412,13 +431,12 @@
                     const resUpload = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
                     const datUpload = await resUpload.json();
                     if(datUpload.status === "sukses") {
-                        finalFotoUrl = datUpload.url; // Gunakan URL dari GDrive
+                        finalFotoUrl = datUpload.url; 
                     } else {
                         alert("Gagal mengupload foto. Data lain tetap akan disimpan.");
                     }
                 }
 
-                // 2. Simpan Data Profil
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan Data...';
                 const p = new URLSearchParams();
                 p.append('action', 'update_profil');
@@ -442,8 +460,11 @@
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                 const d = await res.json();
                 if(d.status === "sukses") {
-                    alert("Data Berhasil Diperbarui! Silakan Login Ulang.");
-                    logout();
+                    alert("Data Berhasil Diperbarui!");
+                    
+                    // PERUBAHAN DI SINI: Refresh otomatis & langsung buka halaman Detail Profil
+                    await refreshData(true); 
+                    bukaHalaman('detail-profil-page');
                 }
             } catch(e) { 
                 alert("Koneksi terputus saat menyimpan."); 
