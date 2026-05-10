@@ -25,8 +25,6 @@
         .scrolling-text { display: inline-block; padding-left: 100%; animation: scroll-left 15s linear infinite; }
         @keyframes scroll-left { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
         .form-section-title { font-size: 0.9rem; font-weight: bold; color: var(--primary-color); margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #e9ecef; }
-        
-        /* Cekbox Wilayah Binaan styling */
         .desa-checkbox-list { max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; background: #fff; }
     </style>
 </head>
@@ -74,7 +72,7 @@
         </div>
     </div>
 
-    <input type="file" id="inputFoto" accept="image/*" capture="environment" class="hidden">
+    <input type="file" id="inputFoto" accept="image/*" class="hidden">
 
     <div id="dashboard-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -89,7 +87,7 @@
             <div class="text-center" style="margin-top: -55px;">
                 <div class="position-relative d-inline-block">
                     <img id="view-foto" src="https://via.placeholder.com/150" class="profile-img shadow-sm">
-                    <button onclick="bukaKamera()" class="btn btn-light rounded-circle shadow position-absolute bottom-0 end-0 border" style="padding: 5px 9px;"><i class="bi bi-camera-fill text-primary"></i></button>
+                    <button onclick="siapkanEditProfil(); setTimeout(() => alert('Untuk menyimpan foto secara permanen, silakan pilih foto lalu tekan tombol SIMPAN PERUBAHAN di bawah.'), 500);" class="btn btn-light rounded-circle shadow position-absolute bottom-0 end-0 border" style="padding: 5px 9px;" title="Ubah Foto"><i class="bi bi-camera-fill text-primary"></i></button>
                 </div>
                 <h5 id="view-nama" class="mt-2 fw-bold text-dark">-</h5>
                 <span id="view-role" class="badge bg-warning text-dark px-3 mb-2">-</span>
@@ -142,7 +140,6 @@
                             <i class="bi bi-pencil-fill" id="icon-unlock-nama"></i>
                         </button>
                     </div>
-                    <small class="text-muted" style="font-size: 0.7rem;">*Klik tombol pensil untuk mengedit nama.</small>
                 </div>
                 <div class="mb-3"><label class="form-label small fw-bold">Gelar Depan</label><input type="text" id="edit-g-depan" class="form-control"></div>
                 <div class="mb-3"><label class="form-label small fw-bold">Gelar Belakang</label><input type="text" id="edit-g-belakang" class="form-control"></div>
@@ -167,37 +164,19 @@
                 <div class="mb-4"><label class="form-label small fw-bold">Golongan</label><select id="edit-gol" class="form-select"><option value="">Pilih Status ASN Dahulu</option></select></div>
 
                 <div class="form-section-title">Wilayah Asal</div>
-                <div class="mb-2"><label class="form-label small fw-bold">Kabupaten</label>
-                    <select id="asal-kab" class="form-select" onchange="handleWilayah('asal', 'kab')"><option value="">Pilih Kabupaten</option></select>
-                </div>
-                <div id="asal-kec-container" class="mb-2 hidden"><label class="form-label small fw-bold">Kecamatan</label>
-                    <select id="asal-kec-sel" class="form-select" onchange="handleWilayah('asal', 'kec')"></select>
-                    <input type="text" id="asal-kec-txt" class="form-control hidden" placeholder="Ketik Nama Kecamatan">
-                </div>
-                <div id="asal-desa-container" class="mb-4 hidden"><label class="form-label small fw-bold">Desa/Kelurahan</label>
-                    <select id="asal-desa-sel" class="form-select"></select>
-                    <input type="text" id="asal-desa-txt" class="form-control hidden" placeholder="Ketik Nama Desa">
-                </div>
+                <div class="mb-2"><label class="form-label small fw-bold">Kabupaten</label><select id="asal-kab" class="form-select" onchange="handleWilayah('asal', 'kab')"><option value="">Pilih Kabupaten</option></select></div>
+                <div id="asal-kec-container" class="mb-2 hidden"><label class="form-label small fw-bold">Kecamatan</label><select id="asal-kec-sel" class="form-select" onchange="handleWilayah('asal', 'kec')"></select><input type="text" id="asal-kec-txt" class="form-control hidden" placeholder="Ketik Nama Kecamatan"></div>
+                <div id="asal-desa-container" class="mb-4 hidden"><label class="form-label small fw-bold">Desa/Kelurahan</label><select id="asal-desa-sel" class="form-select"></select><input type="text" id="asal-desa-txt" class="form-control hidden" placeholder="Ketik Nama Desa"></div>
 
                 <div class="form-section-title">Wilayah Domisili</div>
-                <div class="mb-2"><label class="form-label small fw-bold">Kabupaten</label>
-                    <select id="dom-kab" class="form-select" onchange="handleWilayah('dom', 'kab')"><option value="">Pilih Kabupaten</option></select>
-                </div>
-                <div id="dom-kec-container" class="mb-2 hidden"><label class="form-label small fw-bold">Kecamatan</label>
-                    <select id="dom-kec-sel" class="form-select" onchange="handleWilayah('dom', 'kec')"></select>
-                    <input type="text" id="dom-kec-txt" class="form-control hidden" placeholder="Ketik Nama Kecamatan">
-                </div>
-                <div id="dom-desa-container" class="mb-4 hidden"><label class="form-label small fw-bold">Desa/Kelurahan</label>
-                    <select id="dom-desa-sel" class="form-select"></select>
-                    <input type="text" id="dom-desa-txt" class="form-control hidden" placeholder="Ketik Nama Desa">
-                </div>
+                <div class="mb-2"><label class="form-label small fw-bold">Kabupaten</label><select id="dom-kab" class="form-select" onchange="handleWilayah('dom', 'kab')"><option value="">Pilih Kabupaten</option></select></div>
+                <div id="dom-kec-container" class="mb-2 hidden"><label class="form-label small fw-bold">Kecamatan</label><select id="dom-kec-sel" class="form-select" onchange="handleWilayah('dom', 'kec')"></select><input type="text" id="dom-kec-txt" class="form-control hidden" placeholder="Ketik Nama Kecamatan"></div>
+                <div id="dom-desa-container" class="mb-4 hidden"><label class="form-label small fw-bold">Desa/Kelurahan</label><select id="dom-desa-sel" class="form-select"></select><input type="text" id="dom-desa-txt" class="form-control hidden" placeholder="Ketik Nama Desa"></div>
 
                 <div class="form-section-title">Wilayah Binaan (Lokasi Tugas)</div>
                 <div class="mb-2"><label class="form-label small fw-bold">Kabupaten</label><select id="bin-kab" class="form-select" onchange="handleWilayah('bin', 'kab')"><option value="">Pilih Kabupaten</option></select></div>
                 <div id="bin-kec-container" class="mb-2 hidden"><label class="form-label small fw-bold">Kecamatan</label><select id="bin-kec" class="form-select" onchange="handleWilayah('bin', 'kec')"></select></div>
-                <div id="bin-desa-container" class="mb-4 hidden"><label class="form-label small fw-bold">Desa/Kelurahan Binaan (Bisa Pilih > 1)</label>
-                    <div id="bin-desa-wrapper" class="desa-checkbox-list"></div>
-                </div>
+                <div id="bin-desa-container" class="mb-4 hidden"><label class="form-label small fw-bold">Desa/Kelurahan Binaan (Bisa Pilih > 1)</label><div id="bin-desa-wrapper" class="desa-checkbox-list"></div></div>
 
                 <div class="form-section-title">Kontak</div>
                 <div class="mb-3"><label class="form-label small fw-bold">No. HP / WhatsApp</label><input type="tel" id="edit-hp" class="form-control"></div>
@@ -227,13 +206,9 @@
             const el = document.getElementById('edit-nama');
             const icon = document.getElementById('icon-unlock-nama');
             if(el.hasAttribute('readonly')) {
-                el.removeAttribute('readonly');
-                el.classList.remove('bg-light');
-                icon.classList.replace('bi-pencil-fill', 'bi-unlock-fill');
+                el.removeAttribute('readonly'); el.classList.remove('bg-light'); icon.classList.replace('bi-pencil-fill', 'bi-unlock-fill');
             } else {
-                el.setAttribute('readonly', 'true');
-                el.classList.add('bg-light');
-                icon.classList.replace('bi-unlock-fill', 'bi-pencil-fill');
+                el.setAttribute('readonly', 'true'); el.classList.add('bg-light'); icon.classList.replace('bi-unlock-fill', 'bi-pencil-fill');
             }
         }
 
@@ -251,13 +226,10 @@
         function initDropdownKabupaten() {
             let optUmum = '<option value="">Pilih Kabupaten</option>';
             for(let kab in dataWilayahGlobal) { optUmum += `<option value="${kab}">${kab}</option>`; }
-            
-            // Asal & Domisili ada "LUAR BALI"
             let optDenganLuarBali = optUmum + '<option value="LUAR BALI" class="fw-bold text-primary">LUAR BALI</option>';
-            
             document.getElementById('asal-kab').innerHTML = optDenganLuarBali;
             document.getElementById('dom-kab').innerHTML = optDenganLuarBali;
-            document.getElementById('bin-kab').innerHTML = optUmum; // Binaan khusus bali
+            document.getElementById('bin-kab').innerHTML = optUmum; 
         }
 
         function handleWilayah(jenis, level) {
@@ -267,7 +239,6 @@
             if (level === 'kab') {
                 const kecContainer = document.getElementById(`${jenis}-kec-container`);
                 const desaContainer = document.getElementById(`${jenis}-desa-container`);
-                
                 if(!kab) { kecContainer.classList.add('hidden'); desaContainer.classList.add('hidden'); return; }
                 kecContainer.classList.remove('hidden');
                 
@@ -276,58 +247,41 @@
                     const txtKec = document.getElementById(`${jenis}-kec-txt`);
                     const selDesa = document.getElementById(`${jenis}-desa-sel`);
                     const txtDesa = document.getElementById(`${jenis}-desa-txt`);
-                    
-                    selKec.classList.toggle('hidden', isLuarBali);
-                    txtKec.classList.toggle('hidden', !isLuarBali);
-                    selDesa.classList.toggle('hidden', isLuarBali);
-                    txtDesa.classList.toggle('hidden', !isLuarBali);
+                    selKec.classList.toggle('hidden', isLuarBali); txtKec.classList.toggle('hidden', !isLuarBali);
+                    selDesa.classList.toggle('hidden', isLuarBali); txtDesa.classList.toggle('hidden', !isLuarBali);
                     
                     if (isLuarBali) {
-                        desaContainer.classList.remove('hidden'); // Show txt immediately
+                        desaContainer.classList.remove('hidden'); 
                     } else {
                         desaContainer.classList.add('hidden');
                         let kecHtml = '<option value="">Pilih Kecamatan</option>';
-                        if(dataWilayahGlobal[kab]) {
-                            for(let k in dataWilayahGlobal[kab]) kecHtml += `<option value="${k}">${k}</option>`;
-                        }
+                        if(dataWilayahGlobal[kab]) { for(let k in dataWilayahGlobal[kab]) kecHtml += `<option value="${k}">${k}</option>`; }
                         selKec.innerHTML = kecHtml;
                     }
-                } else if (jenis === 'bin') { // Binaan
+                } else if (jenis === 'bin') {
                     desaContainer.classList.add('hidden');
                     let kecHtml = '<option value="">Pilih Kecamatan</option>';
-                    if(dataWilayahGlobal[kab]) {
-                        for(let k in dataWilayahGlobal[kab]) kecHtml += `<option value="${k}">${k}</option>`;
-                    }
+                    if(dataWilayahGlobal[kab]) { for(let k in dataWilayahGlobal[kab]) kecHtml += `<option value="${k}">${k}</option>`; }
                     document.getElementById('bin-kec').innerHTML = kecHtml;
                 }
-            } 
-            else if (level === 'kec') {
+            } else if (level === 'kec') {
                 const desaContainer = document.getElementById(`${jenis}-desa-container`);
-                
                 if (jenis === 'asal' || jenis === 'dom') {
                     const kec = document.getElementById(`${jenis}-kec-sel`).value;
                     if(!kec) { desaContainer.classList.add('hidden'); return; }
                     desaContainer.classList.remove('hidden');
-                    
                     let desaHtml = '<option value="">Pilih Desa/Kelurahan</option>';
-                    if(dataWilayahGlobal[kab] && dataWilayahGlobal[kab][kec]) {
-                        dataWilayahGlobal[kab][kec].forEach(d => desaHtml += `<option value="${d}">${d}</option>`);
-                    }
+                    if(dataWilayahGlobal[kab] && dataWilayahGlobal[kab][kec]) { dataWilayahGlobal[kab][kec].forEach(d => desaHtml += `<option value="${d}">${d}</option>`); }
                     document.getElementById(`${jenis}-desa-sel`).innerHTML = desaHtml;
-                } 
-                else if (jenis === 'bin') { // Checkbox logic untuk desa binaan
+                } else if (jenis === 'bin') { 
                     const kec = document.getElementById('bin-kec').value;
                     if(!kec) { desaContainer.classList.add('hidden'); return; }
                     desaContainer.classList.remove('hidden');
-                    
                     let cbHtml = '';
                     if(dataWilayahGlobal[kab] && dataWilayahGlobal[kab][kec]) {
                         dataWilayahGlobal[kab][kec].forEach(d => {
                             const idCb = d.replace(/\s+/g, '');
-                            cbHtml += `<div class="form-check text-start">
-                                <input class="form-check-input bin-desa-cb" type="checkbox" value="${d}" id="cb-${idCb}">
-                                <label class="form-check-label small" for="cb-${idCb}">${d}</label>
-                            </div>`;
+                            cbHtml += `<div class="form-check text-start"><input class="form-check-input bin-desa-cb" type="checkbox" value="${d}" id="cb-${idCb}"><label class="form-check-label small" for="cb-${idCb}">${d}</label></div>`;
                         });
                     }
                     document.getElementById('bin-desa-wrapper').innerHTML = cbHtml;
@@ -335,22 +289,16 @@
             }
         }
 
-        // Pengambil Nilai Alamat saat Save
         function dapatkanNilaiAlamat(jenis) {
             const kab = document.getElementById(`${jenis}-kab`).value;
             if(!kab) return "-";
             if(kab === 'LUAR BALI') {
-                const k = document.getElementById(`${jenis}-kec-txt`).value || "-";
-                const d = document.getElementById(`${jenis}-desa-txt`).value || "-";
-                return `${kab} - ${k} - ${d}`;
+                return `${kab} - ${document.getElementById(`${jenis}-kec-txt`).value || "-"} - ${document.getElementById(`${jenis}-desa-txt`).value || "-"}`;
             } else {
-                const k = document.getElementById(`${jenis}-kec-sel`).value || "-";
-                const d = document.getElementById(`${jenis}-desa-sel`).value || "-";
-                return `${kab} - ${k} - ${d}`;
+                return `${kab} - ${document.getElementById(`${jenis}-kec-sel`).value || "-"} - ${document.getElementById(`${jenis}-desa-sel`).value || "-"}`;
             }
         }
 
-        // Memecah format "Kab - Kec - Desa" saat Pre-Fill Data
         function pecahNilaiAlamat(jenis, stringAlamat) {
             if(!stringAlamat || stringAlamat === "-") return;
             const pts = stringAlamat.split(" - ");
@@ -390,7 +338,7 @@
             if(!file) return;
             const reader = new FileReader();
             reader.onload = function(event) {
-                document.getElementById('view-foto').src = event.target.result;
+                // Jangan update view-foto dasbor dulu agar tidak membingungkan
                 document.getElementById('preview-foto-edit').src = event.target.result;
                 document.getElementById('status-upload').classList.remove('hidden');
                 const base64Data = event.target.result.split(',')[1];
@@ -497,7 +445,7 @@
             
             document.getElementById('edit-id-nip').value = d.nip;
             document.getElementById('edit-nama').value = d.nama_asli; 
-            document.getElementById('edit-nama').setAttribute('readonly', 'true'); // Pastikan terkunci
+            document.getElementById('edit-nama').setAttribute('readonly', 'true'); 
             document.getElementById('edit-nama').classList.add('bg-light');
             document.getElementById('icon-unlock-nama').classList.replace('bi-unlock-fill', 'bi-pencil-fill');
 
@@ -512,11 +460,9 @@
             document.getElementById('edit-t-lahir').value = d.tempat_lahir;
             document.getElementById('edit-tgl-lahir').value = d.tanggal_lahir; 
             
-            // Set Wilayah Asal dan Domisili dari gabungan string
             pecahNilaiAlamat('asal', d.alamat_asal);
             pecahNilaiAlamat('dom', d.alamat_domisili);
 
-            // Set Wilayah Binaan (Dropdown -> Checkboxes)
             setTimeout(() => {
                if(d.wilayah_binaan_kecamatan && d.wilayah_binaan_kecamatan !== "-") {
                    document.getElementById('bin-kab').value = "BULELENG"; 
@@ -561,14 +507,14 @@
                     const resUpload = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
                     const datUpload = await resUpload.json();
                     if(datUpload.status === "sukses") { finalFotoUrl = datUpload.url; } 
-                    else { printLog("Gagal Upload Foto: " + datUpload.pesan, "orange"); alert("Gagal mengupload foto."); }
+                    else { printLog("Gagal Upload Foto: " + datUpload.pesan, "orange"); alert("Gagal mengupload foto. Otorisasi Drive gagal?"); }
                 }
 
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan Data...';
                 const p = new URLSearchParams();
                 p.append('action', 'update_profil');
                 p.append('id_nip', document.getElementById('edit-id-nip').value);
-                p.append('nama_asli', document.getElementById('edit-nama').value); // Kirim nama asli
+                p.append('nama_asli', document.getElementById('edit-nama').value); 
                 p.append('g_depan', document.getElementById('edit-g-depan').value);
                 p.append('g_belakang', document.getElementById('edit-g-belakang').value);
                 p.append('jk', document.getElementById('edit-jk').value);
@@ -577,14 +523,10 @@
                 p.append('gol', document.getElementById('edit-gol').value);
                 p.append('t_lahir', document.getElementById('edit-t-lahir').value);
                 p.append('tgl_lahir', document.getElementById('edit-tgl-lahir').value);
-                
-                // Ambil string format Alamat "Kab - Kec - Desa"
                 p.append('almt_asal', dapatkanNilaiAlamat('asal'));
                 p.append('almt_dom', dapatkanNilaiAlamat('dom'));
-                
                 p.append('kec', document.getElementById('bin-kec').value);
                 
-                // Kumpulkan Checkbox Wilayah Binaan Desa
                 const checkedDesa = Array.from(document.querySelectorAll('.bin-desa-cb:checked')).map(cb => cb.value).join(', ');
                 p.append('desa', checkedDesa || "-");
 
