@@ -24,6 +24,10 @@
         .scrolling-wrapper { overflow: hidden; white-space: nowrap; width: 100%; }
         .scrolling-text { display: inline-block; padding-left: 100%; animation: scroll-left 15s linear infinite; }
         @keyframes scroll-left { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+        .form-section-title { font-size: 0.9rem; font-weight: bold; color: var(--primary-color); margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #e9ecef; }
+        
+        /* Cekbox Wilayah Binaan styling */
+        .desa-checkbox-list { max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; background: #fff; }
     </style>
 </head>
 <body>
@@ -38,20 +42,11 @@
     <script>
         const bbLogs = document.getElementById('blackBoxLogs');
         const bbContainer = document.getElementById('blackBox');
-        function printLog(msg, color="lime") {
-            bbContainer.style.display = 'block';
-            bbLogs.innerHTML += `<div style="color:${color}; margin-bottom:4px; line-height:1.2;">=> ${msg}</div>`;
-        }
-        // Menangkap error coding murni (Syntax Error dll)
-        window.onerror = function(msg, url, line) {
-            printLog(`ERROR BERSISTEM pada Baris ${line}: <br> ${msg}`, '#ff4444');
-            return false;
-        };
-        // Menangkap error API/Fetch/Janji (Promise Error)
-        window.addEventListener('unhandledrejection', function(e) {
-            printLog(`ERROR KONEKSI/API: <br> ${e.reason}`, 'orange');
-        });
+        function printLog(msg, color="lime") { bbContainer.style.display = 'block'; bbLogs.innerHTML += `<div style="color:${color}; margin-bottom:4px; line-height:1.2;">=> ${msg}</div>`; }
+        window.onerror = function(msg, url, line) { printLog(`ERROR Baris ${line}: ${msg}`, '#ff4444'); return false; };
+        window.addEventListener('unhandledrejection', function(e) { printLog(`API/PROMISE ERROR: ${e.reason}`, 'orange'); });
     </script>
+
     <div id="splash-screen">
         <img id="splash-logo" src="IPeKB26-PWA.png" alt="Logo IPKB Buleleng">
         <div class="spinner-border text-primary mt-3" role="status"></div>
@@ -64,10 +59,7 @@
                 <img src="IPeKB26-PWA.png" style="width: 80px;">
                 <h2 class="fw-bold mt-2 text-dark">Login PKB/PLKB</h2>
                 <div class="card p-4 mt-4 shadow-sm border-0 text-start" style="border-radius: 15px;">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-muted small">NIP</label>
-                        <input type="text" id="nip" class="form-control form-control-lg">
-                    </div>
+                    <div class="mb-3"><label class="form-label fw-bold text-muted small">NIP</label><input type="text" id="nip" class="form-control form-control-lg"></div>
                     <div class="mb-4">
                         <label class="form-label fw-bold text-muted small">Password (NIK)</label>
                         <div class="position-relative">
@@ -92,7 +84,6 @@
                 <button onclick="logout()" class="btn btn-sm btn-outline-danger fw-bold shadow-sm">Keluar</button>
             </div>
         </div>
-
         <div class="card card-profile mb-3">
             <div class="header-bg"></div>
             <div class="text-center" style="margin-top: -55px;">
@@ -108,16 +99,12 @@
                 <div class="d-flex justify-content-between small pt-2"><span><i class="bi bi-pin-map me-1"></i> Kec/Desa Binaan</span><span id="view-kec" class="fw-bold text-end" style="width: 60%;">-</span></div>
             </div>
         </div>
-
         <div class="card mb-4 border-0 shadow-sm bg-warning-subtle" style="border-radius: 10px; border-left: 5px solid #ffc107 !important;">
             <div class="card-body py-2 d-flex align-items-center overflow-hidden">
                 <i class="bi bi-megaphone-fill text-warning me-2 fs-5 z-1 bg-warning-subtle pe-1"></i>
-                <div class="scrolling-wrapper">
-                    <span id="pengumuman-text" class="scrolling-text small fw-medium">Selamat datang di Sistem Informasi E-PKB Buleleng. Harap perbarui kelengkapan profil Anda.</span>
-                </div>
+                <div class="scrolling-wrapper"><span id="pengumuman-text" class="scrolling-text small fw-medium">Selamat datang di Sistem Informasi E-PKB Buleleng. Harap perbarui kelengkapan profil Anda.</span></div>
             </div>
         </div>
-
         <div class="row g-3 text-center" id="menu-grid"></div>
     </div>
 
@@ -146,48 +133,73 @@
                     <p id="status-upload" class="text-success small mt-1 hidden">Foto siap disimpan!</p>
                 </div>
 
+                <div class="form-section-title">Informasi Dasar</div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Nama Lengkap (Sesuai SK)</label>
+                    <div class="input-group">
+                        <input type="text" id="edit-nama" class="form-control bg-light fw-medium" readonly>
+                        <button class="btn btn-warning text-dark" type="button" id="btn-unlock-nama" onclick="bukaKunciNama()">
+                            <i class="bi bi-pencil-fill" id="icon-unlock-nama"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted" style="font-size: 0.7rem;">*Klik tombol pensil untuk mengedit nama.</small>
+                </div>
                 <div class="mb-3"><label class="form-label small fw-bold">Gelar Depan</label><input type="text" id="edit-g-depan" class="form-control"></div>
                 <div class="mb-3"><label class="form-label small fw-bold">Gelar Belakang</label><input type="text" id="edit-g-belakang" class="form-control"></div>
                 <div class="mb-3"><label class="form-label small fw-bold">Jenis Kelamin</label><select id="edit-jk" class="form-select"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
-                
+                <div class="mb-3"><label class="form-label small fw-bold">Tempat Lahir</label><input type="text" id="edit-t-lahir" class="form-control"></div>
+                <div class="mb-4"><label class="form-label small fw-bold">Tanggal Lahir</label><input type="date" id="edit-tgl-lahir" class="form-control"></div>
+
+                <div class="form-section-title">Data Kepegawaian</div>
                 <div class="mb-3"><label class="form-label small fw-bold">Status ASN</label>
                     <select id="edit-status" class="form-select" onchange="aturGolongan()">
-                        <option value="">Pilih Status</option>
-                        <option value="PNS">PNS</option>
-                        <option value="CPNS">CPNS</option>
-                        <option value="PPPK">PPPK</option>
+                        <option value="">Pilih Status</option><option value="PNS">PNS</option><option value="CPNS">CPNS</option><option value="PPPK">PPPK</option>
                     </select>
                 </div>
                 <div class="mb-3"><label class="form-label small fw-bold">Jabatan</label>
                     <select id="edit-jabatan" class="form-select">
-                        <option value="PKB AHLI PERTAMA">PKB AHLI PERTAMA</option>
-                        <option value="PKB AHLI MUDA">PKB AHLI MUDA</option>
-                        <option value="PKB AHLI MADYA">PKB AHLI MADYA</option>
-                        <option value="PLKB PEMULA">PLKB PEMULA</option>
-                        <option value="PLKB TERAMPIL">PLKB TERAMPIL</option>
-                        <option value="PLKB MAHIR">PLKB MAHIR</option>
+                        <option value="PKB AHLI PERTAMA">PKB AHLI PERTAMA</option><option value="PKB AHLI MUDA">PKB AHLI MUDA</option>
+                        <option value="PKB AHLI MADYA">PKB AHLI MADYA</option><option value="PLKB PEMULA">PLKB PEMULA</option>
+                        <option value="PLKB TERAMPIL">PLKB TERAMPIL</option><option value="PLKB MAHIR">PLKB MAHIR</option>
                         <option value="PLKB PENYELIA">PLKB PENYELIA</option>
                     </select>
                 </div>
-                <div class="mb-3"><label class="form-label small fw-bold">Golongan</label>
-                    <select id="edit-gol" class="form-select"><option value="">Pilih Status ASN Dahulu</option></select>
+                <div class="mb-4"><label class="form-label small fw-bold">Golongan</label><select id="edit-gol" class="form-select"><option value="">Pilih Status ASN Dahulu</option></select></div>
+
+                <div class="form-section-title">Wilayah Asal</div>
+                <div class="mb-2"><label class="form-label small fw-bold">Kabupaten</label>
+                    <select id="asal-kab" class="form-select" onchange="handleWilayah('asal', 'kab')"><option value="">Pilih Kabupaten</option></select>
+                </div>
+                <div id="asal-kec-container" class="mb-2 hidden"><label class="form-label small fw-bold">Kecamatan</label>
+                    <select id="asal-kec-sel" class="form-select" onchange="handleWilayah('asal', 'kec')"></select>
+                    <input type="text" id="asal-kec-txt" class="form-control hidden" placeholder="Ketik Nama Kecamatan">
+                </div>
+                <div id="asal-desa-container" class="mb-4 hidden"><label class="form-label small fw-bold">Desa/Kelurahan</label>
+                    <select id="asal-desa-sel" class="form-select"></select>
+                    <input type="text" id="asal-desa-txt" class="form-control hidden" placeholder="Ketik Nama Desa">
                 </div>
 
-                <div class="mb-3"><label class="form-label small fw-bold">Tempat Lahir</label><input type="text" id="edit-t-lahir" class="form-control"></div>
-                <div class="mb-4"><label class="form-label small fw-bold">Tanggal Lahir</label><input type="date" id="edit-tgl-lahir" class="form-control"></div>
+                <div class="form-section-title">Wilayah Domisili</div>
+                <div class="mb-2"><label class="form-label small fw-bold">Kabupaten</label>
+                    <select id="dom-kab" class="form-select" onchange="handleWilayah('dom', 'kab')"><option value="">Pilih Kabupaten</option></select>
+                </div>
+                <div id="dom-kec-container" class="mb-2 hidden"><label class="form-label small fw-bold">Kecamatan</label>
+                    <select id="dom-kec-sel" class="form-select" onchange="handleWilayah('dom', 'kec')"></select>
+                    <input type="text" id="dom-kec-txt" class="form-control hidden" placeholder="Ketik Nama Kecamatan">
+                </div>
+                <div id="dom-desa-container" class="mb-4 hidden"><label class="form-label small fw-bold">Desa/Kelurahan</label>
+                    <select id="dom-desa-sel" class="form-select"></select>
+                    <input type="text" id="dom-desa-txt" class="form-control hidden" placeholder="Ketik Nama Desa">
+                </div>
 
-                <hr>
-                <h6 class="fw-bold text-primary mb-3">Wilayah Asal & Domisili</h6>
-                <div class="mb-3"><label class="form-label small fw-bold">Alamat Asal (Lengkap dengan Desa/Kec)</label><textarea id="edit-almt-asal" class="form-control" rows="2"></textarea></div>
-                <div class="mb-4"><label class="form-label small fw-bold">Alamat Domisili (Lengkap dengan Desa/Kec)</label><textarea id="edit-almt-dom" class="form-control" rows="2"></textarea></div>
+                <div class="form-section-title">Wilayah Binaan (Lokasi Tugas)</div>
+                <div class="mb-2"><label class="form-label small fw-bold">Kabupaten</label><select id="bin-kab" class="form-select" onchange="handleWilayah('bin', 'kab')"><option value="">Pilih Kabupaten</option></select></div>
+                <div id="bin-kec-container" class="mb-2 hidden"><label class="form-label small fw-bold">Kecamatan</label><select id="bin-kec" class="form-select" onchange="handleWilayah('bin', 'kec')"></select></div>
+                <div id="bin-desa-container" class="mb-4 hidden"><label class="form-label small fw-bold">Desa/Kelurahan Binaan (Bisa Pilih > 1)</label>
+                    <div id="bin-desa-wrapper" class="desa-checkbox-list"></div>
+                </div>
 
-                <hr>
-                <h6 class="fw-bold text-primary mb-3">Wilayah Binaan</h6>
-                <div class="mb-3"><label class="form-label small fw-bold">Kabupaten</label><select id="wil-kab" class="form-select" onchange="isiKecamatan()"><option value="">Pilih Kabupaten</option></select></div>
-                <div class="mb-3"><label class="form-label small fw-bold">Kecamatan</label><select id="wil-kec" class="form-select" onchange="isiDesa()"><option value="">Pilih Kecamatan</option></select></div>
-                <div class="mb-4"><label class="form-label small fw-bold">Desa/Kelurahan</label><select id="wil-desa" class="form-select"><option value="">Pilih Desa</option></select></div>
-
-                <hr>
+                <div class="form-section-title">Kontak</div>
                 <div class="mb-3"><label class="form-label small fw-bold">No. HP / WhatsApp</label><input type="tel" id="edit-hp" class="form-control"></div>
                 <div class="mb-4"><label class="form-label small fw-bold">Email</label><input type="email" id="edit-email" class="form-control"></div>
                 
@@ -200,11 +212,8 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
         let dataWilayahGlobal = {}; 
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
-        }
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 
-        // Handle Mata Password
         const toggleBtn = document.getElementById('togglePassword');
         if(toggleBtn) {
             toggleBtn.addEventListener('click', function () {
@@ -214,45 +223,150 @@
             });
         }
 
+        function bukaKunciNama() {
+            const el = document.getElementById('edit-nama');
+            const icon = document.getElementById('icon-unlock-nama');
+            if(el.hasAttribute('readonly')) {
+                el.removeAttribute('readonly');
+                el.classList.remove('bg-light');
+                icon.classList.replace('bi-pencil-fill', 'bi-unlock-fill');
+            } else {
+                el.setAttribute('readonly', 'true');
+                el.classList.add('bg-light');
+                icon.classList.replace('bi-unlock-fill', 'bi-pencil-fill');
+            }
+        }
+
         async function fetchWilayah() {
             try {
                 const res = await fetch(`${SCRIPT_URL}?action=get_wilayah`);
                 const result = await res.json();
                 if(result.status === "sukses") {
                     dataWilayahGlobal = result.data;
-                    isiKabupaten();
-                } else { printLog("Gagal baca sheet wilayah: " + result.pesan, "yellow"); }
+                    initDropdownKabupaten();
+                } else { printLog("Gagal baca wilayah: " + result.pesan, "yellow"); }
             } catch(e) { printLog("Fetch Wilayah Error: " + e, "orange"); }
         }
 
-        function isiKabupaten() {
-            const selKab = document.getElementById('wil-kab');
-            selKab.innerHTML = '<option value="">Pilih Kabupaten</option>';
-            for(let kab in dataWilayahGlobal) {
-                selKab.innerHTML += `<option value="${kab}">${kab}</option>`;
-            }
+        function initDropdownKabupaten() {
+            let optUmum = '<option value="">Pilih Kabupaten</option>';
+            for(let kab in dataWilayahGlobal) { optUmum += `<option value="${kab}">${kab}</option>`; }
+            
+            // Asal & Domisili ada "LUAR BALI"
+            let optDenganLuarBali = optUmum + '<option value="LUAR BALI" class="fw-bold text-primary">LUAR BALI</option>';
+            
+            document.getElementById('asal-kab').innerHTML = optDenganLuarBali;
+            document.getElementById('dom-kab').innerHTML = optDenganLuarBali;
+            document.getElementById('bin-kab').innerHTML = optUmum; // Binaan khusus bali
         }
-        function isiKecamatan() {
-            const kab = document.getElementById('wil-kab').value;
-            const selKec = document.getElementById('wil-kec');
-            const selDesa = document.getElementById('wil-desa');
-            selKec.innerHTML = '<option value="">Pilih Kecamatan</option>';
-            selDesa.innerHTML = '<option value="">Pilih Desa</option>';
-            if(kab && dataWilayahGlobal[kab]) {
-                for(let kec in dataWilayahGlobal[kab]) {
-                    selKec.innerHTML += `<option value="${kec}">${kec}</option>`;
+
+        function handleWilayah(jenis, level) {
+            const kab = document.getElementById(`${jenis}-kab`).value;
+            const isLuarBali = (kab === 'LUAR BALI');
+            
+            if (level === 'kab') {
+                const kecContainer = document.getElementById(`${jenis}-kec-container`);
+                const desaContainer = document.getElementById(`${jenis}-desa-container`);
+                
+                if(!kab) { kecContainer.classList.add('hidden'); desaContainer.classList.add('hidden'); return; }
+                kecContainer.classList.remove('hidden');
+                
+                if (jenis === 'asal' || jenis === 'dom') {
+                    const selKec = document.getElementById(`${jenis}-kec-sel`);
+                    const txtKec = document.getElementById(`${jenis}-kec-txt`);
+                    const selDesa = document.getElementById(`${jenis}-desa-sel`);
+                    const txtDesa = document.getElementById(`${jenis}-desa-txt`);
+                    
+                    selKec.classList.toggle('hidden', isLuarBali);
+                    txtKec.classList.toggle('hidden', !isLuarBali);
+                    selDesa.classList.toggle('hidden', isLuarBali);
+                    txtDesa.classList.toggle('hidden', !isLuarBali);
+                    
+                    if (isLuarBali) {
+                        desaContainer.classList.remove('hidden'); // Show txt immediately
+                    } else {
+                        desaContainer.classList.add('hidden');
+                        let kecHtml = '<option value="">Pilih Kecamatan</option>';
+                        if(dataWilayahGlobal[kab]) {
+                            for(let k in dataWilayahGlobal[kab]) kecHtml += `<option value="${k}">${k}</option>`;
+                        }
+                        selKec.innerHTML = kecHtml;
+                    }
+                } else if (jenis === 'bin') { // Binaan
+                    desaContainer.classList.add('hidden');
+                    let kecHtml = '<option value="">Pilih Kecamatan</option>';
+                    if(dataWilayahGlobal[kab]) {
+                        for(let k in dataWilayahGlobal[kab]) kecHtml += `<option value="${k}">${k}</option>`;
+                    }
+                    document.getElementById('bin-kec').innerHTML = kecHtml;
+                }
+            } 
+            else if (level === 'kec') {
+                const desaContainer = document.getElementById(`${jenis}-desa-container`);
+                
+                if (jenis === 'asal' || jenis === 'dom') {
+                    const kec = document.getElementById(`${jenis}-kec-sel`).value;
+                    if(!kec) { desaContainer.classList.add('hidden'); return; }
+                    desaContainer.classList.remove('hidden');
+                    
+                    let desaHtml = '<option value="">Pilih Desa/Kelurahan</option>';
+                    if(dataWilayahGlobal[kab] && dataWilayahGlobal[kab][kec]) {
+                        dataWilayahGlobal[kab][kec].forEach(d => desaHtml += `<option value="${d}">${d}</option>`);
+                    }
+                    document.getElementById(`${jenis}-desa-sel`).innerHTML = desaHtml;
+                } 
+                else if (jenis === 'bin') { // Checkbox logic untuk desa binaan
+                    const kec = document.getElementById('bin-kec').value;
+                    if(!kec) { desaContainer.classList.add('hidden'); return; }
+                    desaContainer.classList.remove('hidden');
+                    
+                    let cbHtml = '';
+                    if(dataWilayahGlobal[kab] && dataWilayahGlobal[kab][kec]) {
+                        dataWilayahGlobal[kab][kec].forEach(d => {
+                            const idCb = d.replace(/\s+/g, '');
+                            cbHtml += `<div class="form-check text-start">
+                                <input class="form-check-input bin-desa-cb" type="checkbox" value="${d}" id="cb-${idCb}">
+                                <label class="form-check-label small" for="cb-${idCb}">${d}</label>
+                            </div>`;
+                        });
+                    }
+                    document.getElementById('bin-desa-wrapper').innerHTML = cbHtml;
                 }
             }
         }
-        function isiDesa() {
-            const kab = document.getElementById('wil-kab').value;
-            const kec = document.getElementById('wil-kec').value;
-            const selDesa = document.getElementById('wil-desa');
-            selDesa.innerHTML = '<option value="">Pilih Desa</option>';
-            if(kab && kec && dataWilayahGlobal[kab][kec]) {
-                dataWilayahGlobal[kab][kec].forEach(desa => {
-                    selDesa.innerHTML += `<option value="${desa}">${desa}</option>`;
-                });
+
+        // Pengambil Nilai Alamat saat Save
+        function dapatkanNilaiAlamat(jenis) {
+            const kab = document.getElementById(`${jenis}-kab`).value;
+            if(!kab) return "-";
+            if(kab === 'LUAR BALI') {
+                const k = document.getElementById(`${jenis}-kec-txt`).value || "-";
+                const d = document.getElementById(`${jenis}-desa-txt`).value || "-";
+                return `${kab} - ${k} - ${d}`;
+            } else {
+                const k = document.getElementById(`${jenis}-kec-sel`).value || "-";
+                const d = document.getElementById(`${jenis}-desa-sel`).value || "-";
+                return `${kab} - ${k} - ${d}`;
+            }
+        }
+
+        // Memecah format "Kab - Kec - Desa" saat Pre-Fill Data
+        function pecahNilaiAlamat(jenis, stringAlamat) {
+            if(!stringAlamat || stringAlamat === "-") return;
+            const pts = stringAlamat.split(" - ");
+            if(pts.length >= 1) {
+                document.getElementById(`${jenis}-kab`).value = pts[0];
+                handleWilayah(jenis, 'kab');
+                setTimeout(() => {
+                    if(pts[0] === 'LUAR BALI') {
+                        document.getElementById(`${jenis}-kec-txt`).value = pts[1] || "";
+                        document.getElementById(`${jenis}-desa-txt`).value = pts[2] || "";
+                    } else {
+                        document.getElementById(`${jenis}-kec-sel`).value = pts[1] || "";
+                        handleWilayah(jenis, 'kec');
+                        setTimeout(() => { document.getElementById(`${jenis}-desa-sel`).value = pts[2] || ""; }, 100);
+                    }
+                }, 100);
             }
         }
 
@@ -261,18 +375,15 @@
             const selGol = document.getElementById('edit-gol');
             selGol.innerHTML = '';
             if(status === "PNS" || status === "CPNS") {
-                const gols = ["II a", "II b", "II c", "II d", "III a", "III b", "III c", "III d", "IV a", "IV b", "IV c", "IV d"];
-                gols.forEach(g => selGol.innerHTML += `<option value="${g}">${g}</option>`);
+                ["II a", "II b", "II c", "II d", "III a", "III b", "III c", "III d", "IV a", "IV b", "IV c", "IV d"].forEach(g => selGol.innerHTML += `<option value="${g}">${g}</option>`);
             } else if (status === "PPPK") {
-                const gols = ["V", "VII", "IX"];
-                gols.forEach(g => selGol.innerHTML += `<option value="${g}">${g}</option>`);
+                ["V", "VII", "IX"].forEach(g => selGol.innerHTML += `<option value="${g}">${g}</option>`);
             } else {
                 selGol.innerHTML = '<option value="">Pilih Status ASN Dahulu</option>';
             }
         }
 
         function bukaKamera() { document.getElementById('inputFoto').click(); }
-        
         let fileFotoData = null; 
         document.getElementById('inputFoto').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -282,7 +393,6 @@
                 document.getElementById('view-foto').src = event.target.result;
                 document.getElementById('preview-foto-edit').src = event.target.result;
                 document.getElementById('status-upload').classList.remove('hidden');
-                
                 const base64Data = event.target.result.split(',')[1];
                 fileFotoData = { filename: file.name, mimeType: file.type, fileData: base64Data };
             };
@@ -295,50 +405,33 @@
             window.scrollTo(0,0);
         }
 
-        // PERBAIKAN: Menambahkan Try-Catch pada Data Profil Lokal (Pencegah Crash Blank Screen)
         window.onload = () => {
             fetchWilayah(); 
             const userString = localStorage.getItem('userPKB');
-            
             setTimeout(() => {
                 document.getElementById('splash-screen').classList.add('hidden');
-                
                 if(userString) {
-                    try {
-                        const userParsed = JSON.parse(userString);
-                        tampilkanProfil(userParsed);
-                    } catch(e) {
-                        printLog("Data lokal korup, menghapus data dan kembali ke login.", "orange");
-                        localStorage.removeItem('userPKB');
-                        bukaHalaman('login-page');
-                    }
-                } else {
-                    bukaHalaman('login-page');
-                }
+                    try { tampilkanProfil(JSON.parse(userString)); } 
+                    catch(e) { localStorage.removeItem('userPKB'); bukaHalaman('login-page'); }
+                } else { bukaHalaman('login-page'); }
             }, 800);
         };
 
         async function refreshData(isAutoRefresh = false) {
             const userString = localStorage.getItem('userPKB');
             if (!userString) return;
-            
             let user = {};
             try { user = JSON.parse(userString); } catch(e) { return; }
-            
             const btn = document.getElementById('btnRefresh');
-            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Refresh...'; }
-
+            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Refreshing...'; }
             try {
                 const res = await fetch(`${SCRIPT_URL}?action=login&nip=${user.nip}&nik=${user.nik}`, { method: 'POST' });
                 const d = await res.json();
-                
                 if(d.status === "sukses") {
                     localStorage.setItem('userPKB', JSON.stringify(d.dataProfil));
                     tampilkanProfil(d.dataProfil); 
                     if(!isAutoRefresh) alert("Data berhasil diperbarui!"); 
-                } else {
-                    alert("Gagal memuat data terbaru. Silakan login ulang.");
-                }
+                } else { alert("Gagal memuat data terbaru. Silakan login ulang."); }
             } catch(e) { 
                 printLog("Gagal Refresh: " + e, "orange");
                 if(!isAutoRefresh) alert("Gagal terhubung ke server."); 
@@ -352,24 +445,17 @@
             const nik = document.getElementById('nik').value;
             const btn = document.getElementById('btnLogin');
             if(!nip || !nik) return alert("Isi NIP & NIK");
-            
             btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Mengecek...';
             document.getElementById('loginError').classList.add('hidden');
-            
             try {
                 const res = await fetch(`${SCRIPT_URL}?action=login&nip=${nip}&nik=${nik}`, { method: 'POST' });
                 const d = await res.json();
                 if(d.status === "sukses") {
                     localStorage.setItem('userPKB', JSON.stringify(d.dataProfil));
                     tampilkanProfil(d.dataProfil);
-                } else { 
-                    document.getElementById('loginError').classList.remove('hidden'); 
-                }
-            } catch(e) { 
-                printLog("Login Fetch Error: " + e, "red");
-            } finally { 
-                btn.disabled = false; btn.innerText = "MASUK"; 
-            }
+                } else { document.getElementById('loginError').classList.remove('hidden'); }
+            } catch(e) { printLog("Login Fetch Error: " + e, "red"); } 
+            finally { btn.disabled = false; btn.innerText = "MASUK"; }
         }
 
         function tampilkanProfil(d) {
@@ -400,17 +486,9 @@
 
         function renderMenu(role) {
             const grid = document.getElementById('menu-grid');
-            const menus = [
-                ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Info")'],
-                ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")']
-            ];
-            if(role === "PKB" || role === "User/PKB") {
-                menus.push(['bi-journal-check', '#0d6efd', 'Laporan', 'alert("Tugas")'], ['bi-file-earmark-text', '#6f42c1', 'Admin', 'alert("Admin")']);
-            }
-            grid.innerHTML = menus.map(m => `
-                <div class="col-6 mb-2"><div class="card p-3 border-0 shadow-sm menu-card h-100" onclick='${m[3]}'>
-                <i class="bi ${m[0]} h2 mb-2" style="color:${m[1]}"></i><div class="small fw-bold">${m[2]}</div></div></div>
-            `).join('');
+            const menus = [['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Info")'], ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")']];
+            if(role === "PKB" || role === "User/PKB") menus.push(['bi-journal-check', '#0d6efd', 'Laporan', 'alert("Tugas")'], ['bi-file-earmark-text', '#6f42c1', 'Admin', 'alert("Admin")']);
+            grid.innerHTML = menus.map(m => `<div class="col-6 mb-2"><div class="card p-3 border-0 shadow-sm menu-card h-100" onclick='${m[3]}'><i class="bi ${m[0]} h2 mb-2" style="color:${m[1]}"></i><div class="small fw-bold">${m[2]}</div></div></div>`).join('');
         }
 
         function siapkanEditProfil() {
@@ -418,28 +496,41 @@
             try { d = JSON.parse(localStorage.getItem('userPKB')); } catch(e) { return; }
             
             document.getElementById('edit-id-nip').value = d.nip;
+            document.getElementById('edit-nama').value = d.nama_asli; 
+            document.getElementById('edit-nama').setAttribute('readonly', 'true'); // Pastikan terkunci
+            document.getElementById('edit-nama').classList.add('bg-light');
+            document.getElementById('icon-unlock-nama').classList.replace('bi-unlock-fill', 'bi-pencil-fill');
+
             document.getElementById('edit-g-depan').value = d.gelar_depan;
             document.getElementById('edit-g-belakang').value = d.gelar_belakang;
             document.getElementById('edit-jk').value = d.jenis_kelamin;
             
             document.getElementById('edit-status').value = d.status_asn;
-            aturGolongan(); 
-            setTimeout(() => document.getElementById('edit-gol').value = d.golongan, 100);
+            aturGolongan(); setTimeout(() => document.getElementById('edit-gol').value = d.golongan, 100);
             
             document.getElementById('edit-jabatan').value = d.jabatan;
             document.getElementById('edit-t-lahir').value = d.tempat_lahir;
             document.getElementById('edit-tgl-lahir').value = d.tanggal_lahir; 
-            document.getElementById('edit-almt-asal').value = d.alamat_asal;
-            document.getElementById('edit-almt-dom').value = d.alamat_domisili;
             
+            // Set Wilayah Asal dan Domisili dari gabungan string
+            pecahNilaiAlamat('asal', d.alamat_asal);
+            pecahNilaiAlamat('dom', d.alamat_domisili);
+
+            // Set Wilayah Binaan (Dropdown -> Checkboxes)
             setTimeout(() => {
                if(d.wilayah_binaan_kecamatan && d.wilayah_binaan_kecamatan !== "-") {
-                   document.getElementById('wil-kab').value = "BULELENG"; 
-                   isiKecamatan();
+                   document.getElementById('bin-kab').value = "BULELENG"; 
+                   handleWilayah('bin', 'kab');
                    setTimeout(() => {
-                       document.getElementById('wil-kec').value = d.wilayah_binaan_kecamatan;
-                       isiDesa();
-                       setTimeout(() => { document.getElementById('wil-desa').value = d.wilayah_binaan_desa; }, 100);
+                       document.getElementById('bin-kec').value = d.wilayah_binaan_kecamatan;
+                       handleWilayah('bin', 'kec');
+                       setTimeout(() => { 
+                           const desaChecked = d.wilayah_binaan_desa ? d.wilayah_binaan_desa.split(', ') : [];
+                           desaChecked.forEach(ds => {
+                               const cbox = document.getElementById('cb-' + ds.replace(/\s+/g, ''));
+                               if(cbox) cbox.checked = true;
+                           });
+                       }, 100);
                    }, 100);
                }
             }, 300);
@@ -469,18 +560,15 @@
                     
                     const resUpload = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
                     const datUpload = await resUpload.json();
-                    if(datUpload.status === "sukses") {
-                        finalFotoUrl = datUpload.url; 
-                    } else {
-                        printLog("Gagal Upload Foto: " + datUpload.pesan, "orange");
-                        alert("Gagal mengupload foto. Data lain tetap disimpan.");
-                    }
+                    if(datUpload.status === "sukses") { finalFotoUrl = datUpload.url; } 
+                    else { printLog("Gagal Upload Foto: " + datUpload.pesan, "orange"); alert("Gagal mengupload foto."); }
                 }
 
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan Data...';
                 const p = new URLSearchParams();
                 p.append('action', 'update_profil');
                 p.append('id_nip', document.getElementById('edit-id-nip').value);
+                p.append('nama_asli', document.getElementById('edit-nama').value); // Kirim nama asli
                 p.append('g_depan', document.getElementById('edit-g-depan').value);
                 p.append('g_belakang', document.getElementById('edit-g-belakang').value);
                 p.append('jk', document.getElementById('edit-jk').value);
@@ -489,10 +577,17 @@
                 p.append('gol', document.getElementById('edit-gol').value);
                 p.append('t_lahir', document.getElementById('edit-t-lahir').value);
                 p.append('tgl_lahir', document.getElementById('edit-tgl-lahir').value);
-                p.append('almt_asal', document.getElementById('edit-almt-asal').value);
-                p.append('almt_dom', document.getElementById('edit-almt-dom').value);
-                p.append('kec', document.getElementById('wil-kec').value);
-                p.append('desa', document.getElementById('wil-desa').value);
+                
+                // Ambil string format Alamat "Kab - Kec - Desa"
+                p.append('almt_asal', dapatkanNilaiAlamat('asal'));
+                p.append('almt_dom', dapatkanNilaiAlamat('dom'));
+                
+                p.append('kec', document.getElementById('bin-kec').value);
+                
+                // Kumpulkan Checkbox Wilayah Binaan Desa
+                const checkedDesa = Array.from(document.querySelectorAll('.bin-desa-cb:checked')).map(cb => cb.value).join(', ');
+                p.append('desa', checkedDesa || "-");
+
                 p.append('hp', document.getElementById('edit-hp').value);
                 p.append('email', document.getElementById('edit-email').value);
                 p.append('foto', finalFotoUrl);
@@ -503,12 +598,9 @@
                     alert("Data Berhasil Diperbarui!");
                     await refreshData(true); 
                     bukaHalaman('detail-profil-page');
-                } else {
-                    printLog("Gagal Simpan Data: " + d.pesan, "red");
-                }
+                } else { printLog("Gagal Simpan Data: " + d.pesan, "red"); }
             } catch(e) { 
-                printLog("Error Simpan Profil: " + e, "red");
-                alert("Koneksi terputus saat menyimpan."); 
+                printLog("Error Simpan Profil: " + e, "red"); alert("Koneksi terputus saat menyimpan."); 
             } finally { 
                 btn.disabled = false; btn.innerText = "SIMPAN PERUBAHAN"; 
             }
