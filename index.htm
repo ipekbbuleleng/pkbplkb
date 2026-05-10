@@ -28,6 +28,12 @@
         /* Menu Icon Hover */
         .menu-card { transition: transform 0.2s; cursor: pointer; border-radius: 12px; }
         .menu-card:active { transform: scale(0.95); }
+
+        /* Styling tambahan untuk ikon mata di password */
+        .password-toggle {
+            cursor: pointer;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -53,7 +59,10 @@
                     </div>
                     <div class="mb-4">
                         <label class="form-label text-muted small fw-bold">Password (NIK)</label>
-                        <input type="password" id="nik" class="form-control form-control-lg" placeholder="Masukkan NIK">
+                        <div class="position-relative">
+                            <input type="password" id="nik" class="form-control form-control-lg pe-5" placeholder="Masukkan NIK">
+                            <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted h5 password-toggle" id="togglePassword"></i>
+                        </div>
                     </div>
                     <button onclick="prosesLogin()" id="btnLogin" class="btn btn-primary btn-lg w-100 fw-bold">MASUK</button>
                     <div id="loginError" class="text-danger mt-3 small text-center hidden fw-medium">NIP atau NIK salah!</div>
@@ -95,16 +104,13 @@
         </div>
 
         <h6 class="fw-bold text-secondary mb-3">Menu Utama</h6>
-
-        <div class="row g-3 text-center" id="menu-grid">
-            </div>
+        <div class="row g-3 text-center" id="menu-grid"></div>
     </div>
 
     <script>
-        // GANTI BAGIAN INI DENGAN URL APPS SCRIPT ANDA
+        // GANTI URL INI
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
 
-        // Mendaftarkan Service Worker untuk syarat PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
@@ -113,9 +119,24 @@
             });
         }
 
+        // --- Logika Mata Password ---
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('nik');
+
+        togglePassword.addEventListener('click', function () {
+            // Cek tipe input saat ini
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Ubah ikon mata (eye menjadi eye-slash)
+            this.classList.toggle('bi-eye');
+            this.classList.toggle('bi-eye-slash');
+        });
+
         window.onload = () => {
             const user = localStorage.getItem('userPKB');
             
+            // PERUBAHAN: Durasi dikurangi dari 1500ms menjadi 800ms
             setTimeout(() => {
                 document.getElementById('splash-screen').classList.add('hidden');
                 if (user) {
@@ -123,7 +144,7 @@
                 } else {
                     document.getElementById('login-page').classList.remove('hidden');
                 }
-            }, 1500);
+            }, 800); 
         };
 
         async function prosesLogin() {
@@ -161,7 +182,6 @@
             document.getElementById('login-page').classList.add('hidden');
             document.getElementById('dashboard-page').classList.remove('hidden');
 
-            // Set Data Profil
             document.getElementById('view-nama').innerText = data.nama_lengkap || data.nama_asli;
             document.getElementById('view-role').innerText = data.role;
             document.getElementById('view-jabatan').innerText = data.jabatan;
@@ -176,7 +196,6 @@
                 document.getElementById('view-foto').src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
             }
 
-            // Render Menu sesuai Role
             renderMenuDinamic(data.role);
         }
 
@@ -184,7 +203,6 @@
             const grid = document.getElementById('menu-grid');
             grid.innerHTML = ''; 
 
-            // Penggunaan petik tunggal untuk onclick dan petik ganda untuk alert sudah diperbaiki
             const buatMenu = (icon, warna, teks, fungsi) => `
                 <div class="col-4">
                     <div class="card p-3 border-0 shadow-sm menu-card h-100" onclick='${fungsi}'>
