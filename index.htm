@@ -10,9 +10,13 @@
     <style>
         :root { --primary-color: #007bff; }
         body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        
+        /* Splash Screen */
         #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
         #splash-logo { width: 150px; }
         .hidden { display: none !important; }
+        
+        /* Layout Card */
         .card-profile { border-radius: 15px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.08); overflow: hidden; }
         .profile-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid white; background: white; }
         .header-bg { background: linear-gradient(135deg, var(--primary-color), #0056b3); height: 100px; }
@@ -20,39 +24,51 @@
         .info-row { border-bottom: 1px dashed #dee2e6; padding: 10px 0; }
         .info-label { font-size: 0.8rem; color: #6c757d; display: block; }
         .info-value { font-size: 0.95rem; font-weight: 500; }
+        .password-toggle { cursor: pointer; z-index: 10; }
+
+        /* Teks Berjalan (Pengganti Marquee yang rusak di Mobile) */
+        .scrolling-wrapper { overflow: hidden; white-space: nowrap; width: 100%; }
+        .scrolling-text { display: inline-block; padding-left: 100%; animation: scroll-left 15s linear infinite; }
+        @keyframes scroll-left { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
     </style>
 </head>
 <body>
 
     <div id="splash-screen">
-        <img id="splash-logo" src="IPeKB26-PWA.png">
-        <div class="spinner-border text-primary mt-3"></div>
+        <img id="splash-logo" src="IPeKB26-PWA.png" alt="Logo IPKB Buleleng">
+        <div class="spinner-border text-primary mt-3" role="status"></div>
+        <h5 class="mt-3 text-secondary text-center">E-PKB Buleleng<br><small>Menyiapkan Data...</small></h5>
     </div>
 
     <div id="login-page" class="container mt-5 hidden">
         <div class="row justify-content-center text-center">
             <div class="col-md-5">
                 <img src="IPeKB26-PWA.png" style="width: 80px;">
-                <h2 class="fw-bold mt-2">Login PKB/PLKB</h2>
-                <div class="card p-4 mt-4 shadow-sm border-0 text-start">
+                <h2 class="fw-bold mt-2 text-dark">Login PKB/PLKB</h2>
+                <div class="card p-4 mt-4 shadow-sm border-0 text-start" style="border-radius: 15px;">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">NIP</label>
-                        <input type="text" id="nip" class="form-control">
+                        <label class="form-label fw-bold text-muted small">NIP</label>
+                        <input type="text" id="nip" class="form-control form-control-lg">
                     </div>
                     <div class="mb-4">
-                        <label class="form-label fw-bold">Password (NIK)</label>
-                        <input type="password" id="nik" class="form-control">
+                        <label class="form-label fw-bold text-muted small">Password (NIK)</label>
+                        <div class="position-relative">
+                            <input type="password" id="nik" class="form-control form-control-lg pe-5">
+                            <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted h5 password-toggle" id="togglePassword"></i>
+                        </div>
                     </div>
-                    <button onclick="prosesLogin()" id="btnLogin" class="btn btn-primary w-100 fw-bold">MASUK</button>
-                    <p id="loginError" class="text-danger mt-3 small hidden text-center">NIP atau NIK salah!</p>
+                    <button onclick="prosesLogin()" id="btnLogin" class="btn btn-primary btn-lg w-100 fw-bold">MASUK</button>
+                    <p id="loginError" class="text-danger mt-3 small hidden text-center fw-medium">NIP atau NIK salah!</p>
                 </div>
             </div>
         </div>
     </div>
 
+    <input type="file" id="inputFoto" accept="image/*" capture="environment" class="hidden">
+
     <div id="dashboard-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="fw-bold m-0">Beranda</h4>
+            <h4 class="fw-bold m-0 text-dark">Beranda</h4>
             <button onclick="logout()" class="btn btn-sm btn-outline-danger fw-bold">Keluar</button>
         </div>
 
@@ -61,20 +77,23 @@
             <div class="text-center" style="margin-top: -55px;">
                 <div class="position-relative d-inline-block">
                     <img id="view-foto" src="https://via.placeholder.com/150" class="profile-img shadow-sm">
-                    <button onclick="alert('Gunakan Form Edit Profil untuk ubah URL Foto')" class="btn btn-light rounded-circle shadow position-absolute bottom-0 end-0 border" style="padding: 5px 9px;"><i class="bi bi-camera-fill text-primary"></i></button>
+                    <button onclick="bukaKamera()" class="btn btn-light rounded-circle shadow position-absolute bottom-0 end-0 border" style="padding: 5px 9px;"><i class="bi bi-camera-fill text-primary"></i></button>
                 </div>
                 <h5 id="view-nama" class="mt-2 fw-bold text-dark">-</h5>
                 <span id="view-role" class="badge bg-warning text-dark px-3 mb-2">-</span>
             </div>
-            <div class="card-body bg-light">
-                <div class="d-flex justify-content-between small border-bottom pb-2"><span>NIP</span><span id="view-nip" class="fw-bold">-</span></div>
-                <div class="d-flex justify-content-between small pt-2"><span>Kecamatan</span><span id="view-kec" class="fw-bold">-</span></div>
+            <div class="card-body bg-light pt-1">
+                <div class="d-flex justify-content-between small border-bottom pb-2 pt-2"><span><i class="bi bi-person-vcard me-1"></i> NIP</span><span id="view-nip" class="fw-bold">-</span></div>
+                <div class="d-flex justify-content-between small pt-2"><span><i class="bi bi-pin-map me-1"></i> Kec/Desa Binaan</span><span id="view-kec" class="fw-bold text-end" style="width: 60%;">-</span></div>
             </div>
         </div>
 
-        <div class="card mb-4 border-0 shadow-sm bg-warning-subtle">
-            <div class="card-body py-2">
-                <marquee id="pengumuman-text" class="small fw-medium">Selamat datang di E-PKB Buleleng.</marquee>
+        <div class="card mb-4 border-0 shadow-sm bg-warning-subtle" style="border-radius: 10px; border-left: 5px solid #ffc107 !important;">
+            <div class="card-body py-2 d-flex align-items-center overflow-hidden">
+                <i class="bi bi-megaphone-fill text-warning me-2 fs-5 z-1 bg-warning-subtle pe-1"></i>
+                <div class="scrolling-wrapper">
+                    <span id="pengumuman-text" class="scrolling-text small fw-medium">Selamat datang di Sistem Informasi E-PKB Buleleng. Harap perbarui kelengkapan profil Anda.</span>
+                </div>
             </div>
         </div>
 
@@ -83,7 +102,7 @@
 
     <div id="detail-profil-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex align-items-center mb-4">
-            <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light me-3"><i class="bi bi-arrow-left"></i></button>
+            <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
             <h4 class="fw-bold m-0">Detail Profil</h4>
         </div>
         <div class="card border-0 shadow-sm p-4 mb-4" id="detail-content" style="border-radius: 15px;"></div>
@@ -92,35 +111,173 @@
 
     <div id="edit-profil-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex align-items-center mb-4">
-            <button onclick="bukaHalaman('detail-profil-page')" class="btn btn-light me-3"><i class="bi bi-arrow-left"></i></button>
+            <button onclick="bukaHalaman('detail-profil-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
             <h4 class="fw-bold m-0">Edit Profil</h4>
         </div>
         <div class="card border-0 shadow-sm p-4" style="border-radius: 15px;">
             <form id="formEdit">
                 <input type="hidden" id="edit-id-nip">
+                <input type="hidden" id="edit-foto-url">
+
+                <div class="text-center mb-4">
+                    <img id="preview-foto-edit" src="https://via.placeholder.com/150" class="profile-img mb-2 shadow-sm"><br>
+                    <button type="button" onclick="bukaKamera()" class="btn btn-sm btn-outline-primary"><i class="bi bi-camera"></i> Ganti Foto</button>
+                    <p id="status-upload" class="text-success small mt-1 hidden">Foto siap disimpan!</p>
+                </div>
+
                 <div class="mb-3"><label class="form-label small fw-bold">Gelar Depan</label><input type="text" id="edit-g-depan" class="form-control"></div>
                 <div class="mb-3"><label class="form-label small fw-bold">Gelar Belakang</label><input type="text" id="edit-g-belakang" class="form-control"></div>
-                <div class="mb-3"><label class="form-label small fw-bold">Jenis Kelamin</label><select id="edit-jk" class="form-control"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
-                <div class="mb-3"><label class="form-label small fw-bold">Status ASN</label><input type="text" id="edit-status" class="form-control"></div>
-                <div class="mb-3"><label class="form-label small fw-bold">Jabatan</label><input type="text" id="edit-jabatan" class="form-control"></div>
-                <div class="mb-3"><label class="form-label small fw-bold">Golongan</label><input type="text" id="edit-gol" class="form-control"></div>
+                <div class="mb-3"><label class="form-label small fw-bold">Jenis Kelamin</label><select id="edit-jk" class="form-select"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
+                
+                <div class="mb-3"><label class="form-label small fw-bold">Status ASN</label>
+                    <select id="edit-status" class="form-select" onchange="aturGolongan()">
+                        <option value="">Pilih Status</option>
+                        <option value="PNS">PNS</option>
+                        <option value="CPNS">CPNS</option>
+                        <option value="PPPK">PPPK</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label small fw-bold">Jabatan</label>
+                    <select id="edit-jabatan" class="form-select">
+                        <option value="PKB AHLI PERTAMA">PKB AHLI PERTAMA</option>
+                        <option value="PKB AHLI MUDA">PKB AHLI MUDA</option>
+                        <option value="PKB AHLI MADYA">PKB AHLI MADYA</option>
+                        <option value="PLKB PEMULA">PLKB PEMULA</option>
+                        <option value="PLKB TERAMPIL">PLKB TERAMPIL</option>
+                        <option value="PLKB MAHIR">PLKB MAHIR</option>
+                        <option value="PLKB PENYELIA">PLKB PENYELIA</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label small fw-bold">Golongan</label>
+                    <select id="edit-gol" class="form-select"><option value="">Pilih Status ASN Dahulu</option></select>
+                </div>
+
                 <div class="mb-3"><label class="form-label small fw-bold">Tempat Lahir</label><input type="text" id="edit-t-lahir" class="form-control"></div>
-                <div class="mb-3"><label class="form-label small fw-bold">Tanggal Lahir</label><input type="text" id="edit-tgl-lahir" class="form-control" placeholder="DD-MM-YYYY"></div>
-                <div class="mb-3"><label class="form-label small fw-bold">Alamat Asal</label><textarea id="edit-almt-asal" class="form-control"></textarea></div>
-                <div class="mb-3"><label class="form-label small fw-bold">Alamat Domisili</label><textarea id="edit-almt-dom" class="form-control"></textarea></div>
-                <div class="mb-3"><label class="form-label small fw-bold">Kecamatan Binaan</label><input type="text" id="edit-kec" class="form-control"></div>
-                <div class="mb-3"><label class="form-label small fw-bold">Desa Binaan</label><input type="text" id="edit-desa" class="form-control"></div>
-                <div class="mb-3"><label class="form-label small fw-bold">No. HP</label><input type="text" id="edit-hp" class="form-control"></div>
-                <div class="mb-3"><label class="form-label small fw-bold">Email</label><input type="email" id="edit-email" class="form-control"></div>
-                <div class="mb-4"><label class="form-label small fw-bold">URL Foto Profil</label><input type="text" id="edit-foto" class="form-control"></div>
-                <button type="button" onclick="simpanProfil()" id="btnSimpan" class="btn btn-success w-100 py-3 fw-bold rounded-4">SIMPAN PERUBAHAN</button>
+                <div class="mb-4"><label class="form-label small fw-bold">Tanggal Lahir</label><input type="date" id="edit-tgl-lahir" class="form-control"></div>
+
+                <hr>
+                <h6 class="fw-bold text-primary mb-3">Wilayah Asal & Domisili</h6>
+                <div class="mb-3"><label class="form-label small fw-bold">Alamat Asal (Lengkap dengan Desa/Kec)</label><textarea id="edit-almt-asal" class="form-control" rows="2"></textarea></div>
+                <div class="mb-4"><label class="form-label small fw-bold">Alamat Domisili (Lengkap dengan Desa/Kec)</label><textarea id="edit-almt-dom" class="form-control" rows="2"></textarea></div>
+
+                <hr>
+                <h6 class="fw-bold text-primary mb-3">Wilayah Binaan</h6>
+                <div class="mb-3"><label class="form-label small fw-bold">Kabupaten</label><select id="wil-kab" class="form-select" onchange="isiKecamatan()"><option value="">Pilih Kabupaten</option></select></div>
+                <div class="mb-3"><label class="form-label small fw-bold">Kecamatan</label><select id="wil-kec" class="form-select" onchange="isiDesa()"><option value="">Pilih Kecamatan</option></select></div>
+                <div class="mb-4"><label class="form-label small fw-bold">Desa/Kelurahan</label><select id="wil-desa" class="form-select"><option value="">Pilih Desa</option></select></div>
+
+                <hr>
+                <div class="mb-3"><label class="form-label small fw-bold">No. HP / WhatsApp</label><input type="tel" id="edit-hp" class="form-control"></div>
+                <div class="mb-4"><label class="form-label small fw-bold">Email</label><input type="email" id="edit-email" class="form-control"></div>
+                
+                <button type="button" onclick="simpanProfil()" id="btnSimpan" class="btn btn-success w-100 py-3 fw-bold rounded-4 shadow">SIMPAN PERUBAHAN</button>
             </form>
         </div>
     </div>
 
     <script>
+        // GANTI URL JIKA BERUBAH
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
+        let dataWilayahGlobal = {}; // Untuk menyimpan data wilayah
 
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+        }
+
+        // --- MATA PASSWORD ---
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const input = document.getElementById('nik');
+            input.setAttribute('type', input.getAttribute('type') === 'password' ? 'text' : 'password');
+            this.classList.toggle('bi-eye'); this.classList.toggle('bi-eye-slash');
+        });
+
+        // --- AMBIL DATA WILAYAH DARI SERVER ---
+        async function fetchWilayah() {
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=get_wilayah`);
+                const result = await res.json();
+                if(result.status === "sukses") {
+                    dataWilayahGlobal = result.data;
+                    isiKabupaten();
+                }
+            } catch(e) { console.log("Gagal memuat wilayah", e); }
+        }
+
+        // --- LOGIKA DROPDOWN WILAYAH BERJENJANG ---
+        function isiKabupaten() {
+            const selKab = document.getElementById('wil-kab');
+            selKab.innerHTML = '<option value="">Pilih Kabupaten</option>';
+            for(let kab in dataWilayahGlobal) {
+                selKab.innerHTML += `<option value="${kab}">${kab}</option>`;
+            }
+        }
+        function isiKecamatan() {
+            const kab = document.getElementById('wil-kab').value;
+            const selKec = document.getElementById('wil-kec');
+            const selDesa = document.getElementById('wil-desa');
+            selKec.innerHTML = '<option value="">Pilih Kecamatan</option>';
+            selDesa.innerHTML = '<option value="">Pilih Desa</option>';
+            if(kab && dataWilayahGlobal[kab]) {
+                for(let kec in dataWilayahGlobal[kab]) {
+                    selKec.innerHTML += `<option value="${kec}">${kec}</option>`;
+                }
+            }
+        }
+        function isiDesa() {
+            const kab = document.getElementById('wil-kab').value;
+            const kec = document.getElementById('wil-kec').value;
+            const selDesa = document.getElementById('wil-desa');
+            selDesa.innerHTML = '<option value="">Pilih Desa</option>';
+            if(kab && kec && dataWilayahGlobal[kab][kec]) {
+                dataWilayahGlobal[kab][kec].forEach(desa => {
+                    selDesa.innerHTML += `<option value="${desa}">${desa}</option>`;
+                });
+            }
+        }
+
+        // --- LOGIKA DROPDOWN GOLONGAN ---
+        function aturGolongan() {
+            const status = document.getElementById('edit-status').value;
+            const selGol = document.getElementById('edit-gol');
+            selGol.innerHTML = '';
+            if(status === "PNS" || status === "CPNS") {
+                const gols = ["II a", "II b", "II c", "II d", "III a", "III b", "III c", "III d", "IV a", "IV b", "IV c", "IV d"];
+                gols.forEach(g => selGol.innerHTML += `<option value="${g}">${g}</option>`);
+            } else if (status === "PPPK") {
+                const gols = ["V", "VII", "IX"];
+                gols.forEach(g => selGol.innerHTML += `<option value="${g}">${g}</option>`);
+            } else {
+                selGol.innerHTML = '<option value="">Pilih Status ASN Dahulu</option>';
+            }
+        }
+
+        // --- KAMERA & UPLOAD FOTO ---
+        function bukaKamera() { document.getElementById('inputFoto').click(); }
+        
+        let fileFotoData = null; // Menyimpan base64 sebelum dikirim
+        document.getElementById('inputFoto').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                // Tampilkan di preview lokal seketika
+                document.getElementById('view-foto').src = event.target.result;
+                document.getElementById('preview-foto-edit').src = event.target.result;
+                document.getElementById('status-upload').classList.remove('hidden');
+                
+                // Pisahkan base64 murni tanpa header data:image/jpeg;base64,
+                const base64Data = event.target.result.split(',')[1];
+                fileFotoData = {
+                    filename: file.name,
+                    mimeType: file.type,
+                    fileData: base64Data
+                };
+            };
+            reader.readAsDataURL(file);
+        });
+
+
+        // --- NAVIGASI ---
         function bukaHalaman(id) {
             ['login-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page'].forEach(pg => document.getElementById(pg).classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
@@ -128,6 +285,7 @@
         }
 
         window.onload = () => {
+            fetchWilayah(); // Load data wilayah di background
             const user = localStorage.getItem('userPKB');
             setTimeout(() => {
                 document.getElementById('splash-screen').classList.add('hidden');
@@ -135,37 +293,43 @@
             }, 800);
         };
 
+        // --- LOGIN ---
         async function prosesLogin() {
             const nip = document.getElementById('nip').value;
             const nik = document.getElementById('nik').value;
             const btn = document.getElementById('btnLogin');
             if(!nip || !nik) return alert("Isi NIP & NIK");
-            btn.disabled = true; btn.innerText = "Mengecek...";
+            btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Mengecek...';
             try {
                 const res = await fetch(`${SCRIPT_URL}?action=login&nip=${nip}&nik=${nik}`, { method: 'POST' });
                 const d = await res.json();
                 if(d.status === "sukses") {
                     localStorage.setItem('userPKB', JSON.stringify(d.dataProfil));
                     tampilkanProfil(d.dataProfil);
-                } else { alert("Login Gagal!"); }
-            } catch(e) { alert("Error Server"); } finally { btn.disabled = false; btn.innerText = "MASUK"; }
+                } else { document.getElementById('loginError').classList.remove('hidden'); }
+            } catch(e) { alert("Error Koneksi Server"); } finally { btn.disabled = false; btn.innerText = "MASUK"; }
         }
 
+        // --- TAMPILKAN PROFIL ---
         function tampilkanProfil(d) {
             bukaHalaman('dashboard-page');
             const namaLengkap = (d.gelar_depan ? d.gelar_depan + " " : "") + d.nama_asli + (d.gelar_belakang ? ", " + d.gelar_belakang : "");
             document.getElementById('view-nama').innerText = namaLengkap;
             document.getElementById('view-role').innerText = d.role;
             document.getElementById('view-nip').innerText = d.nip;
-            document.getElementById('view-kec').innerText = d.wilayah_binaan_kecamatan;
-            if(d.foto) document.getElementById('view-foto').src = d.foto;
+            document.getElementById('view-kec').innerText = (d.wilayah_binaan_kecamatan || "") + " / " + (d.wilayah_binaan_desa || "");
+            
+            const defFoto = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+            document.getElementById('view-foto').src = d.foto && d.foto !== "-" ? d.foto : defFoto;
+            document.getElementById('preview-foto-edit').src = d.foto && d.foto !== "-" ? d.foto : defFoto;
+            document.getElementById('edit-foto-url').value = d.foto || ""; // simpan url lama
 
             let html = `<h6 class="fw-bold text-primary border-bottom pb-2">DATA PEGAWAI</h6>`;
             const fields = [
                 ["NIP", d.nip], ["Status", d.status_asn], ["Jabatan", d.jabatan], ["Golongan", d.golongan],
                 ["JK", d.jenis_kelamin], ["TTL", d.tempat_lahir + ", " + d.tanggal_lahir],
                 ["Alamat Asal", d.alamat_asal], ["Domisili", d.alamat_domisili],
-                ["Kecamatan", d.wilayah_binaan_kecamatan], ["Desa", d.wilayah_binaan_desa],
+                ["Wilayah Binaan", (d.wilayah_binaan_kecamatan || "-") + " - " + (d.wilayah_binaan_desa || "-")],
                 ["HP", d.no_hp], ["Email", d.email]
             ];
             fields.forEach(f => html += `<div class="info-row"><span class="info-label">${f[0]}</span><span class="info-value">${f[1]}</span></div>`);
@@ -179,7 +343,7 @@
                 ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Info")'],
                 ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")']
             ];
-            if(role === "PKB") {
+            if(role === "PKB" || role === "User/PKB") {
                 menus.push(['bi-journal-check', '#0d6efd', 'Laporan', 'alert("Tugas")'], ['bi-file-earmark-text', '#6f42c1', 'Admin', 'alert("Admin")']);
             }
             grid.innerHTML = menus.map(m => `
@@ -188,58 +352,105 @@
             `).join('');
         }
 
+        // --- SIAPKAN FORM EDIT ---
         function siapkanEditProfil() {
             const d = JSON.parse(localStorage.getItem('userPKB'));
             document.getElementById('edit-id-nip').value = d.nip;
             document.getElementById('edit-g-depan').value = d.gelar_depan;
             document.getElementById('edit-g-belakang').value = d.gelar_belakang;
             document.getElementById('edit-jk').value = d.jenis_kelamin;
+            
             document.getElementById('edit-status').value = d.status_asn;
+            aturGolongan(); // Set pilihan golongan berdasarkan status
+            setTimeout(() => document.getElementById('edit-gol').value = d.golongan, 100);
+            
             document.getElementById('edit-jabatan').value = d.jabatan;
-            document.getElementById('edit-gol').value = d.golongan;
             document.getElementById('edit-t-lahir').value = d.tempat_lahir;
-            document.getElementById('edit-tgl-lahir').value = d.tanggal_lahir;
+            document.getElementById('edit-tgl-lahir').value = d.tanggal_lahir; // Karena sudah format YYYY-MM-DD
             document.getElementById('edit-almt-asal').value = d.alamat_asal;
             document.getElementById('edit-almt-dom').value = d.alamat_domisili;
-            document.getElementById('edit-kec').value = d.wilayah_binaan_kecamatan;
-            document.getElementById('edit-desa').value = d.wilayah_binaan_desa;
+            
+            // Set Dropdown Wilayah Binaan
+            setTimeout(() => {
+               // Anggap semua di Buleleng, kita tembak jika wilayah_binaan_kecamatan tidak kosong
+               if(d.wilayah_binaan_kecamatan && d.wilayah_binaan_kecamatan !== "-") {
+                   document.getElementById('wil-kab').value = "BULELENG"; // Default atau deteksi
+                   isiKecamatan();
+                   setTimeout(() => {
+                       document.getElementById('wil-kec').value = d.wilayah_binaan_kecamatan;
+                       isiDesa();
+                       setTimeout(() => { document.getElementById('wil-desa').value = d.wilayah_binaan_desa; }, 100);
+                   }, 100);
+               }
+            }, 300);
+
             document.getElementById('edit-hp').value = d.no_hp;
             document.getElementById('edit-email').value = d.email;
-            document.getElementById('edit-foto').value = d.foto;
+            
+            document.getElementById('status-upload').classList.add('hidden');
+            fileFotoData = null; // reset file unggahan
             bukaHalaman('edit-profil-page');
         }
 
+        // --- SIMPAN PROFIL & UPLOAD ---
         async function simpanProfil() {
             const btn = document.getElementById('btnSimpan');
-            btn.disabled = true; btn.innerText = "Menyimpan...";
+            btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
             
-            const p = new URLSearchParams();
-            p.append('action', 'update_profil');
-            p.append('id_nip', document.getElementById('edit-id-nip').value);
-            p.append('g_depan', document.getElementById('edit-g-depan').value);
-            p.append('g_belakang', document.getElementById('edit-g-belakang').value);
-            p.append('jk', document.getElementById('edit-jk').value);
-            p.append('status', document.getElementById('edit-status').value);
-            p.append('jabatan', document.getElementById('edit-jabatan').value);
-            p.append('gol', document.getElementById('edit-gol').value);
-            p.append('t_lahir', document.getElementById('edit-t-lahir').value);
-            p.append('tgl_lahir', document.getElementById('edit-tgl-lahir').value);
-            p.append('almt_asal', document.getElementById('edit-almt-asal').value);
-            p.append('almt_dom', document.getElementById('edit-almt-dom').value);
-            p.append('kec', document.getElementById('edit-kec').value);
-            p.append('desa', document.getElementById('edit-desa').value);
-            p.append('hp', document.getElementById('edit-hp').value);
-            p.append('email', document.getElementById('edit-email').value);
-            p.append('foto', document.getElementById('edit-foto').value);
+            let finalFotoUrl = document.getElementById('edit-foto-url').value;
 
             try {
+                // 1. Jika ada foto baru, upload dulu ke server
+                if (fileFotoData) {
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Mengupload Foto...';
+                    const fd = new URLSearchParams();
+                    fd.append('action', 'upload_foto');
+                    fd.append('fileData', fileFotoData.fileData);
+                    fd.append('mimeType', fileFotoData.mimeType);
+                    fd.append('filename', document.getElementById('edit-id-nip').value + "_profil.jpg");
+                    
+                    const resUpload = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
+                    const datUpload = await resUpload.json();
+                    if(datUpload.status === "sukses") {
+                        finalFotoUrl = datUpload.url; // Gunakan URL dari GDrive
+                    } else {
+                        alert("Gagal mengupload foto. Data lain tetap akan disimpan.");
+                    }
+                }
+
+                // 2. Simpan Data Profil
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan Data...';
+                const p = new URLSearchParams();
+                p.append('action', 'update_profil');
+                p.append('id_nip', document.getElementById('edit-id-nip').value);
+                p.append('g_depan', document.getElementById('edit-g-depan').value);
+                p.append('g_belakang', document.getElementById('edit-g-belakang').value);
+                p.append('jk', document.getElementById('edit-jk').value);
+                p.append('status', document.getElementById('edit-status').value);
+                p.append('jabatan', document.getElementById('edit-jabatan').value);
+                p.append('gol', document.getElementById('edit-gol').value);
+                p.append('t_lahir', document.getElementById('edit-t-lahir').value);
+                p.append('tgl_lahir', document.getElementById('edit-tgl-lahir').value);
+                p.append('almt_asal', document.getElementById('edit-almt-asal').value);
+                p.append('almt_dom', document.getElementById('edit-almt-dom').value);
+                p.append('kec', document.getElementById('wil-kec').value);
+                p.append('desa', document.getElementById('wil-desa').value);
+                p.append('hp', document.getElementById('edit-hp').value);
+                p.append('email', document.getElementById('edit-email').value);
+                p.append('foto', finalFotoUrl);
+
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                 const d = await res.json();
                 if(d.status === "sukses") {
-                    alert("Data Berhasil Diperbarui! Silakan Login Ulang untuk memuat data terbaru.");
+                    alert("Data Berhasil Diperbarui! Silakan Login Ulang.");
                     logout();
                 }
-            } catch(e) { alert("Gagal Simpan"); } finally { btn.disabled = false; btn.innerText = "SIMPAN PERUBAHAN"; }
+            } catch(e) { 
+                alert("Koneksi terputus saat menyimpan."); 
+                console.error(e);
+            } finally { 
+                btn.disabled = false; btn.innerText = "SIMPAN PERUBAHAN"; 
+            }
         }
 
         function logout() { localStorage.removeItem('userPKB'); location.reload(); }
