@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Informasi Pegawai</title>
+    <title>Sistem Informasi PKB/PLKB Buleleng</title>
     <link rel="manifest" href="manifest.json">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        :root { --primary-color: #0056b3; }
+        :root { --primary-color: #007bff; --secondary-gold: #c69d00; }
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
         /* Splash Screen */
@@ -17,115 +17,104 @@
             background: white; display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 9999;
         }
-
+        #splash-logo { width: 150px; height: 150px; object-fit: contain; margin-bottom: 20px; }
         .hidden { display: none !important; }
         
         /* Card Styles */
-        .card-profile { border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid white; }
-        .header-bg { background: var(--primary-color); height: 80px; border-radius: 15px 15px 0 0; }
+        .card-profile { border-radius: 15px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.08); overflow: hidden; }
+        .profile-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid white; background-color: white;}
+        .header-bg { background: linear-gradient(135deg, var(--primary-color), #0056b3); height: 100px; }
+        
+        /* Menu Icon Hover */
+        .menu-card { transition: transform 0.2s; cursor: pointer; border-radius: 12px; }
+        .menu-card:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
     <div id="splash-screen">
+        <img id="splash-logo" src="URL_LOGO_IPKB_ANDA_DISINI" alt="Logo IPKB Buleleng">
         <div class="spinner-border text-primary" role="status"></div>
-        <h5 class="mt-3 text-secondary text-center">Aplikasi Pegawai<br><small>Menyiapkan Data...</small></h5>
+        <h5 class="mt-3 text-secondary text-center">E-PKB Buleleng<br><small>Menyiapkan Data...</small></h5>
     </div>
 
     <div id="login-page" class="container mt-5 hidden">
         <div class="row justify-content-center">
             <div class="col-md-5">
                 <div class="text-center mb-4">
-                    <i class="bi bi-person-badge text-primary" style="font-size: 4rem;"></i>
-                    <h2 class="fw-bold">Login Pegawai</h2>
+                    <img src="URL_LOGO_IPKB_ANDA_DISINI" alt="Logo IPKB" style="width: 80px; height: 80px; object-fit: contain;">
+                    <h2 class="fw-bold text-dark mt-2">Login PKB/PLKB</h2>
+                    <p class="text-muted small">Ikatan Penyuluh KB Kab. Buleleng</p>
                 </div>
-                <div class="card p-4 shadow-sm border-0">
+                <div class="card p-4 shadow-sm border-0" style="border-radius: 15px;">
                     <div class="mb-3">
-                        <label class="form-label">NIP</label>
-                        <input type="text" id="nip" class="form-control" placeholder="Masukkan NIP">
+                        <label class="form-label text-muted small fw-bold">NIP</label>
+                        <input type="text" id="nip" class="form-control form-control-lg" placeholder="Masukkan NIP">
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Password (NIK)</label>
-                        <input type="password" id="nik" class="form-control" placeholder="Masukkan NIK">
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-bold">Password (NIK)</label>
+                        <input type="password" id="nik" class="form-control form-control-lg" placeholder="Masukkan NIK">
                     </div>
-                    <button onclick="prosesLogin()" id="btnLogin" class="btn btn-primary w-100 py-2">MASUK</button>
-                    <div id="loginError" class="text-danger mt-2 small text-center hidden">NIP atau NIK salah!</div>
+                    <button onclick="prosesLogin()" id="btnLogin" class="btn btn-primary btn-lg w-100 fw-bold">MASUK</button>
+                    <div id="loginError" class="text-danger mt-3 small text-center hidden fw-medium">NIP atau NIK salah!</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="dashboard-page" class="container mt-4 hidden">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="fw-bold m-0">Dashboard</h4>
-            <button onclick="logout()" class="btn btn-sm btn-outline-danger">Logout</button>
+    <div id="dashboard-page" class="container mt-4 mb-5 hidden">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold m-0 text-dark">Beranda</h4>
+            <button onclick="logout()" class="btn btn-sm btn-outline-danger fw-bold"><i class="bi bi-box-arrow-right"></i> Keluar</button>
         </div>
 
         <div class="card card-profile mb-4">
             <div class="header-bg"></div>
-            <div class="px-4 text-center" style="margin-top: -50px;">
-                <img id="view-foto" src="https://via.placeholder.com/150" class="profile-img shadow">
-                <h4 id="view-nama" class="mt-2 mb-0 fw-bold">-</h4>
-                <p id="view-jabatan" class="text-muted small">-</p>
+            <div class="px-3 text-center" style="margin-top: -55px;">
+                <img id="view-foto" src="https://via.placeholder.com/150" class="profile-img shadow-sm">
+                <h5 id="view-nama" class="mt-2 mb-1 fw-bold text-dark">-</h5>
+                <span id="view-role" class="badge bg-warning text-dark mb-2 px-3 py-1">-</span>
+                <p class="text-muted small mb-3"><span id="view-jabatan">-</span> | Gol: <span id="view-golongan">-</span></p>
             </div>
-            <div class="card-body pt-0">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <span class="text-secondary small">NIP</span>
+            <div class="card-body pt-0 pb-3 bg-light">
+                <ul class="list-group list-group-flush bg-transparent">
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-1">
+                        <span class="text-secondary small"><i class="bi bi-person-vcard me-1"></i> NIP</span>
                         <span id="view-nip" class="fw-medium small">-</span>
                     </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <span class="text-secondary small">Unit Kerja</span>
-                        <span id="view-unit" class="fw-medium small">-</span>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-1">
+                        <span class="text-secondary small"><i class="bi bi-building me-1"></i> Kec. Binaan</span>
+                        <span id="view-kecamatan" class="fw-medium small">-</span>
                     </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <span class="text-secondary small">Alamat</span>
-                        <span id="view-alamat" class="fw-medium small text-end" style="width: 60%;">-</span>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-1">
+                        <span class="text-secondary small"><i class="bi bi-pin-map me-1"></i> Desa Binaan</span>
+                        <span id="view-desa" class="fw-medium small text-end" style="max-width: 60%;">-</span>
                     </li>
                 </ul>
             </div>
         </div>
 
-        <div class="row g-3 text-center">
-            <div class="col-4">
-                <div class="card p-3 border-0 shadow-sm opacity-50">
-                    <i class="bi bi-megaphone-fill text-primary h3"></i>
-                    <div class="small">Info</div>
-                </div>
+        <h6 class="fw-bold text-secondary mb-3">Menu Utama</h6>
+
+        <div class="row g-3 text-center" id="menu-grid">
             </div>
-            <div class="col-4">
-                <div class="card p-3 border-0 shadow-sm opacity-50">
-                    <i class="bi bi-briefcase-fill text-primary h3"></i>
-                    <div class="small">Tugas</div>
-                </div>
-            </div>
-            <div class="col-4">
-                <div class="card p-3 border-0 shadow-sm opacity-50">
-                    <i class="bi bi-file-earmark-text-fill text-primary h3"></i>
-                    <div class="small">Admin</div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
-        // GANTI INI dengan URL Web App dari Google Apps Script Anda
+        // GANTI URL INI
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
 
         window.onload = () => {
-            // Simulasi Splash Screen selama 2 detik
+            const user = localStorage.getItem('userPKB');
+            
             setTimeout(() => {
                 document.getElementById('splash-screen').classList.add('hidden');
-                
-                // Cek apakah sudah pernah login (Simpan di LocalStorage)
-                const user = localStorage.getItem('userPegawai');
                 if (user) {
                     tampilkanProfil(JSON.parse(user));
                 } else {
                     document.getElementById('login-page').classList.remove('hidden');
                 }
-            }, 2000);
+            }, 1500);
         };
 
         async function prosesLogin() {
@@ -134,26 +123,25 @@
             const btn = document.getElementById('btnLogin');
             const errorMsg = document.getElementById('loginError');
 
-            if (!nip || !nik) return alert("Isi NIP dan NIK!");
+            if (!nip || !nik) return alert("Harap isi NIP dan NIK!");
 
             btn.disabled = true;
-            btn.innerText = "Mengecek...";
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Mengecek...`;
             errorMsg.classList.add('hidden');
 
             try {
-                // Mengirim data ke Google Apps Script (Metode POST)
                 const response = await fetch(`${SCRIPT_URL}?nip=${nip}&nik=${nik}`, { method: 'POST' });
                 const result = await response.json();
 
                 if (result.status === "sukses") {
-                    localStorage.setItem('userPegawai', JSON.stringify(result.dataProfil));
+                    localStorage.setItem('userPKB', JSON.stringify(result.dataProfil));
                     tampilkanProfil(result.dataProfil);
                 } else {
                     errorMsg.classList.remove('hidden');
                 }
             } catch (error) {
                 console.error(error);
-                alert("Gagal terhubung ke server!");
+                alert("Koneksi gagal! Periksa jaringan atau URL Apps Script.");
             } finally {
                 btn.disabled = false;
                 btn.innerText = "MASUK";
@@ -164,17 +152,73 @@
             document.getElementById('login-page').classList.add('hidden');
             document.getElementById('dashboard-page').classList.remove('hidden');
 
-            document.getElementById('view-nama').innerText = data.nama;
+            // Set Data Profil
+            document.getElementById('view-nama').innerText = data.nama_lengkap || data.nama_asli;
+            document.getElementById('view-role').innerText = data.role;
             document.getElementById('view-jabatan').innerText = data.jabatan;
+            document.getElementById('view-golongan').innerText = data.golongan;
             document.getElementById('view-nip').innerText = data.nip;
-            document.getElementById('view-unit').innerText = data.unit_kerja;
-            document.getElementById('view-alamat').innerText = data.alamat;
-            if (data.foto) document.getElementById('view-foto').src = data.foto;
+            document.getElementById('view-kecamatan').innerText = data.wilayah_binaan_kecamatan;
+            document.getElementById('view-desa').innerText = data.wilayah_binaan_desa;
+            
+            if (data.foto && data.foto !== "-") {
+                document.getElementById('view-foto').src = data.foto;
+            } else {
+                // Foto default jika kosong
+                document.getElementById('view-foto').src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+            }
+
+            // Render Menu sesuai Role
+            renderMenuDinamic(data.role);
+        }
+
+        function renderMenuDinamic(role) {
+            const grid = document.getElementById('menu-grid');
+            grid.innerHTML = ''; // Bersihkan menu yang ada
+
+            // Fungsi pembantu pembuat tombol menu
+            const buatMenu = (icon, warna, teks, fungsi) => `
+                <div class="col-4">
+                    <div class="card p-3 border-0 shadow-sm menu-card h-100" onclick="${fungsi}">
+                        <i class="bi ${icon} h2 mb-2" style="color: ${warna};"></i>
+                        <div class="small fw-medium" style="font-size: 0.8rem; line-height: 1.2;">${teks}</div>
+                    </div>
+                </div>
+            `;
+
+            // MENU UMUM (Semua Role Punya)
+            let menuHTML = buatMenu('bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert(\\'Menu Informasi\\')');
+            menuHTML += buatMenu('bi-person-lines-fill', '#198754', 'Detail Profil', 'alert(\\'Menu Detail Profil\\')');
+
+            // MENU KHUSUS BERDASARKAN ROLE
+            if (role === "User/PKB") {
+                menuHTML += buatMenu('bi-journal-check', '#0d6efd', 'Lapor Tugas', 'alert(\\'Form Lapor Tugas\\')');
+                menuHTML += buatMenu('bi-file-earmark-text', '#6f42c1', 'Administrasi', 'alert(\\'Pengajuan Surat/Administrasi\\')');
+            
+            } else if (role === "Admin Kecamatan") {
+                menuHTML += buatMenu('bi-journal-check', '#0d6efd', 'Lapor Tugas', 'alert(\\'Form Lapor Tugas\\')');
+                menuHTML += buatMenu('bi-check-circle-fill', '#fd7e14', 'Validasi Tugas', 'alert(\\'Validasi Laporan Kecamatan\\')');
+                menuHTML += buatMenu('bi-people-fill', '#6c757d', 'Data PKB Kec', 'alert(\\'Lihat Data Pegawai Kecamatan\\')');
+            
+            } else if (role === "Admin IPeKB" || role === "Super Admin") {
+                menuHTML += buatMenu('bi-database-fill-gear', '#dc3545', 'Master Data', 'alert(\\'Kelola Master Data Pegawai\\')');
+                menuHTML += buatMenu('bi-bar-chart-fill', '#fd7e14', 'Rekap Laporan', 'alert(\\'Lihat Semua Laporan Kabupaten\\')');
+                menuHTML += buatMenu('bi-envelope-paper-fill', '#6f42c1', 'Kelola Admin', 'alert(\\'Verifikasi Administrasi\\')');
+                
+                if(role === "Super Admin"){
+                     menuHTML += buatMenu('bi-shield-lock-fill', '#212529', 'Kelola Akun', 'alert(\\'Atur Hak Akses / Password\\')');
+                }
+            }
+
+            // Tampilkan ke layar
+            grid.innerHTML = menuHTML;
         }
 
         function logout() {
-            localStorage.removeItem('userPegawai');
-            location.reload();
+            if(confirm("Apakah Anda yakin ingin keluar?")) {
+                localStorage.removeItem('userPKB');
+                location.reload();
+            }
         }
     </script>
 </body>
