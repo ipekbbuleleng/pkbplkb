@@ -33,7 +33,7 @@
 <body>
 
     <div id="splash-screen">
-        <img id="splash-logo" src="https://github.com/ipekbbuleleng/pkbplkb/IPeKB26-PWA.png" alt="Logo IPKB Buleleng">
+        <img id="splash-logo" src="IPeKB26-PWA.png" alt="Logo IPKB Buleleng">
         <div class="spinner-border text-primary" role="status"></div>
         <h5 class="mt-3 text-secondary text-center">E-PKB Buleleng<br><small>Menyiapkan Data...</small></h5>
     </div>
@@ -42,7 +42,7 @@
         <div class="row justify-content-center">
             <div class="col-md-5">
                 <div class="text-center mb-4">
-                    <img src="https://github.com/ipekbbuleleng/pkbplkb/IPeKB26-PWA.png" alt="Logo IPKB" style="width: 80px; height: 80px; object-fit: contain;">
+                    <img src="IPeKB26-PWA.png" alt="Logo IPKB" style="width: 80px; height: 80px; object-fit: contain;">
                     <h2 class="fw-bold text-dark mt-2">Login PKB/PLKB</h2>
                     <p class="text-muted small">Ikatan Penyuluh KB Kab. Buleleng</p>
                 </div>
@@ -101,8 +101,17 @@
     </div>
 
     <script>
-        // GANTI URL INI
+        // GANTI BAGIAN INI DENGAN URL APPS SCRIPT ANDA
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
+
+        // Mendaftarkan Service Worker untuk syarat PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker Terdaftar!'))
+                .catch(err => console.log('Service Worker Gagal:', err));
+            });
+        }
 
         window.onload = () => {
             const user = localStorage.getItem('userPKB');
@@ -164,7 +173,6 @@
             if (data.foto && data.foto !== "-") {
                 document.getElementById('view-foto').src = data.foto;
             } else {
-                // Foto default jika kosong
                 document.getElementById('view-foto').src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
             }
 
@@ -174,43 +182,40 @@
 
         function renderMenuDinamic(role) {
             const grid = document.getElementById('menu-grid');
-            grid.innerHTML = ''; // Bersihkan menu yang ada
+            grid.innerHTML = ''; 
 
-            // Fungsi pembantu pembuat tombol menu
+            // Penggunaan petik tunggal untuk onclick dan petik ganda untuk alert sudah diperbaiki
             const buatMenu = (icon, warna, teks, fungsi) => `
                 <div class="col-4">
-                    <div class="card p-3 border-0 shadow-sm menu-card h-100" onclick="${fungsi}">
+                    <div class="card p-3 border-0 shadow-sm menu-card h-100" onclick='${fungsi}'>
                         <i class="bi ${icon} h2 mb-2" style="color: ${warna};"></i>
                         <div class="small fw-medium" style="font-size: 0.8rem; line-height: 1.2;">${teks}</div>
                     </div>
                 </div>
             `;
 
-            // MENU UMUM (Semua Role Punya)
-            let menuHTML = buatMenu('bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert(\\'Menu Informasi\\')');
-            menuHTML += buatMenu('bi-person-lines-fill', '#198754', 'Detail Profil', 'alert(\\'Menu Detail Profil\\')');
+            let menuHTML = buatMenu('bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Informasi")');
+            menuHTML += buatMenu('bi-person-lines-fill', '#198754', 'Detail Profil', 'alert("Menu Detail Profil")');
 
-            // MENU KHUSUS BERDASARKAN ROLE
             if (role === "User/PKB") {
-                menuHTML += buatMenu('bi-journal-check', '#0d6efd', 'Lapor Tugas', 'alert(\\'Form Lapor Tugas\\')');
-                menuHTML += buatMenu('bi-file-earmark-text', '#6f42c1', 'Administrasi', 'alert(\\'Pengajuan Surat/Administrasi\\')');
+                menuHTML += buatMenu('bi-journal-check', '#0d6efd', 'Lapor Tugas', 'alert("Form Lapor Tugas")');
+                menuHTML += buatMenu('bi-file-earmark-text', '#6f42c1', 'Administrasi', 'alert("Pengajuan Surat/Administrasi")');
             
             } else if (role === "Admin Kecamatan") {
-                menuHTML += buatMenu('bi-journal-check', '#0d6efd', 'Lapor Tugas', 'alert(\\'Form Lapor Tugas\\')');
-                menuHTML += buatMenu('bi-check-circle-fill', '#fd7e14', 'Validasi Tugas', 'alert(\\'Validasi Laporan Kecamatan\\')');
-                menuHTML += buatMenu('bi-people-fill', '#6c757d', 'Data PKB Kec', 'alert(\\'Lihat Data Pegawai Kecamatan\\')');
+                menuHTML += buatMenu('bi-journal-check', '#0d6efd', 'Lapor Tugas', 'alert("Form Lapor Tugas")');
+                menuHTML += buatMenu('bi-check-circle-fill', '#fd7e14', 'Validasi Tugas', 'alert("Validasi Laporan Kecamatan")');
+                menuHTML += buatMenu('bi-people-fill', '#6c757d', 'Data PKB Kec', 'alert("Lihat Data Pegawai Kecamatan")');
             
             } else if (role === "Admin IPeKB" || role === "Super Admin") {
-                menuHTML += buatMenu('bi-database-fill-gear', '#dc3545', 'Master Data', 'alert(\\'Kelola Master Data Pegawai\\')');
-                menuHTML += buatMenu('bi-bar-chart-fill', '#fd7e14', 'Rekap Laporan', 'alert(\\'Lihat Semua Laporan Kabupaten\\')');
-                menuHTML += buatMenu('bi-envelope-paper-fill', '#6f42c1', 'Kelola Admin', 'alert(\\'Verifikasi Administrasi\\')');
+                menuHTML += buatMenu('bi-database-fill-gear', '#dc3545', 'Master Data', 'alert("Kelola Master Data Pegawai")');
+                menuHTML += buatMenu('bi-bar-chart-fill', '#fd7e14', 'Rekap Laporan', 'alert("Lihat Semua Laporan Kabupaten")');
+                menuHTML += buatMenu('bi-envelope-paper-fill', '#6f42c1', 'Kelola Admin', 'alert("Verifikasi Administrasi")');
                 
                 if(role === "Super Admin"){
-                     menuHTML += buatMenu('bi-shield-lock-fill', '#212529', 'Kelola Akun', 'alert(\\'Atur Hak Akses / Password\\')');
+                     menuHTML += buatMenu('bi-shield-lock-fill', '#212529', 'Kelola Akun', 'alert("Atur Hak Akses / Password")');
                 }
             }
 
-            // Tampilkan ke layar
             grid.innerHTML = menuHTML;
         }
 
