@@ -28,12 +28,13 @@
         /* Menu Icon Hover */
         .menu-card { transition: transform 0.2s; cursor: pointer; border-radius: 12px; }
         .menu-card:active { transform: scale(0.95); }
+        .password-toggle { cursor: pointer; z-index: 10; }
 
-        /* Styling tambahan untuk ikon mata di password */
-        .password-toggle {
-            cursor: pointer;
-            z-index: 10;
-        }
+        /* Detail Profil Info Row */
+        .info-row { border-bottom: 1px dashed #dee2e6; padding: 10px 0; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { font-size: 0.8rem; color: #6c757d; display: block; margin-bottom: 2px;}
+        .info-value { font-size: 0.95rem; font-weight: 500; color: #212529; }
     </style>
 </head>
 <body>
@@ -77,10 +78,18 @@
             <button onclick="logout()" class="btn btn-sm btn-outline-danger fw-bold"><i class="bi bi-box-arrow-right"></i> Keluar</button>
         </div>
 
-        <div class="card card-profile mb-4">
+        <div class="card card-profile mb-3">
             <div class="header-bg"></div>
-            <div class="px-3 text-center" style="margin-top: -55px;">
-                <img id="view-foto" src="https://via.placeholder.com/150" class="profile-img shadow-sm">
+            <div class="text-center">
+                <div class="position-relative d-inline-block" style="margin-top: -55px;">
+                    <img id="view-foto" src="https://via.placeholder.com/150" class="profile-img shadow-sm">
+                    <button onclick="alert('Fitur Upload Foto sedang disiapkan')" class="btn btn-light rounded-circle shadow position-absolute bottom-0 end-0 border" style="padding: 5px 9px; transform: translate(-10%, -10%);">
+                        <i class="bi bi-camera-fill text-primary"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="px-3 text-center">
                 <h5 id="view-nama" class="mt-2 mb-1 fw-bold text-dark">-</h5>
                 <span id="view-role" class="badge bg-warning text-dark mb-2 px-3 py-1">-</span>
                 <p class="text-muted small mb-3"><span id="view-jabatan">-</span> | Gol: <span id="view-golongan">-</span></p>
@@ -103,12 +112,55 @@
             </div>
         </div>
 
+        <div class="card mb-4 border-0 shadow-sm" style="border-radius: 10px; background-color: #fff3cd; border-left: 5px solid #ffc107 !important;">
+            <div class="card-body py-2 px-3 d-flex align-items-center">
+                <i class="bi bi-megaphone-fill text-warning me-2 fs-5"></i>
+                <marquee id="pengumuman-text" class="text-dark small mb-0 fw-medium">
+                    Selamat datang di Sistem Informasi PKB/PLKB Buleleng. Harap pastikan kelengkapan data profil Anda.
+                </marquee>
+            </div>
+        </div>
+
         <h6 class="fw-bold text-secondary mb-3">Menu Utama</h6>
         <div class="row g-3 text-center" id="menu-grid"></div>
     </div>
 
+    <div id="detail-profil-page" class="container mt-4 mb-5 hidden">
+        <div class="d-flex align-items-center mb-4">
+            <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
+            <h4 class="fw-bold m-0 text-dark">Detail Profil</h4>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Data Kepegawaian</h6>
+                <div class="info-row"><span class="info-label">NIP</span><span class="info-value" id="det-nip">-</span></div>
+                <div class="info-row"><span class="info-label">Nama Lengkap</span><span class="info-value" id="det-nama">-</span></div>
+                <div class="info-row"><span class="info-label">Status ASN</span><span class="info-value" id="det-status">-</span></div>
+                <div class="info-row"><span class="info-label">Jabatan</span><span class="info-value" id="det-jabatan">-</span></div>
+                <div class="info-row"><span class="info-label">Golongan</span><span class="info-value" id="det-golongan">-</span></div>
+
+                <h6 class="fw-bold text-primary border-bottom pb-2 mt-4 mb-3">Data Pribadi</h6>
+                <div class="info-row"><span class="info-label">Jenis Kelamin</span><span class="info-value" id="det-jk">-</span></div>
+                <div class="info-row"><span class="info-label">Tempat, Tanggal Lahir</span><span class="info-value" id="det-ttl">-</span></div>
+                <div class="info-row"><span class="info-label">Alamat Asal</span><span class="info-value" id="det-alamatasal">-</span></div>
+                <div class="info-row"><span class="info-label">Alamat Domisili</span><span class="info-value" id="det-alamatdom">-</span></div>
+                <div class="info-row"><span class="info-label">No. HP / WhatsApp</span><span class="info-value" id="det-hp">-</span></div>
+                <div class="info-row"><span class="info-label">Email</span><span class="info-value" id="det-email">-</span></div>
+
+                <h6 class="fw-bold text-primary border-bottom pb-2 mt-4 mb-3">Wilayah Binaan</h6>
+                <div class="info-row"><span class="info-label">Kecamatan Binaan</span><span class="info-value" id="det-kec">-</span></div>
+                <div class="info-row"><span class="info-label">Desa Binaan</span><span class="info-value" id="det-desa">-</span></div>
+            </div>
+        </div>
+
+        <button onclick="alert('Form Edit Profil sedang disiapkan')" class="btn btn-primary w-100 py-3 fw-bold shadow-sm" style="border-radius: 12px;">
+            <i class="bi bi-pencil-square me-2"></i> EDIT PROFIL
+        </button>
+    </div>
+
     <script>
-        // GANTI URL INI
+        // URL SCRIPT ANDA SUDAH DIMASUKKAN
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
 
         if ('serviceWorker' in navigator) {
@@ -119,30 +171,34 @@
             });
         }
 
-        // --- Logika Mata Password ---
         const togglePassword = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('nik');
 
         togglePassword.addEventListener('click', function () {
-            // Cek tipe input saat ini
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
-            
-            // Ubah ikon mata (eye menjadi eye-slash)
             this.classList.toggle('bi-eye');
             this.classList.toggle('bi-eye-slash');
         });
 
+        // --- Fungsi Navigasi SPA ---
+        function bukaHalaman(idHalaman) {
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('dashboard-page').classList.add('hidden');
+            document.getElementById('detail-profil-page').classList.add('hidden');
+            
+            document.getElementById(idHalaman).classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
         window.onload = () => {
             const user = localStorage.getItem('userPKB');
-            
-            // PERUBAHAN: Durasi dikurangi dari 1500ms menjadi 800ms
             setTimeout(() => {
                 document.getElementById('splash-screen').classList.add('hidden');
                 if (user) {
                     tampilkanProfil(JSON.parse(user));
                 } else {
-                    document.getElementById('login-page').classList.remove('hidden');
+                    bukaHalaman('login-page');
                 }
             }, 800); 
         };
@@ -179,9 +235,9 @@
         }
 
         function tampilkanProfil(data) {
-            document.getElementById('login-page').classList.add('hidden');
-            document.getElementById('dashboard-page').classList.remove('hidden');
+            bukaHalaman('dashboard-page');
 
+            // Set Data Dashboard
             document.getElementById('view-nama').innerText = data.nama_lengkap || data.nama_asli;
             document.getElementById('view-role').innerText = data.role;
             document.getElementById('view-jabatan').innerText = data.jabatan;
@@ -195,6 +251,21 @@
             } else {
                 document.getElementById('view-foto').src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
             }
+
+            // Set Data Halaman Detail Profil
+            document.getElementById('det-nip').innerText = data.nip;
+            document.getElementById('det-nama').innerText = data.nama_lengkap || data.nama_asli;
+            document.getElementById('det-status').innerText = data.status_asn;
+            document.getElementById('det-jabatan').innerText = data.jabatan;
+            document.getElementById('det-golongan').innerText = data.golongan;
+            document.getElementById('det-jk').innerText = data.jenis_kelamin;
+            document.getElementById('det-ttl').innerText = data.tempat_lahir + ", " + data.tanggal_lahir;
+            document.getElementById('det-alamatasal').innerText = data.alamat_asal;
+            document.getElementById('det-alamatdom').innerText = data.alamat_domisili;
+            document.getElementById('det-hp').innerText = data.no_hp;
+            document.getElementById('det-email').innerText = data.email;
+            document.getElementById('det-kec').innerText = data.wilayah_binaan_kecamatan;
+            document.getElementById('det-desa').innerText = data.wilayah_binaan_desa;
 
             renderMenuDinamic(data.role);
         }
@@ -213,9 +284,11 @@
             `;
 
             let menuHTML = buatMenu('bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Informasi")');
-            menuHTML += buatMenu('bi-person-lines-fill', '#198754', 'Detail Profil', 'alert("Menu Detail Profil")');
+            // Menu Detail Profil sekarang memanggil fungsi bukaHalaman
+            menuHTML += buatMenu('bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")');
 
-            if (role === "User/PKB") {
+            // PERBAIKAN: Menambahkan kondisi "PKB" selain "User/PKB"
+            if (role === "User/PKB" || role === "PKB") {
                 menuHTML += buatMenu('bi-journal-check', '#0d6efd', 'Lapor Tugas', 'alert("Form Lapor Tugas")');
                 menuHTML += buatMenu('bi-file-earmark-text', '#6f42c1', 'Administrasi', 'alert("Pengajuan Surat/Administrasi")');
             
