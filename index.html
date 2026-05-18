@@ -44,16 +44,16 @@
                 <img src="IPeKB26-PWA.png" style="width: 80px; margin-bottom: 15px;">
                 <h2 class="fw-bold text-dark">Login PKB/PLKB</h2>
                 <div class="card p-4 mt-3 shadow-sm border-0 text-start" style="border-radius: 15px;">
-                    <div class="mb-3"><label class="form-label fw-bold text-muted small">NIP</label><input type="text" id="nip" class="form-control form-control-lg"></div>
+                    <div class="mb-3"><label class="form-label fw-bold text-muted small">Username</label><input type="text" id="nip" class="form-control form-control-lg" autocomplete="username" placeholder="Contoh: PKB001"></div>
                     <div class="mb-4">
-                        <label class="form-label fw-bold text-muted small">Password (NIK)</label>
+                        <label class="form-label fw-bold text-muted small">Password</label>
                         <div class="position-relative">
-                            <input type="password" id="nik" class="form-control form-control-lg pe-5">
+                            <input type="password" id="nik" class="form-control form-control-lg pe-5" autocomplete="current-password" placeholder="Password awal">
                             <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted h5 password-toggle" id="togglePassword"></i>
                         </div>
                     </div>
                     <button onclick="prosesLogin()" id="btnLogin" class="btn btn-primary btn-lg w-100 fw-bold">MASUK</button>
-                    <p id="loginError" class="text-danger mt-3 small hidden text-center fw-medium">NIP atau NIK salah!</p>
+                    <p id="loginError" class="text-danger mt-3 small hidden text-center fw-medium">Username atau password salah!</p>
                 </div>
             </div>
         </div>
@@ -237,6 +237,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
+        const EPKB_APP_VERSION = "0.1.0-LOGIN-FOUNDATION-V1";
         let dataWilayahGlobal = {}; 
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{})); }
@@ -257,6 +258,56 @@
             "PENCATATAN DAN PELAPORAN": ["Fasilitasi Laporan Faskes", "Pelaporan SIGA"],
             "PERTEMUAN": ["Staff Meeting", "Rapat Koordinasi", "Musrenbang", "Pertemuan Kecamatan", "Pertemuan Kabupaten"]
         };
+
+
+        function getDeviceId() {
+            let id = localStorage.getItem('epkb_device_id');
+            if (!id) {
+                const rand = (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(16).slice(2));
+                id = 'WEB-' + rand;
+                localStorage.setItem('epkb_device_id', id);
+            }
+            return id;
+        }
+
+        function simpanSessionLogin(result) {
+            const session = {
+                token: result.token || (result.session && result.session.token) || '',
+                refresh_token: result.refresh_token || (result.session && result.session.refresh_token) || '',
+                expired_at: result.session ? result.session.expired_at : '',
+                device_id: getDeviceId(),
+                app_version: EPKB_APP_VERSION,
+                user: result.user || {},
+                saved_at: new Date().toISOString()
+            };
+            localStorage.setItem('epkb_session', JSON.stringify(session));
+            if (result.dataProfil) {
+                localStorage.setItem('userPKB', JSON.stringify(result.dataProfil));
+            }
+        }
+
+        function ambilSession() {
+            try { return JSON.parse(localStorage.getItem('epkb_session') || 'null'); }
+            catch(e) { return null; }
+        }
+
+        async function validasiSession() {
+            const session = ambilSession();
+            if (!session || !session.token) return null;
+            const p = new URLSearchParams();
+            p.append('action', 'validate_session');
+            p.append('token', session.token);
+            p.append('device_id', getDeviceId());
+            p.append('app_version', EPKB_APP_VERSION);
+            p.append('user_agent', navigator.userAgent || '');
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+            const d = await res.json();
+            if (d.status === 'sukses') {
+                simpanSessionLogin({ token: session.token, refresh_token: session.refresh_token, session: session, user: d.user, dataProfil: d.dataProfil });
+                return d.dataProfil;
+            }
+            return null;
+        }
 
         function filterText(val) {
             if(val === undefined || val === null) return "";
@@ -408,51 +459,77 @@
         }
 
         window.onload = () => {
-            fetchWilayah(); 
-            const userString = localStorage.getItem('userPKB');
-            setTimeout(() => {
+            fetchWilayah();
+            setTimeout(async () => {
                 document.getElementById('splash-screen').classList.add('hidden');
-                if(userString) {
-                    try { 
-                        let d = JSON.parse(userString);
-                        if(d.agama === undefined) throw "Format lama";
-                        tampilkanDashboard(d); refreshData(true); 
-                    } catch(e) { localStorage.removeItem('userPKB'); bukaHalaman('login-page'); }
-                } else { bukaHalaman('login-page'); }
+                try {
+                    const aktif = await validasiSession();
+                    if (aktif) {
+                        tampilkanDashboard(aktif);
+                        return;
+                    }
+                } catch(e) {
+                    printLog("Validasi session gagal: " + e, "orange");
+                }
+
+                // Fallback untuk format lama: jangan auto-login ulang; minta login kembali agar token_store terisi.
+                localStorage.removeItem('userPKB');
+                localStorage.removeItem('epkb_session');
+                bukaHalaman('login-page');
             }, 800);
         };
 
         async function refreshData(isAutoRefresh = false) {
-            const userString = localStorage.getItem('userPKB');
-            if (!userString) return;
-            let user = {};
-            try { user = JSON.parse(userString); } catch(e) { return; }
             const btn = document.getElementById('btnRefresh');
             if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Refreshing...'; }
             try {
-                const res = await fetch(`${SCRIPT_URL}?action=login&nip=${user.nip}&nik=${user.nik}`, { method: 'POST' });
-                const d = await res.json();
-                if(d.status === "sukses") {
-                    localStorage.setItem('userPKB', JSON.stringify(d.dataProfil)); tampilkanDashboard(d.dataProfil); 
-                    if(!isAutoRefresh) alert("Data berhasil diperbarui!"); 
-                } else { alert("Silakan login ulang."); localStorage.removeItem('userPKB'); location.reload(); }
-            } catch(e) { 
-                printLog("Gagal Refresh: " + e, "orange"); if(!isAutoRefresh) alert("Gagal terhubung ke server."); 
-            } finally { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh'; } }
+                const dataProfil = await validasiSession();
+                if (dataProfil) {
+                    tampilkanDashboard(dataProfil);
+                    if(!isAutoRefresh) alert("Data session berhasil diperbarui!");
+                } else {
+                    alert("Session berakhir. Silakan login ulang.");
+                    localStorage.removeItem('epkb_session');
+                    localStorage.removeItem('userPKB');
+                    bukaHalaman('login-page');
+                }
+            } catch(e) {
+                printLog("Gagal Refresh: " + e, "orange");
+                if(!isAutoRefresh) alert("Gagal terhubung ke server.");
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh'; }
+            }
         }
 
         async function prosesLogin() {
-            const nip = document.getElementById('nip').value; const nik = document.getElementById('nik').value;
+            const username = document.getElementById('nip').value.trim();
+            const password = document.getElementById('nik').value;
             const btn = document.getElementById('btnLogin');
-            if(!nip || !nik) return alert("Isi NIP & NIK");
+            if(!username || !password) return alert("Isi username dan password");
             btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Mengecek...';
             document.getElementById('loginError').classList.add('hidden');
             try {
-                const res = await fetch(`${SCRIPT_URL}?action=login&nip=${nip}&nik=${nik}`, { method: 'POST' });
+                const p = new URLSearchParams();
+                p.append('action', 'login');
+                p.append('username', username);
+                p.append('password', password);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                 const d = await res.json();
-                if(d.status === "sukses") { localStorage.setItem('userPKB', JSON.stringify(d.dataProfil)); tampilkanDashboard(d.dataProfil); } 
-                else { document.getElementById('loginError').classList.remove('hidden'); }
-            } catch(e) { printLog("Login Error: " + e, "red"); } 
+                if(d.status === "sukses") {
+                    simpanSessionLogin(d);
+                    tampilkanDashboard(d.dataProfil);
+                    if (d.wajib_ganti_password === true || (d.user && d.user.wajib_ganti_password === true)) {
+                        setTimeout(() => alert("Login berhasil. Akun ini masih wajib ganti password. Fitur ganti password akan disiapkan pada paket berikutnya."), 300);
+                    }
+                } else {
+                    document.getElementById('loginError').innerText = d.pesan || "Username atau password salah!";
+                    document.getElementById('loginError').classList.remove('hidden');
+                }
+            } catch(e) { printLog("Login Error: " + e, "red"); }
             finally { btn.disabled = false; btn.innerText = "MASUK"; }
         }
 
@@ -701,7 +778,22 @@
             } catch(err) { alert("Kesalahan koneksi."); } finally { btn.disabled = false; btn.innerText = "SIMPAN KEGIATAN"; }
         }
 
-        function logout() { localStorage.removeItem('userPKB'); location.reload(); }
+        function logout() {
+            const session = ambilSession();
+            try {
+                if (session && session.token) {
+                    const p = new URLSearchParams();
+                    p.append('action', 'logout');
+                    p.append('token', session.token);
+                    p.append('device_id', getDeviceId());
+                    p.append('app_version', EPKB_APP_VERSION);
+                    fetch(SCRIPT_URL, { method: 'POST', body: p }).catch(()=>{});
+                }
+            } catch(e) {}
+            localStorage.removeItem('epkb_session');
+            localStorage.removeItem('userPKB');
+            location.reload();
+        }
     </script>
 </body>
 </html>
