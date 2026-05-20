@@ -59,6 +59,41 @@
         </div>
     </div>
 
+
+
+    <div id="change-password-page" class="container mt-5 hidden">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="text-center mb-3">
+                    <img src="IPeKB26-PWA.png" style="width: 80px; margin-bottom: 15px;">
+                    <h3 class="fw-bold text-dark">Wajib Ganti Password</h3>
+                    <p class="text-muted small mb-0">Akun awal harus mengganti password sebelum masuk dashboard.</p>
+                </div>
+                <div class="card p-4 shadow-sm border-0" style="border-radius: 15px;">
+                    <div class="alert alert-warning small mb-3">
+                        <div class="fw-bold" id="force-user-label">-</div>
+                        Password baru minimal 8 karakter, tidak boleh sama dengan username, dan tidak boleh memakai password awal <b>12345678</b>.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">Password Lama</label>
+                        <input type="password" id="force-old-password" class="form-control form-control-lg" autocomplete="current-password" placeholder="Masukkan password lama">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">Password Baru</label>
+                        <input type="password" id="force-new-password" class="form-control form-control-lg" autocomplete="new-password" placeholder="Minimal 8 karakter">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small">Konfirmasi Password Baru</label>
+                        <input type="password" id="force-confirm-password" class="form-control form-control-lg" autocomplete="new-password" placeholder="Ulangi password baru">
+                    </div>
+                    <button onclick="prosesGantiPassword()" id="btnForcePassword" class="btn btn-success btn-lg w-100 fw-bold">SIMPAN PASSWORD BARU</button>
+                    <button onclick="logout()" class="btn btn-outline-secondary w-100 mt-2 fw-bold">Keluar</button>
+                    <p id="forcePasswordError" class="text-danger mt-3 small hidden text-center fw-medium"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <input type="file" id="inputFoto" accept="image/*" class="hidden">
 
     <div id="dashboard-page" class="container mt-4 mb-5 hidden">
@@ -237,7 +272,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.1.0-LOGIN-FOUNDATION-V1";
+        const EPKB_APP_VERSION = "0.1.1-FORCE-CHANGE-PASSWORD-V1";
         let dataWilayahGlobal = {}; 
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{})); }
@@ -303,8 +338,10 @@
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
             const d = await res.json();
             if (d.status === 'sukses') {
-                simpanSessionLogin({ token: session.token, refresh_token: session.refresh_token, session: session, user: d.user, dataProfil: d.dataProfil });
-                return d.dataProfil;
+                const profil = d.dataProfil || {};
+                profil.wajib_ganti_password = (d.wajib_ganti_password === true) || (d.user && d.user.wajib_ganti_password === true) || (profil.wajib_ganti_password === true);
+                simpanSessionLogin({ token: session.token, refresh_token: session.refresh_token, session: session, user: d.user, dataProfil: profil });
+                return profil;
             }
             return null;
         }
@@ -451,7 +488,7 @@
         });
 
         function bukaHalaman(id) {
-            ['login-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page'].forEach(pg => {
+            ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page'].forEach(pg => {
                 const el = document.getElementById(pg); if(el) el.classList.add('hidden');
             });
             document.getElementById(id).classList.remove('hidden');
@@ -465,7 +502,8 @@
                 try {
                     const aktif = await validasiSession();
                     if (aktif) {
-                        tampilkanDashboard(aktif);
+                        if (aktif.wajib_ganti_password === true) tampilkanHalamanGantiPassword(aktif);
+                        else tampilkanDashboard(aktif);
                         return;
                     }
                 } catch(e) {
@@ -485,7 +523,8 @@
             try {
                 const dataProfil = await validasiSession();
                 if (dataProfil) {
-                    tampilkanDashboard(dataProfil);
+                    if (dataProfil.wajib_ganti_password === true) tampilkanHalamanGantiPassword(dataProfil);
+                    else tampilkanDashboard(dataProfil);
                     if(!isAutoRefresh) alert("Data session berhasil diperbarui!");
                 } else {
                     alert("Session berakhir. Silakan login ulang.");
@@ -520,17 +559,105 @@
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                 const d = await res.json();
                 if(d.status === "sukses") {
+                    const profil = d.dataProfil || {};
+                    profil.wajib_ganti_password = (d.wajib_ganti_password === true) || (d.user && d.user.wajib_ganti_password === true) || (profil.wajib_ganti_password === true);
+                    d.dataProfil = profil;
                     simpanSessionLogin(d);
-                    tampilkanDashboard(d.dataProfil);
-                    if (d.wajib_ganti_password === true || (d.user && d.user.wajib_ganti_password === true)) {
-                        setTimeout(() => alert("Login berhasil. Akun ini masih wajib ganti password. Fitur ganti password akan disiapkan pada paket berikutnya."), 300);
-                    }
+                    if (profil.wajib_ganti_password === true) tampilkanHalamanGantiPassword(profil);
+                    else tampilkanDashboard(profil);
                 } else {
                     document.getElementById('loginError').innerText = d.pesan || "Username atau password salah!";
                     document.getElementById('loginError').classList.remove('hidden');
                 }
             } catch(e) { printLog("Login Error: " + e, "red"); }
             finally { btn.disabled = false; btn.innerText = "MASUK"; }
+        }
+
+
+        function tampilkanHalamanGantiPassword(d) {
+            d = d || {};
+            bukaHalaman('change-password-page');
+            const nama = filterText(d.nama_asli || d.nama_user) || 'Pengguna E-PKB';
+            const username = filterText(d.username || d.nip || d.id_user);
+            document.getElementById('force-user-label').innerText = nama + (username ? ' | ' + username : '');
+            document.getElementById('force-old-password').value = '';
+            document.getElementById('force-new-password').value = '';
+            document.getElementById('force-confirm-password').value = '';
+            document.getElementById('forcePasswordError').classList.add('hidden');
+            setTimeout(() => document.getElementById('force-old-password').focus(), 150);
+        }
+
+        async function prosesGantiPassword() {
+            const session = ambilSession();
+            if (!session || !session.token) {
+                alert('Session tidak ditemukan. Silakan login ulang.');
+                bukaHalaman('login-page');
+                return;
+            }
+            const oldPassword = document.getElementById('force-old-password').value;
+            const newPassword = document.getElementById('force-new-password').value;
+            const confirmPassword = document.getElementById('force-confirm-password').value;
+            const err = document.getElementById('forcePasswordError');
+            const btn = document.getElementById('btnForcePassword');
+            err.classList.add('hidden');
+            err.innerText = '';
+
+            if (!oldPassword || !newPassword || !confirmPassword) {
+                err.innerText = 'Semua kolom password wajib diisi.';
+                err.classList.remove('hidden');
+                return;
+            }
+            if (newPassword.length < 8) {
+                err.innerText = 'Password baru minimal 8 karakter.';
+                err.classList.remove('hidden');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                err.innerText = 'Konfirmasi password baru tidak sama.';
+                err.classList.remove('hidden');
+                return;
+            }
+            if (newPassword === '12345678') {
+                err.innerText = 'Password baru tidak boleh memakai password awal 12345678.';
+                err.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'changePassword');
+                p.append('token', session.token);
+                p.append('current_password', oldPassword);
+                p.append('new_password', newPassword);
+                p.append('confirm_password', confirmPassword);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status === 'sukses') {
+                    const profil = d.dataProfil || {};
+                    profil.wajib_ganti_password = false;
+                    d.dataProfil = profil;
+                    d.token = session.token;
+                    d.refresh_token = session.refresh_token;
+                    simpanSessionLogin(d);
+                    alert('Password berhasil diganti. Anda akan masuk ke dashboard.');
+                    tampilkanDashboard(profil);
+                } else {
+                    err.innerText = d.pesan || 'Gagal mengganti password.';
+                    err.classList.remove('hidden');
+                }
+            } catch(e) {
+                printLog('Ganti Password Error: ' + e, 'red');
+                err.innerText = 'Koneksi terputus saat mengganti password.';
+                err.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'SIMPAN PASSWORD BARU';
+            }
         }
 
         function tampilkanDashboard(d) {
@@ -568,7 +695,7 @@
             
             // Menu Render
             const grid = document.getElementById('menu-grid');
-            let menus = [['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'], ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")']];
+            let menus = [['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'], ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))'], ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")']];
             if(filterText(d.role) === "PKB" || filterText(d.role) === "User/PKB") {
                 menus.unshift(['bi-journal-check', '#0d6efd', 'Lapor Tugas', 'siapkanLaporTugas()']);
                 menus.push(['bi-file-earmark-text', '#6f42c1', 'Administrasi', 'alert("Menu Admin")']);
