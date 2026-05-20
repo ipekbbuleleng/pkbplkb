@@ -106,7 +106,7 @@
 
     <div id="dashboard-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="fw-bold m-0">Beranda</h4>
+            <h4 class="fw-bold m-0" id="dashboard-title">Beranda</h4>
             <div>
                 <button onclick="refreshData()" id="btnRefresh" class="btn btn-sm btn-outline-primary fw-bold me-2 shadow-sm"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
                 <button onclick="logout()" class="btn btn-sm btn-outline-danger fw-bold shadow-sm">Keluar</button>
@@ -158,6 +158,23 @@
             </div>
         </div>
         <div id="mappingVerifyList"></div>
+    </div>
+
+
+    <div id="superadmin-monitor-page" class="container mt-4 mb-5 hidden">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
+                <div>
+                    <h4 class="fw-bold m-0">Blackbox System Monitor</h4>
+                    <div class="small text-muted">Ringkasan health, security, performance, session, dan audit sistem E-PKB.</div>
+                </div>
+            </div>
+            <button onclick="muatSuperAdminBlackbox()" id="btnRefreshBlackbox" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
+        </div>
+        <div id="blackboxSummaryContent">
+            <div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">Klik Muat untuk mengambil ringkasan blackbox.</div>
+        </div>
     </div>
 
     <div id="lapor-tugas-page" class="container mt-4 mb-5 hidden">
@@ -310,7 +327,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.1.4-ADMIN-ROLE-SCOPE-V1";
+        const EPKB_APP_VERSION = "0.1.5-ROLE-SEPARATION-DASHBOARD-V1";
         let dataWilayahGlobal = {}; 
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{})); }
@@ -541,7 +558,7 @@
         });
 
         function bukaHalaman(id) {
-            ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page', 'verifikasi-binaan-page'].forEach(pg => {
+            ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page', 'verifikasi-binaan-page', 'superadmin-monitor-page'].forEach(pg => {
                 const el = document.getElementById(pg); if(el) el.classList.add('hidden');
             });
             document.getElementById(id).classList.remove('hidden');
@@ -715,16 +732,28 @@
 
         function tampilkanDashboard(d) {
             bukaHalaman('dashboard-page');
+            d = d || {};
+            const roleAktif = filterText(d.role_akses || d.role).toUpperCase();
+            const isSuper = isSuperAdminRoleClient(roleAktif);
+            const isAdmin = isOperationalAdminRoleClient(roleAktif);
+            const isPkb = isPkbRoleClient(roleAktif) || filterText(d.role) === "User/PKB";
+
+            const titleEl = document.getElementById('dashboard-title');
+            if (titleEl) titleEl.innerText = isSuper ? 'Blackbox Super Admin' : (isAdmin ? 'Dashboard Admin' : 'Beranda PKB');
+
             const gDepan = filterText(d.gelar_depan) ? filterText(d.gelar_depan) + " " : "";
             const gBelakang = filterText(d.gelar_belakang) ? ", " + filterText(d.gelar_belakang) : "";
-            document.getElementById('view-nama').innerText = gDepan + filterText(d.nama_asli) + gBelakang;
-            document.getElementById('view-role').innerText = filterText(d.role);
-            document.getElementById('view-nip').innerText = filterText(d.nip);
+            const nama = filterText(d.nama_asli || d.nama_user || d.username || d.id_user) || 'Pengguna E-PKB';
+            document.getElementById('view-nama').innerText = gDepan + nama + gBelakang;
+            document.getElementById('view-role').innerText = roleAktif || filterText(d.role);
+            document.getElementById('view-nip').innerText = filterText(d.nip || d.id_nip || d.username || d.id_user);
             
             let strWilayah = "";
             let txtKec = filterText(d.wilayah_binaan_kecamatan);
             let txtDesa = filterText(d.wilayah_binaan_desa);
-            if(txtKec && txtDesa) strWilayah = txtKec + " / " + txtDesa;
+            if (isSuper) strWilayah = 'Health / Security / Performance / Audit';
+            else if (isAdmin) strWilayah = (txtKec && txtKec !== 'ALL' ? txtKec : 'ALL') + ' / ' + (txtDesa || 'ALL');
+            else if(txtKec && txtDesa) strWilayah = txtKec + " / " + txtDesa;
             else if(txtDesa) strWilayah = txtDesa;
             document.getElementById('view-kec').innerText = strWilayah || "-";
             
@@ -733,14 +762,20 @@
             document.getElementById('preview-foto-edit').src = filterText(d.foto) ? filterText(d.foto) : defFoto;
             document.getElementById('edit-foto-url').value = filterText(d.foto_profile_file_id || d.foto); 
 
-            // Menu Profil Content
-            let html = `<h6 class="fw-bold text-primary border-bottom pb-2">DATA PEGAWAI</h6>`;
+            renderDetailProfilContent(d, roleAktif);
+            renderDashboardMenu(d, roleAktif);
+        }
+
+        function renderDetailProfilContent(d, roleAktif) {
+            let title = isSuperAdminRoleClient(roleAktif) ? 'DATA SUPER ADMIN' : (isOperationalAdminRoleClient(roleAktif) ? 'DATA ADMIN' : 'DATA PEGAWAI');
+            let html = `<h6 class="fw-bold text-primary border-bottom pb-2">${title}</h6>`;
             const fields = [
-                ["NIP", d.nip], ["Agama", d.agama], ["Status Kawin", d.status_kawin], ["Status ASN", d.status_asn], ["Jabatan", d.jabatan], ["Golongan", d.golongan],
+                ["ID User", d.id_user], ["Username", d.username], ["NIP", d.nip || d.id_nip], ["Role", d.role_akses || d.role],
+                ["Agama", d.agama], ["Status Kawin", d.status_kawin], ["Status ASN", d.status_asn], ["Jabatan", d.jabatan], ["Golongan", d.golongan],
                 ["Pendidikan", d.pendidikan], ["Jurusan", d.jurusan], ["JK", d.jenis_kelamin], 
                 ["TTL", (filterText(d.tempat_lahir)?filterText(d.tempat_lahir)+", ":"") + filterText(d.tanggal_lahir)],
                 ["Alamat Asal", d.alamat_asal], ["Domisili", d.alamat_domisili], 
-                ["Wilayah Binaan", (filterText(d.wilayah_binaan_kecamatan)?filterText(d.wilayah_binaan_kecamatan)+" - ":"") + filterText(d.wilayah_binaan_desa)],
+                ["Wilayah/Scope", (filterText(d.wilayah_binaan_kecamatan)?filterText(d.wilayah_binaan_kecamatan)+" - ":"") + filterText(d.wilayah_binaan_desa)],
                 ["HP", d.no_hp], ["Email", d.email]
             ];
             fields.forEach(f => {
@@ -749,24 +784,130 @@
                 if(value) html += `<div class="info-row"><span class="info-label">${label}:</span><span class="info-value">${value}</span></div>`;
             });
             document.getElementById('detail-content').innerHTML = html;
-            
-            // Menu Render
+        }
+
+        function renderDashboardMenu(d, roleAktif) {
             const grid = document.getElementById('menu-grid');
-            let menus = [['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'], ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))'], ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")']];
-            const roleAktif = filterText(d.role_akses || d.role).toUpperCase();
-            if(roleAktif === "PKB" || filterText(d.role) === "User/PKB") {
-                menus.unshift(['bi-journal-check', '#0d6efd', 'Lapor Tugas', 'siapkanLaporTugas()']);
-                menus.push(['bi-file-earmark-text', '#6f42c1', 'Administrasi', 'alert("Menu Admin")']);
-            }
-            if(isMappingVerifierRoleClient(roleAktif)) {
-                menus.unshift(['bi-shield-check', '#20c997', 'Verifikasi Binaan', 'bukaVerifikasiBinaan()']);
+            let menus = [];
+            if (isSuperAdminRoleClient(roleAktif)) {
+                menus = [
+                    ['bi-activity', '#dc3545', 'System Monitor', 'bukaSuperAdminMonitor()'],
+                    ['bi-shield-lock-fill', '#6f42c1', 'Security Monitor', 'bukaSuperAdminMonitor()'],
+                    ['bi-speedometer2', '#0d6efd', 'Performance Monitor', 'bukaSuperAdminMonitor()'],
+                    ['bi-database-check', '#198754', 'Workbook Health', 'bukaSuperAdminMonitor()'],
+                    ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'],
+                    ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))']
+                ];
+            } else if (isOperationalAdminRoleClient(roleAktif)) {
+                menus = [
+                    ['bi-shield-check', '#20c997', 'Verifikasi Binaan', 'bukaVerifikasiBinaan()'],
+                    ['bi-people-fill', '#0d6efd', 'Data PKB', 'alert("Menu Data PKB akan dibuat pada paket administrasi berikutnya.")'],
+                    ['bi-card-checklist', '#6f42c1', 'Audit Usulan', 'bukaVerifikasiBinaan()'],
+                    ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'],
+                    ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))'],
+                    ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")']
+                ];
+            } else {
+                menus = [
+                    ['bi-journal-check', '#0d6efd', 'Lapor Tugas', 'siapkanLaporTugas()'],
+                    ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'],
+                    ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))'],
+                    ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")'],
+                    ['bi-file-earmark-text', '#6f42c1', 'Administrasi', 'alert("Menu Administrasi PKB")']
+                ];
             }
             grid.innerHTML = menus.map(m => `<div class="col-6 mb-2"><div class="card p-3 border-0 shadow-sm menu-card text-center" onclick='${m[3]}'><i class="bi ${m[0]} h2 mb-2" style="color:${m[1]}"></i><div class="small fw-bold">${m[2]}</div></div></div>`).join('');
         }
 
-        function isMappingVerifierRoleClient(role) {
+        function isPkbRoleClient(role) {
             const r = filterText(role).toUpperCase();
-            return ['SUPER_ADMIN', 'ADMIN_KABUPATEN', 'ADMIN_PROVINSI', 'ADMIN_KECAMATAN'].includes(r);
+            return ['PKB', 'PLKB'].includes(r);
+        }
+
+        function isOperationalAdminRoleClient(role) {
+            const r = filterText(role).toUpperCase();
+            return ['ADMIN_KABUPATEN', 'ADMIN_PROVINSI', 'ADMIN_KECAMATAN'].includes(r);
+        }
+
+        function isSuperAdminRoleClient(role) {
+            return filterText(role).toUpperCase() === 'SUPER_ADMIN';
+        }
+
+        function isMappingVerifierRoleClient(role) {
+            return isOperationalAdminRoleClient(role);
+        }
+
+        function bukaSuperAdminMonitor() {
+            bukaHalaman('superadmin-monitor-page');
+            muatSuperAdminBlackbox();
+        }
+
+        async function muatSuperAdminBlackbox() {
+            const session = ambilSession();
+            const box = document.getElementById('blackboxSummaryContent');
+            const btn = document.getElementById('btnRefreshBlackbox');
+            if (!session || !session.token) {
+                alert('Session tidak ditemukan. Silakan login ulang.');
+                bukaHalaman('login-page');
+                return;
+            }
+            box.innerHTML = '<div class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm"></span> Memuat ringkasan blackbox...</div>';
+            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Muat'; }
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'getSystemBlackboxSummary');
+                p.append('token', session.token);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status === 'sukses' || d.status === 'warning') renderSuperAdminBlackbox(d.data || d.summary || {});
+                else box.innerHTML = `<div class="alert alert-warning">${escapeHtml(d.pesan || d.code || 'Gagal memuat blackbox.')}</div>`;
+            } catch(e) {
+                printLog('Blackbox Summary Error: ' + e, 'red');
+                box.innerHTML = '<div class="alert alert-danger">Koneksi terputus saat memuat blackbox.</div>';
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Muat'; }
+            }
+        }
+
+        function renderSuperAdminBlackbox(data) {
+            const m = data.metrics || {};
+            const sec = data.security_monitor || {};
+            const perf = data.performance_monitor || {};
+            const login = data.login_monitor || {};
+            const token = data.token_monitor || {};
+            const color = filterText(data.color || 'GREEN');
+            const badgeClass = color === 'RED' ? 'bg-danger' : (color === 'YELLOW' ? 'bg-warning text-dark' : 'bg-success');
+            document.getElementById('blackboxSummaryContent').innerHTML = `
+                <div class="alert alert-light border shadow-sm rounded-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div><b>Status Blackbox:</b> <span class="badge ${badgeClass}">${escapeHtml(color)}</span></div>
+                    <div class="small text-muted">Version: ${escapeHtml(data.app_version || EPKB_APP_VERSION)} | ${escapeHtml(data.generated_at || '')}</div>
+                </div>
+                <div class="row g-3 mb-3">
+                    ${blackboxMetricCard('Pending Mapping', m.pending_mapping, 'bi-hourglass-split', '#ffc107')}
+                    ${blackboxMetricCard('Admin Aktif', m.admin_users, 'bi-people-fill', '#0d6efd')}
+                    ${blackboxMetricCard('Token Aktif', m.active_tokens, 'bi-key-fill', '#198754')}
+                    ${blackboxMetricCard('Security HIGH', m.security_high, 'bi-shield-exclamation', '#dc3545')}
+                    ${blackboxMetricCard('Endpoint Lambat', m.slow_endpoint_count, 'bi-speedometer', '#fd7e14')}
+                    ${blackboxMetricCard('Login Gagal', m.login_failed, 'bi-person-x-fill', '#6c757d')}
+                </div>
+                <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+                    <h6 class="fw-bold text-primary">Ringkasan Monitor</h6>
+                    <div class="info-row"><span class="info-label">Login sukses/gagal:</span><span class="info-value">${escapeHtml(login.success_count || 0)} / ${escapeHtml(login.failed_count || 0)}</span></div>
+                    <div class="info-row"><span class="info-label">Security DENY:</span><span class="info-value">${escapeHtml(sec.deny_count || 0)}</span></div>
+                    <div class="info-row"><span class="info-label">Unknown Action:</span><span class="info-value">${escapeHtml(sec.unknown_action_count || 0)}</span></div>
+                    <div class="info-row"><span class="info-label">Device Mismatch:</span><span class="info-value">${escapeHtml(sec.device_mismatch_count || 0)}</span></div>
+                    <div class="info-row"><span class="info-label">Performance Failed:</span><span class="info-value">${escapeHtml(perf.failed_count || 0)}</span></div>
+                    <div class="info-row"><span class="info-label">Token aktif/expired:</span><span class="info-value">${escapeHtml(token.active_count || 0)} / ${escapeHtml(token.expired_count || 0)}</span></div>
+                </div>
+                <div class="alert alert-info small rounded-4 mb-0">${escapeHtml(data.note || 'Super Admin berfungsi sebagai blackbox/system monitor.')}</div>
+            `;
+        }
+
+        function blackboxMetricCard(label, value, icon, color) {
+            return `<div class="col-md-4"><div class="card border-0 shadow-sm rounded-4 p-3 h-100"><div class="d-flex justify-content-between align-items-center"><div><div class="small text-muted">${escapeHtml(label)}</div><div class="h3 fw-bold mb-0">${escapeHtml(value || 0)}</div></div><i class="bi ${icon} h2 mb-0" style="color:${color}"></i></div></div></div>`;
         }
 
         function bukaVerifikasiBinaan() {
@@ -854,7 +995,7 @@
             if (!confirm(`Anda yakin ${verb} usulan mapping binaan ini?
 
 ${label}`)) return;
-            const reason = prompt('Catatan verifikasi (opsional):', decision === 'APPROVE' ? 'Disetujui oleh Admin/Super Admin' : 'Ditolak oleh Admin/Super Admin') || '';
+            const reason = prompt('Catatan verifikasi (opsional):', decision === 'APPROVE' ? 'Disetujui oleh Admin' : 'Ditolak oleh Admin') || '';
             try {
                 const p = new URLSearchParams();
                 p.append('action', 'verifyMappingBinaan');
@@ -998,7 +1139,7 @@ ${label}`)) return;
                     tampilkanDashboard(profil);
                     bukaHalaman('detail-profil-page');
                     const pendingCount = d.mapping_request && d.mapping_request.created_count ? d.mapping_request.created_count : 0;
-                    if (pendingCount > 0) alert('Profil berhasil disimpan. Perubahan wilayah binaan masuk PENDING dan menunggu verifikasi Admin/Super Admin.');
+                    if (pendingCount > 0) alert('Profil berhasil disimpan. Perubahan wilayah binaan masuk PENDING dan menunggu verifikasi Admin operasional.');
                     else alert('Profil berhasil disimpan.');
                 } else {
                     printLog("Gagal Simpan Data: " + (d.pesan || d.code), "red");
