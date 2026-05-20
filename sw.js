@@ -1,3 +1,13 @@
+// E-PKB Kabupaten Buleleng - Service Worker ringan
+// Version: 0.1.1-FORCE-CHANGE-PASSWORD-V1
+self.addEventListener('install', function(event) {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', function(event) {
+  event.waitUntil(self.clients.claim());
+});
+
 self.addEventListener('fetch', function(event) {
-    // Service worker sederhana untuk syarat PWA
+  // Tidak melakukan cache agresif pada tahap fondasi agar update index.html tidak tertahan.
 });
