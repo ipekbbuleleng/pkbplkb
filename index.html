@@ -12,7 +12,10 @@
         .header-bg { background: linear-gradient(135deg, var(--primary-color), #0056b3); height: 100px; }
         .menu-card { transition: transform 0.2s; cursor: pointer; border-radius: 12px; height: 100%; }
         .form-section-title { font-size: 0.9rem; font-weight: bold; color: var(--primary-color); margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #e9ecef; margin-top: 25px; }
-        .info-row { border-bottom: 1px dashed #dee2e6; padding: 10px 0; font-size:0.9rem; }
+        .info-row { border-bottom: 1px dashed #dee2e6; padding: 10px 0; font-size:0.9rem; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+        .info-label { font-weight:700; color:#6c757d; min-width:160px; flex:0 0 160px; }
+        .info-value { color:#111827; text-align:right; flex:1; word-break:break-word; }
+        @media (max-width: 576px) { .info-row { display:block; } .info-label { display:block; min-width:0; margin-bottom:3px; } .info-value { display:block; text-align:left; } }
         .password-toggle { cursor: pointer; z-index: 10; }
     </style>
 </head>
@@ -272,7 +275,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.1.2-PROFIL-DATA-V1";
+        const EPKB_APP_VERSION = "0.1.2-PROFIL-DATA-V1-R1";
         let dataWilayahGlobal = {}; 
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{})); }
@@ -351,6 +354,13 @@
             let v = String(val).trim();
             if(v === "undefined" || v === "null" || v === "-") return "";
             return v;
+        }
+
+
+        function escapeHtml(val) {
+            return filterText(val).replace(/[&<>"']/g, function(ch) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+            });
         }
 
         function logicKawin() {
@@ -690,7 +700,11 @@
                 ["Wilayah Binaan", (filterText(d.wilayah_binaan_kecamatan)?filterText(d.wilayah_binaan_kecamatan)+" - ":"") + filterText(d.wilayah_binaan_desa)],
                 ["HP", d.no_hp], ["Email", d.email]
             ];
-            fields.forEach(f => { if(filterText(f[1])) { html += `<div class="info-row"><span class="info-label">${f[0]}</span><span class="info-value">${filterText(f[1])}</span></div>`; } });
+            fields.forEach(f => {
+                const label = escapeHtml(f[0]);
+                const value = escapeHtml(f[1]);
+                if(value) html += `<div class="info-row"><span class="info-label">${label}:</span><span class="info-value">${value}</span></div>`;
+            });
             document.getElementById('detail-content').innerHTML = html;
             
             // Menu Render
