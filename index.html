@@ -17,6 +17,11 @@
         .info-value { color:#111827; text-align:right; flex:1; word-break:break-word; }
         @media (max-width: 576px) { .info-row { display:block; } .info-label { display:block; min-width:0; margin-bottom:3px; } .info-value { display:block; text-align:left; } }
         .password-toggle { cursor: pointer; z-index: 10; }
+        .mapping-card { border-radius: 14px; border: 1px solid #e9ecef; box-shadow: 0 3px 8px rgba(0,0,0,0.06); }
+        .mapping-meta { font-size: 0.82rem; color: #6c757d; }
+        .mapping-scope { font-weight: 800; color: #0d6efd; }
+        .mapping-warning { background:#fff3cd; border:1px solid #ffecb5; color:#664d03; border-radius:10px; padding:8px 10px; font-size:0.82rem; }
+        .status-pill { border-radius: 999px; padding: 4px 10px; font-size: 0.75rem; font-weight: 800; }
     </style>
 </head>
 <body>
@@ -123,6 +128,36 @@
             </div>
         </div>
         <div class="row g-3" id="menu-grid"></div>
+    </div>
+
+    <div id="verifikasi-binaan-page" class="container mt-4 mb-5 hidden">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
+                <div>
+                    <h4 class="fw-bold m-0">Verifikasi Mapping Binaan</h4>
+                    <div class="small text-muted">Setujui atau tolak usulan wilayah binaan dari update profil.</div>
+                </div>
+            </div>
+            <button onclick="muatPendingMappingBinaan()" id="btnRefreshMapping" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-4"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">PENDING</div><div class="h4 fw-bold mb-0" id="mapPendingCount">0</div></div></div>
+            <div class="col-md-4"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Ditemukan</div><div class="h4 fw-bold mb-0" id="mapReturnedCount">0</div></div></div>
+            <div class="col-md-4"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Status</div><div class="h6 fw-bold mb-0" id="mapLoadStatus">-</div></div></div>
+        </div>
+        <div class="card border-0 shadow-sm p-3 mb-3 rounded-4">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-9">
+                    <label class="small fw-bold text-muted">Cari nama PKB / desa / kecamatan</label>
+                    <input id="filterMappingSearch" class="form-control" placeholder="Contoh: MADE SULASTRI, TEMBOK, TEJAKULA">
+                </div>
+                <div class="col-md-3">
+                    <button onclick="muatPendingMappingBinaan()" class="btn btn-primary w-100 fw-bold">Terapkan Filter</button>
+                </div>
+            </div>
+        </div>
+        <div id="mappingVerifyList"></div>
     </div>
 
     <div id="lapor-tugas-page" class="container mt-4 mb-5 hidden">
@@ -275,7 +310,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.1.2-PROFIL-DATA-V1-R1";
+        const EPKB_APP_VERSION = "0.1.3-MAPPING-VERIFICATION-V1";
         let dataWilayahGlobal = {}; 
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{})); }
@@ -361,6 +396,14 @@
             return filterText(val).replace(/[&<>"']/g, function(ch) {
                 return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
             });
+        }
+
+        function escapeJs(val) {
+            return filterText(val)
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '&quot;')
+                .replace(/\r?\n/g, ' ');
         }
 
         function logicKawin() {
@@ -498,7 +541,7 @@
         });
 
         function bukaHalaman(id) {
-            ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page'].forEach(pg => {
+            ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page', 'verifikasi-binaan-page'].forEach(pg => {
                 const el = document.getElementById(pg); if(el) el.classList.add('hidden');
             });
             document.getElementById(id).classList.remove('hidden');
@@ -710,11 +753,131 @@
             // Menu Render
             const grid = document.getElementById('menu-grid');
             let menus = [['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'], ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))'], ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")']];
-            if(filterText(d.role) === "PKB" || filterText(d.role) === "User/PKB") {
+            const roleAktif = filterText(d.role_akses || d.role).toUpperCase();
+            if(roleAktif === "PKB" || filterText(d.role) === "User/PKB") {
                 menus.unshift(['bi-journal-check', '#0d6efd', 'Lapor Tugas', 'siapkanLaporTugas()']);
                 menus.push(['bi-file-earmark-text', '#6f42c1', 'Administrasi', 'alert("Menu Admin")']);
             }
+            if(isMappingVerifierRoleClient(roleAktif)) {
+                menus.unshift(['bi-shield-check', '#20c997', 'Verifikasi Binaan', 'bukaVerifikasiBinaan()']);
+            }
             grid.innerHTML = menus.map(m => `<div class="col-6 mb-2"><div class="card p-3 border-0 shadow-sm menu-card text-center" onclick='${m[3]}'><i class="bi ${m[0]} h2 mb-2" style="color:${m[1]}"></i><div class="small fw-bold">${m[2]}</div></div></div>`).join('');
+        }
+
+        function isMappingVerifierRoleClient(role) {
+            const r = filterText(role).toUpperCase();
+            return ['SUPER_ADMIN', 'ADMIN_KABUPATEN', 'ADMIN_PROVINSI', 'ADMIN_KECAMATAN'].includes(r);
+        }
+
+        function bukaVerifikasiBinaan() {
+            bukaHalaman('verifikasi-binaan-page');
+            muatPendingMappingBinaan();
+        }
+
+        async function muatPendingMappingBinaan() {
+            const session = ambilSession();
+            const list = document.getElementById('mappingVerifyList');
+            const btn = document.getElementById('btnRefreshMapping');
+            if (!session || !session.token) {
+                alert('Session tidak ditemukan. Silakan login ulang.');
+                bukaHalaman('login-page');
+                return;
+            }
+            list.innerHTML = '<div class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm"></span> Memuat PENDING...</div>';
+            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Muat'; }
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'listPendingMappingBinaan');
+                p.append('token', session.token);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                p.append('search', document.getElementById('filterMappingSearch').value || '');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status === 'sukses') {
+                    document.getElementById('mapPendingCount').innerText = d.pending_count || 0;
+                    document.getElementById('mapReturnedCount').innerText = d.returned_count || 0;
+                    document.getElementById('mapLoadStatus').innerText = 'OK';
+                    renderPendingMappingBinaan(d.records || []);
+                } else {
+                    document.getElementById('mapLoadStatus').innerText = d.code || 'GAGAL';
+                    list.innerHTML = `<div class="alert alert-warning">${escapeHtml(d.pesan || 'Gagal memuat data PENDING.')}</div>`;
+                }
+            } catch(e) {
+                printLog('Load Mapping Pending Error: ' + e, 'red');
+                document.getElementById('mapLoadStatus').innerText = 'ERROR';
+                list.innerHTML = '<div class="alert alert-danger">Koneksi terputus saat memuat data verifikasi.</div>';
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Muat'; }
+            }
+        }
+
+        function renderPendingMappingBinaan(records) {
+            const list = document.getElementById('mappingVerifyList');
+            if (!records.length) {
+                list.innerHTML = '<div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">Tidak ada usulan mapping_binaan PENDING.</div>';
+                return;
+            }
+            list.innerHTML = records.map(r => {
+                const warn = r.has_active_same_scope ? '<div class="mapping-warning mt-2"><i class="bi bi-exclamation-triangle"></i> Scope ini sudah ACTIVE untuk user ini. Sebaiknya ditolak.</div>' : '';
+                const dup = r.has_pending_duplicate_same_scope ? '<div class="mapping-warning mt-2"><i class="bi bi-files"></i> Ada PENDING duplikat untuk scope yang sama.</div>' : '';
+                return `<div class="card mapping-card p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                        <div>
+                            <div class="fw-bold">${escapeHtml(r.nama_pkb || '-')}</div>
+                            <div class="mapping-meta">${escapeHtml(r.id_user || '-')} | ${escapeHtml(r.id_nip || '-')} | ${escapeHtml(r.role_akses || '-')}</div>
+                        </div>
+                        <span class="status-pill bg-warning text-dark">PENDING</span>
+                    </div>
+                    <div class="mt-3 mapping-scope"><i class="bi bi-geo-alt-fill"></i> ${escapeHtml(r.nama_kecamatan || '-')} / ${escapeHtml(r.nama_desa_kelurahan || '-')}</div>
+                    <div class="mapping-meta mt-1">scope_code: ${escapeHtml(r.scope_code || '-')} | source: ${escapeHtml(r.source_penetapan || '-')}</div>
+                    <div class="mapping-meta mt-1">dibuat oleh: ${escapeHtml(r.created_by || '-')} | row: ${escapeHtml(r.row_number)}</div>
+                    ${warn}${dup}
+                    <div class="d-flex gap-2 mt-3 flex-wrap">
+                        <button class="btn btn-success fw-bold flex-fill" onclick="verifikasiMappingBinaan('${escapeJs(r.id_mapping)}', ${Number(r.row_number)}, 'APPROVE', '${escapeJs(r.nama_pkb)}', '${escapeJs(r.nama_desa_kelurahan)}')"><i class="bi bi-check-circle"></i> Setujui ACTIVE</button>
+                        <button class="btn btn-outline-danger fw-bold flex-fill" onclick="verifikasiMappingBinaan('${escapeJs(r.id_mapping)}', ${Number(r.row_number)}, 'REJECT', '${escapeJs(r.nama_pkb)}', '${escapeJs(r.nama_desa_kelurahan)}')"><i class="bi bi-x-circle"></i> Tolak</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function verifikasiMappingBinaan(idMapping, rowNumber, decision, namaPkb, namaDesa) {
+            const session = ambilSession();
+            if (!session || !session.token) {
+                alert('Session tidak ditemukan. Silakan login ulang.');
+                bukaHalaman('login-page');
+                return;
+            }
+            const label = `${namaPkb || '-'} / ${namaDesa || '-'}`;
+            const verb = decision === 'APPROVE' ? 'MENYETUJUI menjadi ACTIVE' : 'MENOLAK';
+            if (!confirm(`Anda yakin ${verb} usulan mapping binaan ini?
+
+${label}`)) return;
+            const reason = prompt('Catatan verifikasi (opsional):', decision === 'APPROVE' ? 'Disetujui oleh Admin/Super Admin' : 'Ditolak oleh Admin/Super Admin') || '';
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'verifyMappingBinaan');
+                p.append('token', session.token);
+                p.append('id_mapping', idMapping || '');
+                p.append('row_number', rowNumber || '');
+                p.append('decision', decision);
+                p.append('reason', reason);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status === 'sukses') {
+                    alert(d.pesan || 'Verifikasi berhasil.');
+                    muatPendingMappingBinaan();
+                } else {
+                    alert(d.pesan || ('Verifikasi gagal: ' + (d.code || 'UNKNOWN')));
+                }
+            } catch(e) {
+                printLog('Verify Mapping Error: ' + e, 'red');
+                alert('Koneksi terputus saat verifikasi mapping.');
+            }
         }
 
         function siapkanEditProfil() {
