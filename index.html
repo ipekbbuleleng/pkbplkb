@@ -272,7 +272,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.1.1-FORCE-CHANGE-PASSWORD-V1";
+        const EPKB_APP_VERSION = "0.1.2-PROFIL-DATA-V1";
         let dataWilayahGlobal = {}; 
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{})); }
@@ -678,7 +678,7 @@
             const defFoto = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
             document.getElementById('view-foto').src = filterText(d.foto) ? filterText(d.foto) : defFoto;
             document.getElementById('preview-foto-edit').src = filterText(d.foto) ? filterText(d.foto) : defFoto;
-            document.getElementById('edit-foto-url').value = filterText(d.foto); 
+            document.getElementById('edit-foto-url').value = filterText(d.foto_profile_file_id || d.foto); 
 
             // Menu Profil Content
             let html = `<h6 class="fw-bold text-primary border-bottom pb-2">DATA PEGAWAI</h6>`;
@@ -734,7 +734,14 @@
 
             setTimeout(() => {
                if(filterText(d.wilayah_binaan_kecamatan)) {
-                   document.getElementById('bin-kab').value = "BULELENG"; handleWilayah('bin', 'kab');
+                   const binKabEl = document.getElementById('bin-kab');
+                   const targetKab = filterText(d.wilayah_binaan_kabupaten) || "BULELENG";
+                   binKabEl.value = targetKab;
+                   if(!binKabEl.value) {
+                       const optKab = Array.from(binKabEl.options).find(o => filterText(o.value).toUpperCase().includes('BULELENG'));
+                       if(optKab) binKabEl.value = optKab.value;
+                   }
+                   handleWilayah('bin', 'kab');
                    setTimeout(() => {
                        document.getElementById('bin-kec').value = filterText(d.wilayah_binaan_kecamatan); handleWilayah('bin', 'kec');
                        setTimeout(() => { 
@@ -752,24 +759,40 @@
 
         async function simpanProfil() {
             const btn = document.getElementById('btnSimpan');
+            const session = ambilSession();
+            if (!session || !session.token) {
+                alert('Session tidak ditemukan. Silakan login ulang.');
+                bukaHalaman('login-page');
+                return;
+            }
             btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
-            let finalFotoUrl = document.getElementById('edit-foto-url').value;
+            let finalFotoRef = document.getElementById('edit-foto-url').value;
 
             try {
                 if (fileFotoData) {
                     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Mengupload Foto...';
                     const fd = new URLSearchParams();
-                    fd.append('action', 'upload_foto'); fd.append('fileData', fileFotoData.fileData);
-                    fd.append('mimeType', fileFotoData.mimeType); fd.append('filename', document.getElementById('edit-id-nip').value + "_profil.jpg");
+                    fd.append('action', 'upload_foto');
+                    fd.append('token', session.token);
+                    fd.append('device_id', getDeviceId());
+                    fd.append('app_version', EPKB_APP_VERSION);
+                    fd.append('user_agent', navigator.userAgent || '');
+                    fd.append('fileData', fileFotoData.fileData);
+                    fd.append('mimeType', fileFotoData.mimeType);
+                    fd.append('filename', document.getElementById('edit-id-nip').value + "_profil.jpg");
                     const resUpload = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
                     const datUpload = await resUpload.json();
-                    if(datUpload.status === "sukses") { finalFotoUrl = datUpload.url; } 
-                    else { printLog("Gagal Upload Foto", "orange"); alert("Gagal mengupload foto."); }
+                    if(datUpload.status === "sukses") { finalFotoRef = datUpload.file_id || datUpload.url || finalFotoRef; }
+                    else { printLog("Gagal Upload Foto: " + (datUpload.pesan || datUpload.code || ''), "orange"); alert("Gagal mengupload foto. Profil tetap akan disimpan tanpa mengganti foto."); }
                 }
 
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan Data...';
                 const p = new URLSearchParams();
                 p.append('action', 'update_profil');
+                p.append('token', session.token);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
                 p.append('id_nip', document.getElementById('edit-id-nip').value);
                 p.append('nama_asli', document.getElementById('edit-nama').value); 
                 p.append('g_depan', document.getElementById('edit-g-depan').value); p.append('g_belakang', document.getElementById('edit-g-belakang').value);
@@ -777,11 +800,12 @@
                 p.append('jabatan', document.getElementById('edit-jabatan').value); p.append('gol', document.getElementById('edit-gol').value);
                 p.append('t_lahir', document.getElementById('edit-t-lahir').value); p.append('tgl_lahir', document.getElementById('edit-tgl-lahir').value);
                 p.append('almt_asal', dapatkanNilaiAlamat('asal')); p.append('almt_dom', dapatkanNilaiAlamat('dom'));
+                p.append('kab_binaan', document.getElementById('bin-kab').value || "BULELENG");
                 p.append('kec', document.getElementById('bin-kec').value || "-");
                 const checkedDesa = Array.from(document.querySelectorAll('.bin-desa-cb:checked')).map(cb => cb.value).join(', ');
                 p.append('desa', checkedDesa || "-");
                 p.append('hp', document.getElementById('edit-hp').value); p.append('email', document.getElementById('edit-email').value);
-                p.append('foto', finalFotoUrl); p.append('agama', document.getElementById('edit-agama').value);
+                p.append('foto_profile_file_id', finalFotoRef); p.append('foto', finalFotoRef); p.append('agama', document.getElementById('edit-agama').value);
                 const stKawin = document.getElementById('edit-kawin').value; p.append('status_kawin', stKawin);
                 p.append('jml_anak', (stKawin === 'BELUM KAWIN') ? "-" : document.getElementById('edit-anak').value);
                 p.append('peserta_kb', (stKawin === 'KAWIN') ? document.getElementById('edit-kb').value : "-");
@@ -790,8 +814,19 @@
 
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                 const d = await res.json();
-                if(d.status === "sukses") { alert("Berhasil!"); await refreshData(true); bukaHalaman('detail-profil-page'); } 
-                else { printLog("Gagal Simpan Data: " + d.pesan, "red"); }
+                if(d.status === "sukses") {
+                    const profil = d.dataProfil || {};
+                    profil.wajib_ganti_password = false;
+                    simpanSessionLogin({ token: session.token, refresh_token: session.refresh_token, session: session, user: d.user || session.user || {}, dataProfil: profil });
+                    tampilkanDashboard(profil);
+                    bukaHalaman('detail-profil-page');
+                    const pendingCount = d.mapping_request && d.mapping_request.created_count ? d.mapping_request.created_count : 0;
+                    if (pendingCount > 0) alert('Profil berhasil disimpan. Perubahan wilayah binaan masuk PENDING dan menunggu verifikasi Admin/Super Admin.');
+                    else alert('Profil berhasil disimpan.');
+                } else {
+                    printLog("Gagal Simpan Data: " + (d.pesan || d.code), "red");
+                    alert(d.pesan || 'Gagal menyimpan profil.');
+                }
             } catch(e) { printLog("Error Simpan Profil: " + e, "red"); alert("Koneksi terputus saat menyimpan."); } 
             finally { btn.disabled = false; btn.innerText = "SIMPAN PERUBAHAN"; }
         }
