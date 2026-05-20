@@ -1,5 +1,5 @@
 // E-PKB Kabupaten Buleleng - Service Worker ringan
-// Version: 0.1.2-PROFIL-DATA-V1-R1
+// Version: 0.1.4-ADMIN-ROLE-SCOPE-V1
 self.addEventListener('install', function(event) {
   self.skipWaiting();
 });
