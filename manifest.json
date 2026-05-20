@@ -1,11 +1,11 @@
 {
   "name": "E-PKB Kabupaten Buleleng",
   "short_name": "E-PKB",
-  "description": "Aplikasi kerja PKB/PLKB Kabupaten Buleleng berbasis PWA",
+  "description": "Sistem kerja PKB/PLKB Kabupaten Buleleng berbasis PWA",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#007bff",
+  "theme_color": "#0056b3",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/192/192192.png",
