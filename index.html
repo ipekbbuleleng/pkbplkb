@@ -141,12 +141,13 @@
             <div class="d-flex align-items-center">
                 <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
                 <div>
-                    <h4 class="fw-bold m-0">Verifikasi Mapping Binaan</h4>
-                    <div class="small text-muted">Setujui atau tolak usulan wilayah binaan dari update profil.</div>
+                    <h4 class="fw-bold m-0" id="mappingVerifyTitle">Verifikasi Mapping Binaan</h4>
+                    <div class="small text-muted" id="mappingVerifySubtitle">Setujui atau tolak usulan wilayah binaan dari update profil.</div>
                 </div>
             </div>
             <button onclick="muatPendingMappingBinaan()" id="btnRefreshMapping" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
         </div>
+        <div id="mappingScopeNote" class="alert alert-light border small rounded-4 shadow-sm mb-3">Memuat status kewenangan admin...</div>
         <div class="row g-3 mb-3">
             <div class="col-md-4"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">PENDING</div><div class="h4 fw-bold mb-0" id="mapPendingCount">0</div></div></div>
             <div class="col-md-4"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Ditemukan</div><div class="h4 fw-bold mb-0" id="mapReturnedCount">0</div></div></div>
@@ -338,10 +339,11 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.1.6-CODEBASE-STRUCTURE-FOUNDATION-V1-R1";
+        const EPKB_APP_VERSION = "0.1.7-MAPPING-SCOPE-ENFORCEMENT-V1-R1";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
+        let mappingVerifierContext = null;
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 
@@ -844,8 +846,9 @@
                     ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))']
                 ];
             } else if (isOperationalAdminRoleClient(roleAktif)) {
+                const verifLabel = roleAktif === 'ADMIN_PROVINSI' ? 'Monitoring Binaan' : 'Verifikasi Binaan';
                 menus = [
-                    ['bi-shield-check', '#20c997', 'Verifikasi Binaan', 'bukaVerifikasiBinaan()'],
+                    ['bi-shield-check', '#20c997', verifLabel, 'bukaVerifikasiBinaan()'],
                     ['bi-people-fill', '#0d6efd', 'Data PKB', 'alert("Menu Data PKB akan dibuat pada paket administrasi berikutnya.")'],
                     ['bi-card-checklist', '#6f42c1', 'Audit Usulan', 'bukaVerifikasiBinaan()'],
                     ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'],
@@ -880,6 +883,21 @@
 
         function isMappingVerifierRoleClient(role) {
             return isOperationalAdminRoleClient(role);
+        }
+
+        function canApproveMappingClient(role) {
+            const r = filterText(role).toUpperCase();
+            return ['ADMIN_KABUPATEN', 'ADMIN_KECAMATAN'].includes(r);
+        }
+
+        function getMappingScopeNoteClient(role, data) {
+            const r = filterText(role).toUpperCase();
+            const scope = filterText(data && (data.scope_label || data.scope_code));
+            if (r === 'ADMIN_KECAMATAN') return 'Mode APPROVER: hanya dapat melihat dan memverifikasi usulan di kecamatan sendiri' + (scope ? ' (' + scope + ')' : '') + '.';
+            if (r === 'ADMIN_KABUPATEN') return 'Mode APPROVER: dapat melihat dan memverifikasi seluruh usulan Kabupaten Buleleng.';
+            if (r === 'ADMIN_PROVINSI') return 'Mode MONITORING: dapat melihat usulan untuk supervisi, tetapi approval rutin dilakukan Admin Kecamatan atau Admin Kabupaten.';
+            if (r === 'SUPER_ADMIN') return 'Super Admin hanya blackbox/system monitor dan tidak menjadi approver operasional.';
+            return 'Role ini tidak berwenang mengakses verifikasi mapping binaan.';
         }
 
         function bukaSuperAdminMonitor() {
@@ -957,7 +975,26 @@
 
         function bukaVerifikasiBinaan() {
             bukaHalaman('verifikasi-binaan-page');
+            updateMappingVerificationHeader();
             muatPendingMappingBinaan();
+        }
+
+        function updateMappingVerificationHeader(verifier) {
+            let sessionUser = {};
+            try { sessionUser = JSON.parse(localStorage.getItem('userPKB') || '{}'); } catch(e) {}
+            const ctx = verifier || mappingVerifierContext || sessionUser;
+            const role = filterText(ctx.role_akses || ctx.role || sessionUser.role_akses || sessionUser.role).toUpperCase();
+            const titleEl = document.getElementById('mappingVerifyTitle');
+            const subEl = document.getElementById('mappingVerifySubtitle');
+            const noteEl = document.getElementById('mappingScopeNote');
+            if (titleEl) titleEl.innerText = role === 'ADMIN_PROVINSI' ? 'Monitoring Mapping Binaan' : 'Verifikasi Mapping Binaan';
+            if (subEl) subEl.innerText = role === 'ADMIN_PROVINSI' ? 'Pantau usulan wilayah binaan. Approval rutin dilakukan Admin Kecamatan/Kabupaten.' : 'Setujui atau tolak usulan wilayah binaan sesuai scope admin.';
+            if (noteEl) {
+                const canVerify = (ctx.can_verify !== false) && canApproveMappingClient(role);
+                const cls = canVerify ? 'alert-success' : (role === 'ADMIN_PROVINSI' ? 'alert-info' : 'alert-warning');
+                noteEl.className = 'alert ' + cls + ' border small rounded-4 shadow-sm mb-3';
+                noteEl.innerText = getMappingScopeNoteClient(role, ctx);
+            }
         }
 
         async function muatPendingMappingBinaan() {
@@ -982,10 +1019,12 @@
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                 const d = await res.json();
                 if (d.status === 'sukses') {
+                    mappingVerifierContext = d.verifier || mappingVerifierContext;
+                    updateMappingVerificationHeader(mappingVerifierContext);
                     document.getElementById('mapPendingCount').innerText = d.pending_count || 0;
                     document.getElementById('mapReturnedCount').innerText = d.returned_count || 0;
-                    document.getElementById('mapLoadStatus').innerText = 'OK';
-                    renderPendingMappingBinaan(d.records || []);
+                    document.getElementById('mapLoadStatus').innerText = mappingVerifierContext && mappingVerifierContext.mode ? mappingVerifierContext.mode : 'OK';
+                    renderPendingMappingBinaan(d.records || [], mappingVerifierContext);
                 } else {
                     document.getElementById('mapLoadStatus').innerText = d.code || 'GAGAL';
                     list.innerHTML = `<div class="alert alert-warning">${escapeHtml(d.pesan || 'Gagal memuat data PENDING.')}</div>`;
@@ -999,15 +1038,23 @@
             }
         }
 
-        function renderPendingMappingBinaan(records) {
+        function renderPendingMappingBinaan(records, verifier) {
             const list = document.getElementById('mappingVerifyList');
+            const ctx = verifier || mappingVerifierContext || {};
+            const role = filterText(ctx.role_akses || ctx.role).toUpperCase();
+            const canVerify = (ctx.can_verify !== false) && canApproveMappingClient(role);
             if (!records.length) {
-                list.innerHTML = '<div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">Tidak ada usulan mapping_binaan PENDING.</div>';
+                const emptyNote = role === 'ADMIN_PROVINSI' ? 'Tidak ada usulan mapping_binaan PENDING dalam area monitoring.' : 'Tidak ada usulan mapping_binaan PENDING dalam scope admin ini.';
+                list.innerHTML = `<div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">${escapeHtml(emptyNote)}</div>`;
                 return;
             }
             list.innerHTML = records.map(r => {
                 const warn = r.has_active_same_scope ? '<div class="mapping-warning mt-2"><i class="bi bi-exclamation-triangle"></i> Scope ini sudah ACTIVE untuk user ini. Sebaiknya ditolak.</div>' : '';
                 const dup = r.has_pending_duplicate_same_scope ? '<div class="mapping-warning mt-2"><i class="bi bi-files"></i> Ada PENDING duplikat untuk scope yang sama.</div>' : '';
+                const actionHtml = canVerify ? `<div class="d-flex gap-2 mt-3 flex-wrap">
+                        <button class="btn btn-success fw-bold flex-fill" onclick="verifikasiMappingBinaan('${escapeJs(r.id_mapping)}', ${Number(r.row_number)}, 'APPROVE', '${escapeJs(r.nama_pkb)}', '${escapeJs(r.nama_desa_kelurahan)}')"><i class="bi bi-check-circle"></i> Setujui ACTIVE</button>
+                        <button class="btn btn-outline-danger fw-bold flex-fill" onclick="verifikasiMappingBinaan('${escapeJs(r.id_mapping)}', ${Number(r.row_number)}, 'REJECT', '${escapeJs(r.nama_pkb)}', '${escapeJs(r.nama_desa_kelurahan)}')"><i class="bi bi-x-circle"></i> Tolak</button>
+                    </div>` : `<div class="alert alert-info small mt-3 mb-0"><i class="bi bi-info-circle"></i> Mode monitoring/supervisi. Tombol approve/reject tidak tersedia untuk role ini.</div>`;
                 return `<div class="card mapping-card p-3 mb-3">
                     <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
                         <div>
@@ -1019,11 +1066,7 @@
                     <div class="mt-3 mapping-scope"><i class="bi bi-geo-alt-fill"></i> ${escapeHtml(r.nama_kecamatan || '-')} / ${escapeHtml(r.nama_desa_kelurahan || '-')}</div>
                     <div class="mapping-meta mt-1">scope_code: ${escapeHtml(r.scope_code || '-')} | source: ${escapeHtml(r.source_penetapan || '-')}</div>
                     <div class="mapping-meta mt-1">dibuat oleh: ${escapeHtml(r.created_by || '-')} | row: ${escapeHtml(r.row_number)}</div>
-                    ${warn}${dup}
-                    <div class="d-flex gap-2 mt-3 flex-wrap">
-                        <button class="btn btn-success fw-bold flex-fill" onclick="verifikasiMappingBinaan('${escapeJs(r.id_mapping)}', ${Number(r.row_number)}, 'APPROVE', '${escapeJs(r.nama_pkb)}', '${escapeJs(r.nama_desa_kelurahan)}')"><i class="bi bi-check-circle"></i> Setujui ACTIVE</button>
-                        <button class="btn btn-outline-danger fw-bold flex-fill" onclick="verifikasiMappingBinaan('${escapeJs(r.id_mapping)}', ${Number(r.row_number)}, 'REJECT', '${escapeJs(r.nama_pkb)}', '${escapeJs(r.nama_desa_kelurahan)}')"><i class="bi bi-x-circle"></i> Tolak</button>
-                    </div>
+                    ${warn}${dup}${actionHtml}
                 </div>`;
             }).join('');
         }
