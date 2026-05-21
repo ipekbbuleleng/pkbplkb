@@ -2,7 +2,7 @@
   "name": "E-PKB Kabupaten Buleleng",
   "short_name": "E-PKB",
   "description": "Sistem kerja PKB/PLKB Kabupaten Buleleng berbasis PWA",
-  "version": "0.1.6-CODEBASE-STRUCTURE-FOUNDATION-V1-R1",
+  "version": "0.1.7-MAPPING-SCOPE-ENFORCEMENT-V1-R1",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
