@@ -40,8 +40,15 @@
         <div id="blackBoxLogs"></div>
     </div>
     <script>
-        const bbLogs = document.getElementById('blackBoxLogs'); const bbContainer = document.getElementById('blackBox');
-        function printLog(msg, color="lime") { bbContainer.style.display = 'block'; bbLogs.innerHTML += `<div style="color:${color}; margin-bottom:4px; line-height:1.2;">=> ${msg}</div>`; }
+        const bbLogs = document.getElementById('blackBoxLogs');
+        const bbContainer = document.getElementById('blackBox');
+        const EPKB_SHOW_DEV_BLACKBOX = localStorage.getItem('epkb_debug') === '1';
+        function printLog(msg, color="lime") {
+            try { console.warn('[E-PKB]', msg); } catch(e) {}
+            if (!EPKB_SHOW_DEV_BLACKBOX || !bbContainer || !bbLogs) return;
+            bbContainer.style.display = 'block';
+            bbLogs.innerHTML += `<div style="color:${color}; margin-bottom:4px; line-height:1.2;">=> ${msg}</div>`;
+        }
         window.onerror = function(msg, url, line) { printLog(`ERROR Baris ${line}: ${msg}`, '#ff4444'); return false; };
         window.addEventListener('unhandledrejection', function(e) { printLog(`API ERROR: ${e.reason}`, 'orange'); });
     </script>
@@ -110,14 +117,14 @@
                         </div>
                     </div>
                     <button onclick="prosesGantiPassword()" id="btnForcePassword" class="btn btn-success btn-lg w-100 fw-bold">SIMPAN PASSWORD BARU</button>
-                    <button onclick="logout()" class="btn btn-outline-secondary w-100 mt-2 fw-bold">Keluar</button>
+                    <button onclick="kembaliDariGantiPassword()" class="btn btn-outline-secondary w-100 mt-2 fw-bold"><i class="bi bi-arrow-left"></i> Kembali</button>
                     <p id="forcePasswordError" class="text-danger mt-3 small hidden text-center fw-medium"></p>
                 </div>
             </div>
         </div>
     </div>
 
-    <input type="file" id="inputFoto" accept="image/*" class="hidden">
+    <input type="file" id="inputFoto" accept="image/jpeg,image/png,image/webp" class="hidden">
 
     <div id="dashboard-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex justify-content-between align-items-center mb-3 dashboard-topbar">
@@ -127,7 +134,7 @@
                 <button onclick="logout()" class="btn btn-sm btn-outline-danger fw-bold shadow-sm">Keluar</button>
             </div>
         </div>
-        <div class="card card-profile mb-4">
+        <div class="card card-profile mb-4" id="dashboardProfileCard">
             <div class="header-bg"></div>
             <div class="text-center" style="margin-top: -55px;">
                 <div class="position-relative d-inline-block">
@@ -140,6 +147,19 @@
             <div class="card-body bg-light text-center small">
                 <div class="fw-bold" id="view-nip">-</div>
                 <div id="view-kec" class="text-muted mt-1">-</div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 hidden" id="dashboardSuperSummaryCard">
+            <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Ringkasan Monitoring Sistem</h5>
+                    <div class="small text-muted">Blackbox ringkas untuk health, security, performance, dan session E-PKB.</div>
+                </div>
+                <button type="button" onclick="muatSuperAdminDashboardCardSummary_()" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
+            </div>
+            <div id="superDashboardSummaryContent">
+                <div class="text-muted small">Ringkasan akan dimuat otomatis saat dashboard Super Admin dibuka.</div>
             </div>
         </div>
         <div class="row g-3" id="menu-grid"></div>
@@ -277,7 +297,7 @@
 
                 <div class="text-center mb-4">
                     <img id="preview-foto-edit" src="https://via.placeholder.com/150" class="profile-img mb-2 shadow-sm"><br>
-                    <button type="button" onclick="bukaKamera()" class="btn btn-sm btn-outline-primary"><i class="bi bi-camera"></i> Ganti Foto</button>
+                    <button type="button" onclick="pilihFotoProfil()" class="btn btn-sm btn-outline-primary"><i class="bi bi-image"></i> Pilih / Ubah Foto</button>
                     <p id="status-upload" class="text-success small mt-1 hidden">Foto siap disimpan!</p>
                 </div>
 
@@ -351,10 +371,11 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.1.8-UI-ACCOUNT-PROFILE-POLISH-V1";
+        const EPKB_APP_VERSION = "0.1.8-UI-ACCOUNT-PROFILE-POLISH-V1-R1";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
+        let wilayahFetchPromise = null;
         let mappingVerifierContext = null;
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{})); }
@@ -382,6 +403,25 @@
             "PENCATATAN DAN PELAPORAN": ["Fasilitasi Laporan Faskes", "Pelaporan SIGA"],
             "PERTEMUAN": ["Staff Meeting", "Rapat Koordinasi", "Musrenbang", "Pertemuan Kecamatan", "Pertemuan Kabupaten"]
         };
+
+        const JABATAN_PKB_OPTIONS = ["PKB AHLI PERTAMA", "PKB AHLI MUDA", "PKB AHLI MADYA", "PLKB PEMULA", "PLKB TERAMPIL", "PLKB MAHIR", "PLKB PENYELIA"];
+        const JABATAN_ADMIN_OPTIONS = ["Admin Provinsi", "Admin Kabupaten", "Admin Kecamatan", "Operator Admin", "Koordinator Admin"];
+
+        function setJabatanOptions_(isAdminProfile, currentValue, roleAktif) {
+            const sel = document.getElementById('edit-jabatan');
+            if (!sel) return;
+            let current = filterText(currentValue);
+            if (isAdminProfile && !current) {
+                const role = filterText(roleAktif).toUpperCase();
+                if (role === 'ADMIN_PROVINSI') current = 'Admin Provinsi';
+                else if (role === 'ADMIN_KABUPATEN') current = 'Admin Kabupaten';
+                else if (role === 'ADMIN_KECAMATAN') current = 'Admin Kecamatan';
+            }
+            const source = isAdminProfile ? JABATAN_ADMIN_OPTIONS.slice() : JABATAN_PKB_OPTIONS.slice();
+            if (current && source.indexOf(current) === -1) source.unshift(current);
+            sel.innerHTML = source.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+            sel.value = current || source[0] || '';
+        }
 
 
         function getDeviceId() {
@@ -475,12 +515,26 @@
         }
 
         async function fetchWilayah() {
-            try {
-                const res = await fetch(`${SCRIPT_URL}?action=get_wilayah`);
-                const result = await res.json();
-                if(result.status === "sukses") { dataWilayahGlobal = result.data; initDropdownKabupaten(); } 
-                else { printLog("Gagal baca wilayah: " + result.pesan, "yellow"); }
-            } catch(e) { printLog("Fetch Wilayah Error: " + e, "orange"); }
+            if (dataWilayahGlobal && Object.keys(dataWilayahGlobal).length) return dataWilayahGlobal;
+            if (wilayahFetchPromise) return wilayahFetchPromise;
+            wilayahFetchPromise = (async function() {
+                try {
+                    const res = await fetch(`${SCRIPT_URL}?action=get_wilayah`);
+                    const result = await res.json();
+                    if(result.status === "sukses") {
+                        dataWilayahGlobal = result.data || {};
+                        initDropdownKabupaten();
+                    } else {
+                        console.warn('[E-PKB] Gagal baca wilayah:', result.pesan || result.code || result);
+                    }
+                } catch(e) {
+                    console.warn('[E-PKB] Fetch wilayah ditunda/gagal:', e);
+                } finally {
+                    wilayahFetchPromise = null;
+                }
+                return dataWilayahGlobal;
+            })();
+            return wilayahFetchPromise;
         }
 
         function initDropdownKabupaten() {
@@ -577,7 +631,7 @@
             else { selGol.innerHTML = '<option value="">Pilih Status ASN Dahulu</option>'; }
         }
 
-        function bukaKamera() { document.getElementById('inputFoto').click(); }
+        function pilihFotoProfil() { document.getElementById('inputFoto').click(); }
         let fileFotoData = null; 
         document.getElementById('inputFoto').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -600,7 +654,6 @@
         }
 
         window.onload = () => {
-            fetchWilayah();
             setTimeout(async () => {
                 document.getElementById('splash-screen').classList.add('hidden');
                 try {
@@ -673,7 +726,11 @@
                     document.getElementById('loginError').innerText = d.pesan || "Username atau password salah!";
                     document.getElementById('loginError').classList.remove('hidden');
                 }
-            } catch(e) { printLog("Login Error: " + e, "red"); }
+            } catch(e) {
+                console.warn('[E-PKB] Login gagal/koneksi:', e);
+                document.getElementById('loginError').innerText = 'Koneksi gagal. Periksa jaringan lalu coba lagi.';
+                document.getElementById('loginError').classList.remove('hidden');
+            }
             finally { btn.disabled = false; btn.innerText = "MASUK"; }
         }
 
@@ -689,6 +746,17 @@
             document.getElementById('force-confirm-password').value = '';
             document.getElementById('forcePasswordError').classList.add('hidden');
             setTimeout(() => document.getElementById('force-old-password').focus(), 150);
+        }
+
+        function kembaliDariGantiPassword() {
+            const profil = JSON.parse(localStorage.getItem('userPKB') || '{}');
+            if (profil && profil.wajib_ganti_password === false) {
+                tampilkanDashboard(profil);
+                return;
+            }
+            localStorage.removeItem('epkb_session');
+            localStorage.removeItem('userPKB');
+            bukaHalaman('login-page');
         }
 
         async function prosesGantiPassword() {
@@ -813,6 +881,11 @@
             const titleEl = document.getElementById('dashboard-title');
             if (titleEl) titleEl.innerText = getDashboardTitleClient(d, roleAktif);
 
+            const profileCard = document.getElementById('dashboardProfileCard');
+            const superSummaryCard = document.getElementById('dashboardSuperSummaryCard');
+            if (profileCard) profileCard.classList.toggle('hidden', isSuper);
+            if (superSummaryCard) superSummaryCard.classList.toggle('hidden', !isSuper);
+
             const gDepan = filterText(d.gelar_depan) ? filterText(d.gelar_depan) + " " : "";
             const gBelakang = filterText(d.gelar_belakang) ? ", " + filterText(d.gelar_belakang) : "";
             const nama = filterText(d.nama_asli || d.nama_user || d.username || d.id_user) || 'Pengguna E-PKB';
@@ -832,6 +905,59 @@
 
             renderDetailProfilContent(d, roleAktif);
             renderDashboardMenu(d, roleAktif);
+            if (isSuper) muatSuperAdminDashboardCardSummary_();
+        }
+
+        async function muatSuperAdminDashboardCardSummary_() {
+            const box = document.getElementById('superDashboardSummaryContent');
+            const session = ambilSession();
+            if (!box) return;
+            if (!session || !session.token) {
+                box.innerHTML = '<div class="alert alert-warning mb-0">Session tidak ditemukan. Silakan login ulang.</div>';
+                return;
+            }
+            box.innerHTML = '<div class="text-muted small"><span class="spinner-border spinner-border-sm"></span> Memuat ringkasan sistem...</div>';
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'getSystemBlackboxSummary');
+                p.append('token', session.token);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status === 'sukses' || d.status === 'warning') renderSuperAdminDashboardCardSummary_(d.summary || d.data || {});
+                else box.innerHTML = `<div class="alert alert-warning mb-0">${escapeHtml(d.pesan || d.code || 'Gagal memuat ringkasan blackbox.')}</div>`;
+            } catch(e) {
+                console.warn('[E-PKB] Dashboard blackbox summary gagal dimuat:', e);
+                box.innerHTML = '<div class="alert alert-warning mb-0">Ringkasan sistem belum dapat dimuat. Gunakan menu System Monitor untuk muat ulang.</div>';
+            }
+        }
+
+        function renderSuperAdminDashboardCardSummary_(summary) {
+            const box = document.getElementById('superDashboardSummaryContent');
+            if (!box) return;
+            const m = summary.metrics || {};
+            const color = filterText(summary.color || 'GREEN').toUpperCase();
+            const badge = color === 'GREEN' ? 'bg-success' : (color === 'RED' ? 'bg-danger' : 'bg-warning text-dark');
+            box.innerHTML = `
+                <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
+                    <div class="small text-muted">Versi: ${escapeHtml(summary.app_version || EPKB_APP_VERSION)}</div>
+                    <span class="badge ${badge}">BLACKBOX ${escapeHtml(color)}</span>
+                </div>
+                <div class="row g-2">
+                    ${superSummaryMiniCard_('Pending Mapping', m.pending_mapping, 'bi-hourglass-split')}
+                    ${superSummaryMiniCard_('Admin Aktif', m.admin_users, 'bi-people-fill')}
+                    ${superSummaryMiniCard_('Token Aktif', m.active_tokens, 'bi-key-fill')}
+                    ${superSummaryMiniCard_('Security HIGH', m.security_high, 'bi-shield-exclamation')}
+                    ${superSummaryMiniCard_('Endpoint Lambat', m.slow_endpoint_count, 'bi-speedometer')}
+                    ${superSummaryMiniCard_('Login Gagal', m.login_failed, 'bi-person-x-fill')}
+                </div>
+            `;
+        }
+
+        function superSummaryMiniCard_(label, value, icon) {
+            return `<div class="col-6 col-md-4"><div class="border rounded-4 p-3 h-100 bg-light"><div class="d-flex justify-content-between align-items-center"><div><div class="small text-muted">${escapeHtml(label)}</div><div class="h5 fw-bold mb-0">${escapeHtml(value || 0)}</div></div><i class="bi ${icon} h4 mb-0 text-primary"></i></div></div></div>`;
         }
 
         function renderDetailProfilContent(d, roleAktif) {
@@ -1150,7 +1276,46 @@ ${label}`)) return;
             }
         }
 
-        function siapkanEditProfil() {
+        function toggleFieldBlockById_(id, visible) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            let wrap = el;
+            while (wrap && wrap !== document.body) {
+                if (wrap.classList && (wrap.classList.contains('mb-2') || wrap.classList.contains('mb-3') || wrap.classList.contains('mb-4'))) break;
+                wrap = wrap.parentElement;
+            }
+            if (wrap && wrap !== document.body) wrap.classList.toggle('hidden', !visible);
+        }
+
+        function setAdminEditMode_(isAdminProfile) {
+            const hiddenForAdmin = [
+                'edit-g-depan','edit-g-belakang','edit-jk','edit-agama','edit-t-lahir','edit-tgl-lahir',
+                'edit-kawin','edit-anak','edit-kb','edit-pendidikan','edit-jurusan','edit-status','edit-gol','edit-tmt-awal','edit-tmt-jab'
+            ];
+            hiddenForAdmin.forEach(id => toggleFieldBlockById_(id, !isAdminProfile));
+            toggleFieldBlockById_('edit-jabatan', true);
+            toggleFieldBlockById_('edit-hp', true);
+            toggleFieldBlockById_('edit-email', true);
+            const titles = Array.from(document.querySelectorAll('#edit-profil-page .form-section-title'));
+            titles.forEach(function(title, idx) {
+                if (!isAdminProfile) {
+                    title.classList.remove('hidden');
+                    return;
+                }
+                const isBasic = idx === 0;
+                const isContact = title.id === 'edit-kontak-title';
+                title.classList.toggle('hidden', !(isBasic || isContact));
+                if (isBasic) title.innerText = 'Data Admin Operasional';
+            });
+            if (!isAdminProfile) {
+                const firstTitle = document.querySelector('#edit-profil-page .form-section-title');
+                if (firstTitle) firstTitle.innerText = 'Informasi Dasar';
+            }
+            const wilayahBlock = document.getElementById('edit-wilayah-block');
+            if (wilayahBlock) wilayahBlock.classList.toggle('hidden', isAdminProfile);
+        }
+
+        async function siapkanEditProfil() {
             let d = {};
             try { d = JSON.parse(localStorage.getItem('userPKB')); } catch(e) { return; }
             const roleAktif = filterText(d.role_akses || d.role).toUpperCase();
@@ -1160,8 +1325,7 @@ ${label}`)) return;
                 return;
             }
             const isAdminProfile = isOperationalAdminRoleClient(roleAktif);
-            const wilayahBlock = document.getElementById('edit-wilayah-block');
-            if (wilayahBlock) wilayahBlock.classList.toggle('hidden', isAdminProfile);
+            setAdminEditMode_(isAdminProfile);
             const editTitle = document.getElementById('edit-profile-title');
             if (editTitle) editTitle.innerText = isAdminProfile ? 'Edit Profil Admin' : 'Edit Profil';
             const contactTitle = document.getElementById('edit-kontak-title');
@@ -1187,10 +1351,12 @@ ${label}`)) return;
 
             document.getElementById('edit-status').value = filterText(d.status_asn);
             aturGolongan(); setTimeout(() => document.getElementById('edit-gol').value = filterText(d.golongan), 100);
+            setJabatanOptions_(isAdminProfile, d.jabatan, roleAktif);
             
-            document.getElementById('edit-jabatan').value = filterText(d.jabatan);
+            document.getElementById('edit-jabatan').value = filterText(d.jabatan) || document.getElementById('edit-jabatan').value;
             document.getElementById('edit-t-lahir').value = filterText(d.tempat_lahir); document.getElementById('edit-tgl-lahir').value = filterText(d.tanggal_lahir); 
             if (!isAdminProfile) {
+                await fetchWilayah();
                 pecahNilaiAlamat('asal', d.alamat_asal); pecahNilaiAlamat('dom', d.alamat_domisili);
 
                 setTimeout(() => {
@@ -1265,25 +1431,29 @@ ${label}`)) return;
                 p.append('app_version', EPKB_APP_VERSION);
                 p.append('user_agent', navigator.userAgent || '');
                 p.append('id_nip', document.getElementById('edit-id-nip').value);
-                p.append('nama_asli', document.getElementById('edit-nama').value); 
-                p.append('g_depan', document.getElementById('edit-g-depan').value); p.append('g_belakang', document.getElementById('edit-g-belakang').value);
-                p.append('jk', document.getElementById('edit-jk').value); p.append('status', document.getElementById('edit-status').value);
-                p.append('jabatan', document.getElementById('edit-jabatan').value); p.append('gol', document.getElementById('edit-gol').value);
-                p.append('t_lahir', document.getElementById('edit-t-lahir').value); p.append('tgl_lahir', document.getElementById('edit-tgl-lahir').value);
+                p.append('nama_asli', document.getElementById('edit-nama').value);
+                p.append('jabatan', document.getElementById('edit-jabatan').value);
+                p.append('hp', document.getElementById('edit-hp').value);
+                p.append('email', document.getElementById('edit-email').value);
+                p.append('foto_profile_file_id', finalFotoRef);
+                p.append('foto', finalFotoRef);
                 if (!isAdminProfile) {
+                    p.append('g_depan', document.getElementById('edit-g-depan').value); p.append('g_belakang', document.getElementById('edit-g-belakang').value);
+                    p.append('jk', document.getElementById('edit-jk').value); p.append('status', document.getElementById('edit-status').value);
+                    p.append('gol', document.getElementById('edit-gol').value);
+                    p.append('t_lahir', document.getElementById('edit-t-lahir').value); p.append('tgl_lahir', document.getElementById('edit-tgl-lahir').value);
                     p.append('almt_asal', dapatkanNilaiAlamat('asal')); p.append('almt_dom', dapatkanNilaiAlamat('dom'));
                     p.append('kab_binaan', document.getElementById('bin-kab').value || "BULELENG");
                     p.append('kec', document.getElementById('bin-kec').value || "-");
                     const checkedDesa = Array.from(document.querySelectorAll('.bin-desa-cb:checked')).map(cb => cb.value).join(', ');
                     p.append('desa', checkedDesa || "-");
+                    p.append('agama', document.getElementById('edit-agama').value);
+                    const stKawin = document.getElementById('edit-kawin').value; p.append('status_kawin', stKawin);
+                    p.append('jml_anak', (stKawin === 'BELUM KAWIN') ? "-" : document.getElementById('edit-anak').value);
+                    p.append('peserta_kb', (stKawin === 'KAWIN') ? document.getElementById('edit-kb').value : "-");
+                    p.append('pendidikan', document.getElementById('edit-pendidikan').value); p.append('jurusan', document.getElementById('edit-jurusan').value || "-");
+                    p.append('tmt_awal', document.getElementById('edit-tmt-awal').value); p.append('tmt_jabatan', document.getElementById('edit-tmt-jab').value);
                 }
-                p.append('hp', document.getElementById('edit-hp').value); p.append('email', document.getElementById('edit-email').value);
-                p.append('foto_profile_file_id', finalFotoRef); p.append('foto', finalFotoRef); p.append('agama', document.getElementById('edit-agama').value);
-                const stKawin = document.getElementById('edit-kawin').value; p.append('status_kawin', stKawin);
-                p.append('jml_anak', (stKawin === 'BELUM KAWIN') ? "-" : document.getElementById('edit-anak').value);
-                p.append('peserta_kb', (stKawin === 'KAWIN') ? document.getElementById('edit-kb').value : "-");
-                p.append('pendidikan', document.getElementById('edit-pendidikan').value); p.append('jurusan', document.getElementById('edit-jurusan').value || "-");
-                p.append('tmt_awal', document.getElementById('edit-tmt-awal').value); p.append('tmt_jabatan', document.getElementById('edit-tmt-jab').value);
 
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                 const d = await res.json();
