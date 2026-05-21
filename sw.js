@@ -1,5 +1,5 @@
 // E-PKB Kabupaten Buleleng - Service Worker ringan
-// Version: 0.1.8-UI-ACCOUNT-PROFILE-POLISH-V1
+// Version: 0.1.8-UI-ACCOUNT-PROFILE-POLISH-V1-R1
 self.addEventListener('install', function(event) {
   self.skipWaiting();
 });
