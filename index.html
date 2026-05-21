@@ -63,7 +63,7 @@
                         <label class="form-label fw-bold text-muted small">Password</label>
                         <div class="position-relative">
                             <input type="password" id="nik" class="form-control form-control-lg pe-5" autocomplete="current-password" placeholder="Password awal">
-                            <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted h5 password-toggle" id="togglePassword"></i>
+                            <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted h5 password-toggle" id="togglePassword" data-password-toggle="nik" title="Lihat/sembunyikan password"></i>
                         </div>
                     </div>
                     <button onclick="prosesLogin()" id="btnLogin" class="btn btn-primary btn-lg w-100 fw-bold">MASUK</button>
@@ -90,15 +90,24 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold text-muted small">Password Lama</label>
-                        <input type="password" id="force-old-password" class="form-control form-control-lg" autocomplete="current-password" placeholder="Masukkan password lama">
+                        <div class="position-relative">
+                            <input type="password" id="force-old-password" class="form-control form-control-lg pe-5" autocomplete="current-password" placeholder="Masukkan password lama">
+                            <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted h5 password-toggle" data-password-toggle="force-old-password" title="Lihat/sembunyikan password"></i>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold text-muted small">Password Baru</label>
-                        <input type="password" id="force-new-password" class="form-control form-control-lg" autocomplete="new-password" placeholder="Minimal 8 karakter">
+                        <div class="position-relative">
+                            <input type="password" id="force-new-password" class="form-control form-control-lg pe-5" autocomplete="new-password" placeholder="Minimal 8 karakter">
+                            <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted h5 password-toggle" data-password-toggle="force-new-password" title="Lihat/sembunyikan password"></i>
+                        </div>
                     </div>
                     <div class="mb-4">
                         <label class="form-label fw-bold text-muted small">Konfirmasi Password Baru</label>
-                        <input type="password" id="force-confirm-password" class="form-control form-control-lg" autocomplete="new-password" placeholder="Ulangi password baru">
+                        <div class="position-relative">
+                            <input type="password" id="force-confirm-password" class="form-control form-control-lg pe-5" autocomplete="new-password" placeholder="Ulangi password baru">
+                            <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted h5 password-toggle" data-password-toggle="force-confirm-password" title="Lihat/sembunyikan password"></i>
+                        </div>
                     </div>
                     <button onclick="prosesGantiPassword()" id="btnForcePassword" class="btn btn-success btn-lg w-100 fw-bold">SIMPAN PASSWORD BARU</button>
                     <button onclick="logout()" class="btn btn-outline-secondary w-100 mt-2 fw-bold">Keluar</button>
@@ -123,7 +132,7 @@
             <div class="text-center" style="margin-top: -55px;">
                 <div class="position-relative d-inline-block">
                     <img id="view-foto" src="" class="profile-img shadow-sm">
-                    <button onclick="siapkanEditProfil(); setTimeout(() => alert('Untuk menyimpan foto, pilih foto lalu tekan SIMPAN PERUBAHAN.'), 500);" class="btn btn-light rounded-circle shadow position-absolute bottom-0 end-0 border" style="padding: 5px 9px;" title="Ubah Foto"><i class="bi bi-camera-fill text-primary"></i></button>
+                    <button id="btn-dashboard-edit-photo" onclick="siapkanEditProfil(); setTimeout(() => alert('Untuk menyimpan foto, pilih foto lalu tekan SIMPAN PERUBAHAN.'), 500);" class="btn btn-light rounded-circle shadow position-absolute bottom-0 end-0 border" style="padding: 5px 9px;" title="Ubah Foto"><i class="bi bi-camera-fill text-primary"></i></button>
                 </div>
                 <h5 id="view-nama" class="mt-2 fw-bold text-dark">-</h5>
                 <span id="view-role" class="badge bg-warning text-dark px-3 mb-2">-</span>
@@ -253,13 +262,13 @@
             <h4 class="fw-bold m-0">Detail Profil</h4>
         </div>
         <div class="card border-0 shadow-sm p-4 mb-4" id="detail-content" style="border-radius: 15px;"></div>
-        <button onclick="siapkanEditProfil()" class="btn btn-primary w-100 py-3 fw-bold rounded-4 shadow-sm"><i class="bi bi-pencil-square me-2"></i> EDIT PROFIL</button>
+        <button id="btn-detail-edit-profile" onclick="siapkanEditProfil()" class="btn btn-primary w-100 py-3 fw-bold rounded-4 shadow-sm"><i class="bi bi-pencil-square me-2"></i> EDIT PROFIL</button>
     </div>
 
     <div id="edit-profil-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex align-items-center mb-4">
             <button onclick="bukaHalaman('detail-profil-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
-            <h4 class="fw-bold m-0">Edit Profil</h4>
+            <h4 class="fw-bold m-0" id="edit-profile-title">Edit Profil</h4>
         </div>
         <div class="card border-0 shadow-sm p-4" style="border-radius: 15px;">
             <form id="formEdit">
@@ -311,8 +320,9 @@
                 <div class="mb-3"><label class="form-label small fw-bold">TMT SK Pertama</label><input type="date" id="edit-tmt-awal" class="form-control"></div>
                 <div class="mb-4"><label class="form-label small fw-bold">TMT SK Terakhir</label><input type="date" id="edit-tmt-jab" class="form-control"></div>
 
-                <div class="form-section-title">Wilayah & Kontak</div>
-                <div class="mb-2"><label class="form-label small fw-bold">Kabupaten Asal</label><select id="asal-kab" class="form-select" onchange="handleWilayah('asal', 'kab')"></select></div>
+                <div id="edit-wilayah-block">
+                    <div class="form-section-title">Wilayah</div>
+                    <div class="mb-2"><label class="form-label small fw-bold">Kabupaten Asal</label><select id="asal-kab" class="form-select" onchange="handleWilayah('asal', 'kab')"></select></div>
                 <div id="asal-kec-container" class="mb-2 hidden"><label class="form-label small fw-bold">Kec. Asal</label><select id="asal-kec-sel" class="form-select" onchange="handleWilayah('asal', 'kec')"></select><input type="text" id="asal-kec-txt" class="form-control hidden"></div>
                 <div id="asal-desa-container" class="mb-3 hidden"><label class="form-label small fw-bold">Desa Asal</label><select id="asal-desa-sel" class="form-select"></select><input type="text" id="asal-desa-txt" class="form-control hidden"></div>
                 
@@ -323,7 +333,9 @@
                 <div class="mb-2"><label class="form-label small fw-bold text-primary">KABUPATEN BINAAN (TUGAS)</label><select id="bin-kab" class="form-select" onchange="handleWilayah('bin', 'kab')"></select></div>
                 <div id="bin-kec-container" class="mb-2 hidden"><label class="form-label small fw-bold text-primary">KECAMATAN BINAAN</label><select id="bin-kec" class="form-select" onchange="handleWilayah('bin', 'kec')"></select></div>
                 <div id="bin-desa-container" class="mb-3 hidden"><label class="form-label small fw-bold text-primary">DESA BINAAN (Bisa Pilih > 1)</label><div id="bin-desa-wrapper" style="max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; background: #fff;"></div></div>
+                </div>
 
+                <div class="form-section-title" id="edit-kontak-title">Kontak</div>
                 <div class="mb-3"><label class="form-label small fw-bold">No. HP / WhatsApp</label><input type="tel" id="edit-hp" class="form-control"></div>
                 <div class="mb-4"><label class="form-label small fw-bold">Email</label><input type="email" id="edit-email" class="form-control"></div>
                 
@@ -339,7 +351,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.1.7-MAPPING-SCOPE-ENFORCEMENT-V1-R1";
+        const EPKB_APP_VERSION = "0.1.8-UI-ACCOUNT-PROFILE-POLISH-V1";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -348,14 +360,21 @@
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 
         // FUNGSI TOGGLE PASSWORD
-        const toggleBtn = document.getElementById('togglePassword');
-        if(toggleBtn) {
-            toggleBtn.addEventListener('click', function () {
-                const input = document.getElementById('nik');
-                input.setAttribute('type', input.getAttribute('type') === 'password' ? 'text' : 'password');
-                this.classList.toggle('bi-eye'); this.classList.toggle('bi-eye-slash');
+        function setupPasswordToggles_() {
+            document.querySelectorAll('[data-password-toggle]').forEach(function(icon) {
+                if (icon.dataset.toggleBound === '1') return;
+                icon.dataset.toggleBound = '1';
+                icon.addEventListener('click', function() {
+                    const input = document.getElementById(icon.getAttribute('data-password-toggle'));
+                    if (!input) return;
+                    const isHidden = input.getAttribute('type') === 'password';
+                    input.setAttribute('type', isHidden ? 'text' : 'password');
+                    icon.classList.toggle('bi-eye', !isHidden);
+                    icon.classList.toggle('bi-eye-slash', isHidden);
+                });
             });
         }
+        document.addEventListener('DOMContentLoaded', setupPasswordToggles_);
 
         const opsiJenis = {
             "KIE": ["Individu", "Kelompok", "Sosialisasi", "Penyuluhan"],
@@ -808,23 +827,46 @@
             document.getElementById('view-foto').src = filterText(d.foto) ? filterText(d.foto) : defFoto;
             document.getElementById('preview-foto-edit').src = filterText(d.foto) ? filterText(d.foto) : defFoto;
             document.getElementById('edit-foto-url').value = filterText(d.foto_profile_file_id || d.foto); 
+            const dashPhotoBtn = document.getElementById('btn-dashboard-edit-photo');
+            if (dashPhotoBtn) dashPhotoBtn.classList.toggle('hidden', isSuperAdminRoleClient(roleAktif));
 
             renderDetailProfilContent(d, roleAktif);
             renderDashboardMenu(d, roleAktif);
         }
 
         function renderDetailProfilContent(d, roleAktif) {
-            let title = isSuperAdminRoleClient(roleAktif) ? 'DATA SUPER ADMIN' : (isOperationalAdminRoleClient(roleAktif) ? 'DATA ADMIN' : 'DATA PEGAWAI');
+            const detailEditBtn = document.getElementById('btn-detail-edit-profile');
+            if (detailEditBtn) detailEditBtn.classList.toggle('hidden', isSuperAdminRoleClient(roleAktif));
+
+            let title = isSuperAdminRoleClient(roleAktif) ? 'DATA BLACKBOX SUPER ADMIN' : (isOperationalAdminRoleClient(roleAktif) ? 'DATA ADMIN OPERASIONAL' : 'DATA PEGAWAI');
             let html = `<h6 class="fw-bold text-primary border-bottom pb-2">${title}</h6>`;
-            const fields = [
-                ["ID User", d.id_user], ["Username", d.username], ["NIP", d.nip || d.id_nip], ["Role", d.role_akses || d.role],
-                ["Agama", d.agama], ["Status Kawin", d.status_kawin], ["Status ASN", d.status_asn], ["Jabatan", d.jabatan], ["Golongan", d.golongan],
-                ["Pendidikan", d.pendidikan], ["Jurusan", d.jurusan], ["JK", d.jenis_kelamin], 
-                ["TTL", (filterText(d.tempat_lahir)?filterText(d.tempat_lahir)+", ":"") + filterText(d.tanggal_lahir)],
-                ["Alamat Asal", d.alamat_asal], ["Domisili", d.alamat_domisili], 
-                ["Wilayah/Scope", (filterText(d.wilayah_binaan_kecamatan)?filterText(d.wilayah_binaan_kecamatan)+" - ":"") + filterText(d.wilayah_binaan_desa)],
-                ["HP", d.no_hp], ["Email", d.email]
-            ];
+            let fields = [];
+
+            if (isSuperAdminRoleClient(roleAktif)) {
+                fields = [
+                    ["ID User", d.id_user], ["Username", d.username], ["Role", d.role_akses || d.role],
+                    ["Fungsi", "Blackbox / System Monitor / Security / Performance / Audit"],
+                    ["Catatan", "Super Admin tidak memakai profil operasional dan tidak menjadi approver mapping binaan rutin."]
+                ];
+            } else if (isOperationalAdminRoleClient(roleAktif)) {
+                fields = [
+                    ["ID User", d.id_user], ["Username", d.username], ["ID Admin", d.id_nip || d.nip || d.id_pkb],
+                    ["Role", d.role_akses || d.role], ["Jabatan", d.jabatan], ["Unit Kerja", d.unit_kerja],
+                    ["Scope Admin", getDashboardScopeLabelClient(d, roleAktif)], ["No. HP", d.no_hp], ["Email", d.email],
+                    ["Status Akun", d.is_active === false ? "NONAKTIF" : "AKTIF"]
+                ];
+            } else {
+                fields = [
+                    ["ID User", d.id_user], ["Username", d.username], ["NIP", d.nip || d.id_nip], ["Role", d.role_akses || d.role],
+                    ["Agama", d.agama], ["Status Kawin", d.status_kawin], ["Status ASN", d.status_asn], ["Jabatan", d.jabatan], ["Golongan", d.golongan],
+                    ["Pendidikan", d.pendidikan], ["Jurusan", d.jurusan], ["JK", d.jenis_kelamin], 
+                    ["TTL", (filterText(d.tempat_lahir)?filterText(d.tempat_lahir)+", ":"") + filterText(d.tanggal_lahir)],
+                    ["Alamat Asal", d.alamat_asal], ["Domisili", d.alamat_domisili], 
+                    ["Wilayah Binaan", (filterText(d.wilayah_binaan_kecamatan)?filterText(d.wilayah_binaan_kecamatan)+" - ":"") + filterText(d.wilayah_binaan_desa)],
+                    ["HP", d.no_hp], ["Email", d.email]
+                ];
+            }
+
             fields.forEach(f => {
                 const label = escapeHtml(f[0]);
                 const value = escapeHtml(f[1]);
@@ -842,7 +884,6 @@
                     ['bi-shield-lock-fill', '#6f42c1', 'Security Monitor', 'bukaSuperAdminMonitor()'],
                     ['bi-speedometer2', '#0d6efd', 'Performance Monitor', 'bukaSuperAdminMonitor()'],
                     ['bi-database-check', '#198754', 'Workbook Health', 'bukaSuperAdminMonitor()'],
-                    ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'],
                     ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))']
                 ];
             } else if (isOperationalAdminRoleClient(roleAktif)) {
@@ -1112,8 +1153,21 @@ ${label}`)) return;
         function siapkanEditProfil() {
             let d = {};
             try { d = JSON.parse(localStorage.getItem('userPKB')); } catch(e) { return; }
+            const roleAktif = filterText(d.role_akses || d.role).toUpperCase();
+            if (isSuperAdminRoleClient(roleAktif)) {
+                alert('Profil operasional Super Admin tidak digunakan. Gunakan dashboard Blackbox untuk monitoring sistem.');
+                bukaHalaman('dashboard-page');
+                return;
+            }
+            const isAdminProfile = isOperationalAdminRoleClient(roleAktif);
+            const wilayahBlock = document.getElementById('edit-wilayah-block');
+            if (wilayahBlock) wilayahBlock.classList.toggle('hidden', isAdminProfile);
+            const editTitle = document.getElementById('edit-profile-title');
+            if (editTitle) editTitle.innerText = isAdminProfile ? 'Edit Profil Admin' : 'Edit Profil';
+            const contactTitle = document.getElementById('edit-kontak-title');
+            if (contactTitle) contactTitle.innerText = isAdminProfile ? 'Kontak Admin' : 'Kontak';
             
-            document.getElementById('edit-id-nip').value = filterText(d.nip);
+            document.getElementById('edit-id-nip').value = filterText(d.nip || d.id_nip);
             document.getElementById('edit-nama').value = filterText(d.nama_asli); 
             document.getElementById('edit-nama').setAttribute('readonly', 'true'); document.getElementById('edit-nama').classList.add('bg-light');
             document.getElementById('icon-unlock-nama').classList.replace('bi-unlock-fill', 'bi-pencil-fill');
@@ -1136,11 +1190,12 @@ ${label}`)) return;
             
             document.getElementById('edit-jabatan').value = filterText(d.jabatan);
             document.getElementById('edit-t-lahir').value = filterText(d.tempat_lahir); document.getElementById('edit-tgl-lahir').value = filterText(d.tanggal_lahir); 
-            pecahNilaiAlamat('asal', d.alamat_asal); pecahNilaiAlamat('dom', d.alamat_domisili);
+            if (!isAdminProfile) {
+                pecahNilaiAlamat('asal', d.alamat_asal); pecahNilaiAlamat('dom', d.alamat_domisili);
 
-            setTimeout(() => {
-               if(filterText(d.wilayah_binaan_kecamatan)) {
-                   const binKabEl = document.getElementById('bin-kab');
+                setTimeout(() => {
+                   if(filterText(d.wilayah_binaan_kecamatan)) {
+                       const binKabEl = document.getElementById('bin-kab');
                    const targetKab = filterText(d.wilayah_binaan_kabupaten) || "BULELENG";
                    binKabEl.value = targetKab;
                    if(!binKabEl.value) {
@@ -1155,8 +1210,9 @@ ${label}`)) return;
                            desaChecked.forEach(ds => { const cbox = document.getElementById('cb-' + ds.replace(/\s+/g, '')); if(cbox) cbox.checked = true; });
                        }, 100);
                    }, 100);
-               }
-            }, 300);
+                   }
+                }, 300);
+            }
 
             document.getElementById('edit-hp').value = filterText(d.no_hp); document.getElementById('edit-email').value = filterText(d.email);
             document.getElementById('status-upload').classList.add('hidden'); fileFotoData = null; 
@@ -1169,6 +1225,15 @@ ${label}`)) return;
             if (!session || !session.token) {
                 alert('Session tidak ditemukan. Silakan login ulang.');
                 bukaHalaman('login-page');
+                return;
+            }
+            const sessionUser = JSON.parse(localStorage.getItem('userPKB') || '{}');
+            const roleAktif = filterText(sessionUser.role_akses || sessionUser.role).toUpperCase();
+            const isAdminProfile = isOperationalAdminRoleClient(roleAktif);
+            const isSuperProfile = isSuperAdminRoleClient(roleAktif);
+            if (isSuperProfile) {
+                alert('Profil operasional Super Admin tidak digunakan.');
+                bukaHalaman('dashboard-page');
                 return;
             }
             btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
@@ -1205,11 +1270,13 @@ ${label}`)) return;
                 p.append('jk', document.getElementById('edit-jk').value); p.append('status', document.getElementById('edit-status').value);
                 p.append('jabatan', document.getElementById('edit-jabatan').value); p.append('gol', document.getElementById('edit-gol').value);
                 p.append('t_lahir', document.getElementById('edit-t-lahir').value); p.append('tgl_lahir', document.getElementById('edit-tgl-lahir').value);
-                p.append('almt_asal', dapatkanNilaiAlamat('asal')); p.append('almt_dom', dapatkanNilaiAlamat('dom'));
-                p.append('kab_binaan', document.getElementById('bin-kab').value || "BULELENG");
-                p.append('kec', document.getElementById('bin-kec').value || "-");
-                const checkedDesa = Array.from(document.querySelectorAll('.bin-desa-cb:checked')).map(cb => cb.value).join(', ');
-                p.append('desa', checkedDesa || "-");
+                if (!isAdminProfile) {
+                    p.append('almt_asal', dapatkanNilaiAlamat('asal')); p.append('almt_dom', dapatkanNilaiAlamat('dom'));
+                    p.append('kab_binaan', document.getElementById('bin-kab').value || "BULELENG");
+                    p.append('kec', document.getElementById('bin-kec').value || "-");
+                    const checkedDesa = Array.from(document.querySelectorAll('.bin-desa-cb:checked')).map(cb => cb.value).join(', ');
+                    p.append('desa', checkedDesa || "-");
+                }
                 p.append('hp', document.getElementById('edit-hp').value); p.append('email', document.getElementById('edit-email').value);
                 p.append('foto_profile_file_id', finalFotoRef); p.append('foto', finalFotoRef); p.append('agama', document.getElementById('edit-agama').value);
                 const stKawin = document.getElementById('edit-kawin').value; p.append('status_kawin', stKawin);
