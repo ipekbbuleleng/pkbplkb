@@ -1,5 +1,5 @@
 // E-PKB Kabupaten Buleleng - Service Worker ringan
-// Version: 0.1.6-CODEBASE-STRUCTURE-FOUNDATION-V1-R1
+// Version: 0.1.7-MAPPING-SCOPE-ENFORCEMENT-V1-R1
 self.addEventListener('install', function(event) {
   self.skipWaiting();
 });
