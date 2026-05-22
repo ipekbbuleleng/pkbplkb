@@ -28,6 +28,17 @@
         .app-footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1040; background: rgba(255,255,255,0.97); border-top: 1px solid #dee2e6; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); padding: 7px 12px; text-align: center; line-height: 1.15; }
         .app-footer .copyright { font-size: 0.78rem; font-weight: 700; color: #343a40; }
         .app-footer .version { font-size: 0.68rem; color: #6c757d; margin-top: 2px; word-break: break-word; }
+
+        .dashboard-summary-card { border-radius: 16px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+        .summary-mini { border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; height: 100%; background: #fff; }
+        .summary-mini .label { font-size: 0.78rem; color: #6b7280; }
+        .summary-mini .value { font-size: 1.18rem; font-weight: 800; color: #111827; line-height: 1.15; }
+        .summary-mini .sub { font-size: 0.72rem; color: #6b7280; margin-top: 3px; }
+        .status-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: #adb5bd; }
+        .status-dot.ok { background: #198754; }
+        .status-dot.warn { background: #ffc107; }
+        .status-dot.danger { background: #dc3545; }
+        .riwayat-item { border-left: 4px solid #0d6efd; border-radius: 14px; }
     </style>
 </head>
 <body>
@@ -162,6 +173,19 @@
                 <div class="text-muted small">Ringkasan akan dimuat otomatis saat dashboard Super Admin dibuka.</div>
             </div>
         </div>
+
+        <div class="card dashboard-summary-card p-3 mb-4 hidden" id="dashboardPkbSummaryCard">
+            <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Ringkasan Kerja PKB</h5>
+                    <div class="small text-muted">Status laporan harian, rekap bulan berjalan, wilayah binaan, dan kelengkapan profil.</div>
+                </div>
+                <button type="button" onclick="muatPkbDashboardLite_()" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
+            </div>
+            <div id="pkbDashboardSummaryContent">
+                <div class="text-muted small">Ringkasan akan dimuat otomatis saat Beranda PKB dibuka.</div>
+            </div>
+        </div>
         <div class="row g-3" id="menu-grid"></div>
     </div>
 
@@ -276,6 +300,24 @@
         <div id="list-kegiatan"></div>
     </div>
 
+
+    <div id="riwayat-tugas-page" class="container mt-4 mb-5 hidden">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
+                <div>
+                    <h4 class="fw-bold m-0">Riwayat Tugas Saya</h4>
+                    <div class="small text-muted">Daftar ringkas laporan kegiatan terbaru berdasarkan data tugas_kegiatan.</div>
+                </div>
+            </div>
+            <button onclick="muatRiwayatTugasSaya()" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
+        </div>
+        <div id="riwayatTugasSummary" class="mb-3"></div>
+        <div id="riwayatTugasList">
+            <div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">Klik Muat untuk mengambil riwayat tugas.</div>
+        </div>
+    </div>
+
     <div id="detail-profil-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex align-items-center mb-4">
             <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
@@ -334,7 +376,8 @@
                 <div class="mb-3"><label class="form-label small fw-bold">Jurusan</label><input type="text" id="edit-jurusan" class="form-control"></div>
                 <div class="mb-3"><label class="form-label small fw-bold">Status ASN</label><select id="edit-status" class="form-select" onchange="aturGolongan()"><option value="">Pilih Status</option><option value="PNS">PNS</option><option value="CPNS">CPNS</option><option value="PPPK">PPPK</option></select></div>
                 <div class="mb-3"><label class="form-label small fw-bold">Jabatan</label>
-                    <select id="edit-jabatan" class="form-select"><option value="PKB AHLI PERTAMA">PKB AHLI PERTAMA</option><option value="PKB AHLI MUDA">PKB AHLI MUDA</option><option value="PKB AHLI MADYA">PKB AHLI MADYA</option><option value="PLKB PEMULA">PLKB PEMULA</option><option value="PLKB TERAMPIL">PLKB TERAMPIL</option><option value="PLKB MAHIR">PLKB MAHIR</option><option value="PLKB PENYELIA">PLKB PENYELIA</option></select>
+                    <input type="text" id="edit-jabatan" class="form-control" list="jabatan-saran-list" placeholder="Tulis jabatan">
+                    <datalist id="jabatan-saran-list"></datalist>
                 </div>
                 <div class="mb-3"><label class="form-label small fw-bold">Golongan</label><select id="edit-gol" class="form-select"><option value="">Pilih Status ASN Dahulu</option></select></div>
                 <div class="mb-3"><label class="form-label small fw-bold">TMT SK Pertama</label><input type="date" id="edit-tmt-awal" class="form-control"></div>
@@ -371,7 +414,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.1.8-UI-ACCOUNT-PROFILE-POLISH-V1-R1";
+        const EPKB_APP_VERSION = "0.1.9-DASHBOARD-PKB-V1";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -408,8 +451,9 @@
         const JABATAN_ADMIN_OPTIONS = ["Admin Provinsi", "Admin Kabupaten", "Admin Kecamatan", "Operator Admin", "Koordinator Admin"];
 
         function setJabatanOptions_(isAdminProfile, currentValue, roleAktif) {
-            const sel = document.getElementById('edit-jabatan');
-            if (!sel) return;
+            const input = document.getElementById('edit-jabatan');
+            const list = document.getElementById('jabatan-saran-list');
+            if (!input) return;
             let current = filterText(currentValue);
             if (isAdminProfile && !current) {
                 const role = filterText(roleAktif).toUpperCase();
@@ -417,10 +461,11 @@
                 else if (role === 'ADMIN_KABUPATEN') current = 'Admin Kabupaten';
                 else if (role === 'ADMIN_KECAMATAN') current = 'Admin Kecamatan';
             }
-            const source = isAdminProfile ? JABATAN_ADMIN_OPTIONS.slice() : JABATAN_PKB_OPTIONS.slice();
+            const source = (isAdminProfile ? JABATAN_ADMIN_OPTIONS : JABATAN_PKB_OPTIONS).slice();
             if (current && source.indexOf(current) === -1) source.unshift(current);
-            sel.innerHTML = source.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-            sel.value = current || source[0] || '';
+            if (list) list.innerHTML = source.map(v => `<option value="${escapeHtml(v)}"></option>`).join('');
+            input.value = current || '';
+            input.placeholder = isAdminProfile ? 'Tulis jabatan admin' : 'Tulis/pilih jabatan';
         }
 
 
@@ -646,7 +691,7 @@
         });
 
         function bukaHalaman(id) {
-            ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page', 'verifikasi-binaan-page', 'superadmin-monitor-page'].forEach(pg => {
+            ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page', 'riwayat-tugas-page', 'verifikasi-binaan-page', 'superadmin-monitor-page'].forEach(pg => {
                 const el = document.getElementById(pg); if(el) el.classList.add('hidden');
             });
             document.getElementById(id).classList.remove('hidden');
@@ -883,8 +928,10 @@
 
             const profileCard = document.getElementById('dashboardProfileCard');
             const superSummaryCard = document.getElementById('dashboardSuperSummaryCard');
+            const pkbSummaryCard = document.getElementById('dashboardPkbSummaryCard');
             if (profileCard) profileCard.classList.toggle('hidden', isSuper);
             if (superSummaryCard) superSummaryCard.classList.toggle('hidden', !isSuper);
+            if (pkbSummaryCard) pkbSummaryCard.classList.toggle('hidden', !isPkb);
 
             const gDepan = filterText(d.gelar_depan) ? filterText(d.gelar_depan) + " " : "";
             const gBelakang = filterText(d.gelar_belakang) ? ", " + filterText(d.gelar_belakang) : "";
@@ -906,6 +953,62 @@
             renderDetailProfilContent(d, roleAktif);
             renderDashboardMenu(d, roleAktif);
             if (isSuper) muatSuperAdminDashboardCardSummary_();
+            if (isPkb) muatPkbDashboardLite_();
+        }
+
+        async function muatPkbDashboardLite_() {
+            const box = document.getElementById('pkbDashboardSummaryContent');
+            const session = ambilSession();
+            if (!box) return;
+            if (!session || !session.token) {
+                box.innerHTML = '<div class="alert alert-warning mb-0">Session tidak ditemukan. Silakan login ulang.</div>';
+                return;
+            }
+            box.innerHTML = '<div class="text-muted small"><span class="spinner-border spinner-border-sm"></span> Memuat ringkasan kerja PKB...</div>';
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'getPkbDashboardLite');
+                p.append('token', session.token);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status === 'sukses') {
+                    const dashboard = d.dashboard || d.data || {};
+                    localStorage.setItem('epkb_pkb_dashboard_lite', JSON.stringify(dashboard));
+                    renderPkbDashboardCardSummary_(dashboard);
+                } else {
+                    box.innerHTML = `<div class="alert alert-warning mb-0">${escapeHtml(d.pesan || d.code || 'Gagal memuat Dashboard PKB.')}</div>`;
+                }
+            } catch(e) {
+                console.warn('[E-PKB] Dashboard PKB gagal dimuat:', e);
+                box.innerHTML = '<div class="alert alert-warning mb-0">Ringkasan kerja PKB belum dapat dimuat. Periksa jaringan lalu tekan Muat.</div>';
+            }
+        }
+
+        function renderPkbDashboardCardSummary_(dashboard) {
+            const box = document.getElementById('pkbDashboardSummaryContent');
+            if (!box) return;
+            const s = dashboard.summary || {};
+            const statusKey = filterText(s.status_laporan_hari_ini).toUpperCase();
+            const profileKey = filterText(s.status_profil).toUpperCase();
+            const statusClass = statusKey === 'SUDAH_LAPOR' ? 'ok' : 'warn';
+            const profileClass = profileKey === 'LENGKAP' ? 'ok' : 'warn';
+            box.innerHTML = `
+                <div class="row g-2">
+                    ${pkbSummaryMiniCard_('Laporan Hari Ini', `<span class="status-dot ${statusClass}"></span>${escapeHtml(s.status_laporan_hari_ini_label || '-')}`, escapeHtml(dashboard.today_key || ''), 'bi-journal-check')}
+                    ${pkbSummaryMiniCard_('Laporan Bulan Ini', escapeHtml(s.laporan_bulan_ini || 0), escapeHtml(dashboard.tugas_summary && dashboard.tugas_summary.month_key || ''), 'bi-calendar2-check')}
+                    ${pkbSummaryMiniCard_('Laporan Terakhir', escapeHtml(s.laporan_terakhir || '-'), 'Terakhir tersimpan', 'bi-clock-history')}
+                    ${pkbSummaryMiniCard_('Wilayah Aktif', escapeHtml(s.wilayah_binaan_aktif || 0), escapeHtml(s.wilayah_binaan_label || '-'), 'bi-geo-alt-fill')}
+                    ${pkbSummaryMiniCard_('Status Profil', `<span class="status-dot ${profileClass}"></span>${escapeHtml(s.status_profil_label || '-')}`, (s.profile_missing_count ? `${escapeHtml(s.profile_missing_count)} data perlu dilengkapi` : 'Siap digunakan'), 'bi-person-check')}
+                    ${pkbSummaryMiniCard_('Total Laporan', escapeHtml(s.laporan_total || 0), 'Seluruh data terbaca', 'bi-archive')}
+                </div>
+            `;
+        }
+
+        function pkbSummaryMiniCard_(label, value, sub, icon) {
+            return `<div class="col-6 col-md-4"><div class="summary-mini"><div class="d-flex justify-content-between align-items-start gap-2"><div><div class="label">${escapeHtml(label)}</div><div class="value">${value}</div><div class="sub">${escapeHtml(sub || '')}</div></div><i class="bi ${icon} h4 mb-0 text-primary"></i></div></div></div>`;
         }
 
         async function muatSuperAdminDashboardCardSummary_() {
@@ -1025,10 +1128,10 @@
             } else {
                 menus = [
                     ['bi-journal-check', '#0d6efd', 'Lapor Tugas', 'siapkanLaporTugas()'],
+                    ['bi-clock-history', '#6f42c1', 'Riwayat Tugas Saya', 'bukaRiwayatTugasSaya()'],
                     ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'],
                     ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))'],
-                    ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")'],
-                    ['bi-file-earmark-text', '#6f42c1', 'Administrasi', 'alert("Menu Administrasi PKB")']
+                    ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Informasi akan dibuat pada paket berikutnya.")']
                 ];
             }
             grid.innerHTML = menus.map(m => `<div class="col-6 mb-2"><div class="card p-3 border-0 shadow-sm menu-card text-center" onclick='${m[3]}'><i class="bi ${m[0]} h2 mb-2" style="color:${m[1]}"></i><div class="small fw-bold">${m[2]}</div></div></div>`).join('');
@@ -1474,6 +1577,78 @@ ${label}`)) return;
             finally { btn.disabled = false; btn.innerText = "SIMPAN PERUBAHAN"; }
         }
 
+
+        function bukaRiwayatTugasSaya() {
+            bukaHalaman('riwayat-tugas-page');
+            muatRiwayatTugasSaya();
+        }
+
+        async function muatRiwayatTugasSaya() {
+            const session = ambilSession();
+            const summaryBox = document.getElementById('riwayatTugasSummary');
+            const list = document.getElementById('riwayatTugasList');
+            if (!session || !session.token) {
+                alert('Session tidak ditemukan. Silakan login ulang.');
+                bukaHalaman('login-page');
+                return;
+            }
+            if (summaryBox) summaryBox.innerHTML = '';
+            if (list) list.innerHTML = '<div class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm"></span> Memuat riwayat tugas...</div>';
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'getPkbDashboardLite');
+                p.append('token', session.token);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status === 'sukses') {
+                    const dashboard = d.dashboard || d.data || {};
+                    localStorage.setItem('epkb_pkb_dashboard_lite', JSON.stringify(dashboard));
+                    renderRiwayatTugasList_(dashboard);
+                } else {
+                    list.innerHTML = `<div class="alert alert-warning">${escapeHtml(d.pesan || d.code || 'Gagal memuat riwayat tugas.')}</div>`;
+                }
+            } catch(e) {
+                console.warn('[E-PKB] Riwayat tugas gagal dimuat:', e);
+                list.innerHTML = '<div class="alert alert-danger">Koneksi terputus saat memuat riwayat tugas.</div>';
+            }
+        }
+
+        function renderRiwayatTugasList_(dashboard) {
+            const summaryBox = document.getElementById('riwayatTugasSummary');
+            const list = document.getElementById('riwayatTugasList');
+            const s = dashboard.summary || {};
+            const records = dashboard.recent_records || [];
+            if (summaryBox) {
+                summaryBox.innerHTML = `<div class="alert alert-light border rounded-4 shadow-sm mb-0">
+                    <b>Bulan ini:</b> ${escapeHtml(s.laporan_bulan_ini || 0)} laporan
+                    <span class="mx-2">•</span>
+                    <b>Terakhir:</b> ${escapeHtml(s.laporan_terakhir || '-')}
+                    <span class="mx-2">•</span>
+                    <b>Status hari ini:</b> ${escapeHtml(s.status_laporan_hari_ini_label || '-')}
+                </div>`;
+            }
+            if (!records.length) {
+                list.innerHTML = '<div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">Belum ada laporan tugas yang terbaca.</div>';
+                return;
+            }
+            list.innerHTML = records.map(r => `
+                <div class="card border-0 shadow-sm p-3 mb-3 riwayat-item">
+                    <div class="d-flex justify-content-between gap-2 flex-wrap">
+                        <div>
+                            <div class="fw-bold">${escapeHtml(r.judul || 'Laporan Kegiatan')}</div>
+                            <div class="small text-primary fw-bold">${escapeHtml(r.topik || '-')} ${r.jenis ? '• ' + escapeHtml(r.jenis) : ''}</div>
+                        </div>
+                        <span class="badge bg-light text-dark border">${escapeHtml(r.tanggal_label || r.tanggal || '-')}</span>
+                    </div>
+                    <div class="small text-muted mt-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(r.desa || '-')} ${r.lokasi ? ' / ' + escapeHtml(r.lokasi) : ''}</div>
+                    <div class="small text-muted mt-1">Status: ${escapeHtml(r.status || 'TERSIMPAN')}</div>
+                </div>
+            `).join('');
+        }
+
         // --- LAPOR KEGIATAN LOGIC ---
         function aturJenis() {
             const topik = document.getElementById('tg-topik').value;
@@ -1502,7 +1677,7 @@ ${label}`)) return;
             const selDesa = document.getElementById('tg-desa');
             selDesa.innerHTML = '<option value="">Memuat binaan...</option>';
             
-            fetch(`${SCRIPT_URL}?action=get_binaan&nip=${user.nip}`).then(res => res.json()).then(d => {
+            fetch(`${SCRIPT_URL}?action=get_binaan&id_user=${encodeURIComponent(user.id_user || '')}&nip=${encodeURIComponent(user.nip || user.id_nip || '')}`).then(res => res.json()).then(d => {
                 if(d.status === "sukses" && d.binaan.length > 0) {
                     let h = '<option value="">-- Pilih Desa Binaan --</option>';
                     d.binaan.forEach(b => h += `<option value="${b.id}" data-nama="${b.nama}">${b.nama} (${b.kec})</option>`);
@@ -1553,8 +1728,18 @@ ${label}`)) return;
             const foto = await readF(document.getElementById('tg-foto').files[0]);
             const dok = await readF(document.getElementById('tg-dokumen').files[0]);
 
+            const session = ambilSession();
             const p = new URLSearchParams();
-            p.append('action', 'lapor_tugas'); p.append('nip', user.nip); p.append('nama_pkb', user.nama_asli);
+            p.append('action', 'lapor_tugas');
+            if (session && session.token) p.append('token', session.token);
+            p.append('device_id', getDeviceId());
+            p.append('app_version', EPKB_APP_VERSION);
+            p.append('user_agent', navigator.userAgent || '');
+            p.append('id_user', user.id_user || '');
+            p.append('id_pkb', user.id_pkb || '');
+            p.append('id_nip', user.id_nip || '');
+            p.append('nip', user.nip || user.id_nip || '');
+            p.append('nama_pkb', user.nama_asli || user.nama_user || '');
             p.append('id_desa', dSel.value); p.append('nama_desa', dSel.options[dSel.selectedIndex].getAttribute('data-nama'));
             p.append('lokasi', document.getElementById('tg-lokasi').value || "-"); p.append('tanggal', document.getElementById('tg-tanggal').value || "-");
             p.append('waktu_mulai', document.getElementById('tg-mulai').value || "-"); p.append('waktu_selesai', document.getElementById('tg-selesai').value || "-");
@@ -1579,6 +1764,7 @@ ${label}`)) return;
                     document.getElementById('formTugas').reset(); 
                     document.getElementById('box-jenis').classList.add('hidden'); document.getElementById('box-tabel-kb').classList.add('hidden');
                     siapkanLaporTugas();
+                    muatPkbDashboardLite_();
                 } else { alert("Gagal: " + res.pesan); }
             } catch(err) { alert("Kesalahan koneksi."); } finally { btn.disabled = false; btn.innerText = "SIMPAN KEGIATAN"; }
         }

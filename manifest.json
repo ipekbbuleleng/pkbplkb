@@ -1,22 +1,22 @@
 {
-  "name": "E-PKB Kabupaten Buleleng",
-  "short_name": "E-PKB",
-  "description": "Sistem kerja PKB/PLKB Kabupaten Buleleng berbasis PWA",
-  "version": "0.1.8-UI-ACCOUNT-PROFILE-POLISH-V1-R1",
+  "name": "E-Pegawai App",
+  "short_name": "Pegawai",
+  "description": "Sistem Informasi Pegawai berbasis PWA",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0056b3",
   "icons": [
     {
-      "src": "IPeKB26-PWA.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/192/192192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "IPeKB26-PWA.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/512/512512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "version": "0.1.9-DASHBOARD-PKB-V1"
 }
