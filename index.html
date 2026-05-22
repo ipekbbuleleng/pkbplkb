@@ -240,23 +240,54 @@
     <div id="lapor-tugas-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex align-items-center mb-4">
             <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
-            <h4 class="fw-bold m-0">Lapor Kegiatan</h4>
+            <h4 class="fw-bold m-0">Lapor Kegiatan PKB</h4>
         </div>
         <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 15px;">
             <form id="formTugas">
                 <div class="form-section-title mt-0">Data Dasar</div>
-                <div class="mb-3"><label class="small fw-bold">Wilayah (Desa Binaan)</label><select id="tg-desa" class="form-select" required></select></div>
-                <div class="mb-3"><label class="small fw-bold">Lokasi Kegiatan</label><input type="text" id="tg-lokasi" class="form-control"></div>
-                <div class="mb-3"><label class="small fw-bold">Tanggal Kegiatan</label><input type="date" id="tg-tanggal" class="form-control"></div>
+                <div class="alert alert-info py-2 small mb-3">
+                    Pilih <b>Dalam Wilayah Binaan</b> untuk kegiatan rutin di desa binaan. Pilih <b>Di Luar Wilayah Binaan</b> untuk undangan/koordinasi lintas wilayah, luar kecamatan, luar kabupaten, luar provinsi, atau nasional.
+                </div>
+                <div class="mb-3">
+                    <label class="small fw-bold">Ruang Lingkup Lokasi Kegiatan</label>
+                    <select id="tg-lokasi-scope" class="form-select" onchange="aturScopeLokasiKegiatan_()" required>
+                        <option value="DALAM_BINAAN">Dalam Wilayah Binaan</option>
+                        <option value="LUAR_BINAAN">Di Luar Wilayah Binaan</option>
+                    </select>
+                </div>
+                <div id="tg-desa-binaan-block" class="mb-3"><label class="small fw-bold">Wilayah (Desa Binaan)</label><select id="tg-desa" class="form-select" required></select></div>
+                <div id="tg-luar-binaan-block" class="hidden">
+                    <div class="mb-3">
+                        <label class="small fw-bold">Level Lokasi Luar Binaan</label>
+                        <select id="tg-level-lokasi" class="form-select">
+                            <option value="">-- Pilih Level --</option>
+                            <option value="KECAMATAN">Lintas Desa / Dalam Kecamatan</option>
+                            <option value="KABUPATEN">Lintas Kecamatan / Dalam Kabupaten</option>
+                            <option value="PROVINSI">Lintas Kabupaten / Dalam Provinsi</option>
+                            <option value="NASIONAL">Nasional</option>
+                            <option value="LAINNYA">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small fw-bold">Nama Lokasi / Instansi Kegiatan</label>
+                        <input type="text" id="tg-nama-lokasi-luar" class="form-control" placeholder="Contoh: Kantor BKKBN Provinsi Bali, Hotel X Denpasar, Jakarta Convention Center">
+                    </div>
+                    <div class="mb-3">
+                        <label class="small fw-bold">Keterangan / Alasan Luar Binaan</label>
+                        <textarea id="tg-keterangan-luar" class="form-control" rows="2" placeholder="Contoh: Undangan rapat koordinasi provinsi / pertemuan nasional / koordinasi lintas sektor"></textarea>
+                    </div>
+                </div>
+                <div class="mb-3"><label class="small fw-bold">Tempat/Detail Lokasi Kegiatan</label><input type="text" id="tg-lokasi" class="form-control" required placeholder="Contoh: Posyandu, Balai Banjar, Kantor Desa, ruang rapat, aula hotel"></div>
+                <div class="mb-3"><label class="small fw-bold">Tanggal Kegiatan</label><input type="date" id="tg-tanggal" class="form-control" required></div>
                 <div class="row">
                     <div class="col-6 mb-3"><label class="small fw-bold">Waktu Mulai</label><input type="time" id="tg-mulai" class="form-control"></div>
                     <div class="col-6 mb-3"><label class="small fw-bold">Waktu Selesai</label><input type="time" id="tg-selesai" class="form-control"></div>
                 </div>
 
                 <div class="form-section-title">Detail Kegiatan</div>
-                <div class="mb-3"><label class="small fw-bold">Peserta Kegiatan</label><input type="text" id="tg-peserta" class="form-control" placeholder="Cth: Kader, PUS, Tokoh"></div>
-                <div class="mb-3"><label class="small fw-bold">Jumlah Peserta Hadir (Orang)</label><input type="number" id="tg-jml" class="form-control"></div>
-                <div class="mb-3"><label class="small fw-bold">Judul Kegiatan</label><input type="text" id="tg-judul" class="form-control"></div>
+                <div class="mb-3"><label class="small fw-bold">Peserta Kegiatan</label><input type="text" id="tg-peserta" class="form-control" required placeholder="Cth: Kader, PUS, Tokoh masyarakat"></div>
+                <div class="mb-3"><label class="small fw-bold">Jumlah Peserta Hadir (Orang)</label><input type="number" id="tg-jml" class="form-control" min="0" required></div>
+                <div class="mb-3"><label class="small fw-bold">Judul Kegiatan</label><input type="text" id="tg-judul" class="form-control" required placeholder="Contoh: KIE KB pada Posyandu"></div>
                 <div class="mb-3"><label class="small fw-bold">Topik Kegiatan</label>
                     <select id="tg-topik" class="form-select" onchange="aturJenis()" required>
                         <option value="">-- Pilih Topik --</option>
@@ -286,11 +317,11 @@
                     </table>
                 </div>
 
-                <div class="mb-3"><label class="small fw-bold">Deskripsi / Keterangan Kegiatan</label><textarea id="tg-deskripsi" class="form-control" rows="3"></textarea></div>
+                <div class="mb-3"><label class="small fw-bold">Deskripsi / Keterangan Kegiatan</label><textarea id="tg-deskripsi" class="form-control" rows="3" placeholder="Tuliskan ringkasan pelaksanaan, hasil, dan catatan penting."></textarea></div>
 
                 <div class="form-section-title">Lampiran Dokumentasi</div>
-                <div class="mb-3"><label class="small fw-bold">Lampiran Foto Dokumentasi</label><input type="file" id="tg-foto" class="form-control" accept="image/*"></div>
-                <div class="mb-4"><label class="small fw-bold">Lampiran Dokumen (PDF/Word/Excel)</label><input type="file" id="tg-dokumen" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx"></div>
+                <div class="mb-3"><label class="small fw-bold">Lampiran Foto Dokumentasi</label><input type="file" id="tg-foto" class="form-control" accept="image/*"><div class="form-text">Opsional. Maksimal 5 MB.</div></div>
+                <div class="mb-4"><label class="small fw-bold">Lampiran Dokumen (PDF/Word/Excel)</label><input type="file" id="tg-dokumen" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx"><div class="form-text">Opsional. Maksimal 10 MB.</div></div>
 
                 <button type="button" onclick="kirimLaporan()" id="btnKirimTugas" class="btn btn-success w-100 py-3 fw-bold rounded-4 shadow">SIMPAN KEGIATAN</button>
             </form>
@@ -414,7 +445,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.1.9-DASHBOARD-PKB-V1-R1";
+        const EPKB_APP_VERSION = "0.2.1-LAPOR-KEGIATAN-PKB-V1-R1";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -1659,7 +1690,7 @@ ${label}`)) return;
                         </div>
                         <span class="badge bg-light text-dark border">${escapeHtml(r.tanggal_label || r.tanggal || '-')}</span>
                     </div>
-                    <div class="small text-muted mt-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(r.desa || '-')} ${r.lokasi ? ' / ' + escapeHtml(r.lokasi) : ''}</div>
+                    <div class="small text-muted mt-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(r.nama_lokasi_kegiatan || r.desa || '-')} ${r.lokasi ? ' / ' + escapeHtml(r.lokasi) : ''}</div>
                     <div class="small text-muted mt-1">Status: ${escapeHtml(r.status || 'TERSIMPAN')}</div>
                 </div>
             `).join('');
@@ -1687,102 +1718,276 @@ ${label}`)) return;
             document.getElementById('box-tabel-kb').classList.toggle('hidden', document.getElementById('tg-jenis').value !== 'Pelayanan KB');
         }
 
-        async function siapkanLaporTugas() {
-            const user = JSON.parse(localStorage.getItem('userPKB'));
-            bukaHalaman('lapor-tugas-page');
-            const selDesa = document.getElementById('tg-desa');
-            selDesa.innerHTML = '<option value="">Memuat binaan...</option>';
-            
-            fetch(`${SCRIPT_URL}?action=get_binaan&id_user=${encodeURIComponent(user.id_user || '')}&nip=${encodeURIComponent(user.nip || user.id_nip || '')}`).then(res => res.json()).then(d => {
-                if(d.status === "sukses" && d.binaan.length > 0) {
-                    let h = '<option value="">-- Pilih Desa Binaan --</option>';
-                    d.binaan.forEach(b => h += `<option value="${b.id}" data-nama="${b.nama}">${b.nama} (${b.kec})</option>`);
-                    selDesa.innerHTML = h;
-                } else { selDesa.innerHTML = '<option value="">(Kosong) Buka Edit Profil lalu Simpan!</option>'; }
-            });
-            muatRiwayat(user.nip);
+        function aturScopeLokasiKegiatan_() {
+            const scopeEl = document.getElementById('tg-lokasi-scope');
+            const desaBlock = document.getElementById('tg-desa-binaan-block');
+            const luarBlock = document.getElementById('tg-luar-binaan-block');
+            const desaSel = document.getElementById('tg-desa');
+            const level = document.getElementById('tg-level-lokasi');
+            const namaLuar = document.getElementById('tg-nama-lokasi-luar');
+            const ketLuar = document.getElementById('tg-keterangan-luar');
+            const isLuar = scopeEl && scopeEl.value === 'LUAR_BINAAN';
+            if (desaBlock) desaBlock.classList.toggle('hidden', isLuar);
+            if (luarBlock) luarBlock.classList.toggle('hidden', !isLuar);
+            if (desaSel) {
+                desaSel.disabled = isLuar;
+                desaSel.required = !isLuar;
+                if (isLuar) desaSel.value = '';
+            }
+            [level, namaLuar, ketLuar].forEach(el => { if (el) el.required = isLuar; });
         }
 
-        function muatRiwayat(nip) {
+        function getSelectedDesaBinaanLabel_() {
+            const sel = document.getElementById('tg-desa');
+            if (!sel || sel.selectedIndex < 0) return '';
+            const opt = sel.options[sel.selectedIndex];
+            if (!opt || !opt.value) return '';
+            return (opt.getAttribute('data-nama') || opt.textContent || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+        }
+
+        function tanggalHariIniClient_() {
+            const now = new Date();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            return `${now.getFullYear()}-${m}-${d}`;
+        }
+
+        function buatClientSubmitId_() {
+            const rand = (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(16).slice(2));
+            return `WEB-KEG-${rand}`;
+        }
+
+        function aturDefaultTanggalTugas_() {
+            const el = document.getElementById('tg-tanggal');
+            if (!el) return;
+            const today = tanggalHariIniClient_();
+            el.max = today;
+            if (!el.value) el.value = today;
+        }
+
+        async function siapkanLaporTugas() {
+            const user = JSON.parse(localStorage.getItem('userPKB') || '{}');
+            const session = ambilSession();
+            bukaHalaman('lapor-tugas-page');
+            aturDefaultTanggalTugas_();
+            aturScopeLokasiKegiatan_();
+            const selDesa = document.getElementById('tg-desa');
+            selDesa.innerHTML = '<option value="">Memuat binaan...</option>';
+
+            if (!session || !session.token) {
+                selDesa.innerHTML = '<option value="">Session tidak ditemukan</option>';
+                alert('Session tidak ditemukan. Silakan login ulang.');
+                return;
+            }
+
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'get_binaan');
+                p.append('token', session.token);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                p.append('id_user', user.id_user || '');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if(d.status === "sukses" && d.binaan && d.binaan.length > 0) {
+                    let h = '<option value="">-- Pilih Desa Binaan --</option>';
+                    d.binaan.forEach(b => {
+                        const scope = b.scope_code || b.kode_desa_kelurahan || b.id || b.id_wilayah || '';
+                        h += `<option value="${escapeHtml(scope)}" data-id-wilayah="${escapeHtml(b.id_wilayah || '')}" data-id-kecamatan="${escapeHtml(b.id_kecamatan || '')}" data-kode-kecamatan="${escapeHtml(b.kode_kecamatan || '')}" data-nama-kecamatan="${escapeHtml(b.nama_kecamatan || b.kec || '')}" data-id-desa="${escapeHtml(b.id_desa || '')}" data-kode-desa="${escapeHtml(b.kode_desa_kelurahan || scope)}" data-nama="${escapeHtml(b.nama || '')}">${escapeHtml(b.nama || '-')} (${escapeHtml(b.kec || b.nama_kecamatan || '-')})</option>`;
+                    });
+                    selDesa.innerHTML = h;
+                } else {
+                    selDesa.innerHTML = '<option value="">Belum ada desa binaan aktif</option>';
+                }
+            } catch(e) {
+                console.warn('[E-PKB] Gagal memuat binaan:', e);
+                selDesa.innerHTML = '<option value="">Koneksi gagal memuat binaan</option>';
+            }
+            muatRiwayat();
+        }
+
+        async function muatRiwayat() {
             const div = document.getElementById('list-kegiatan');
-            div.innerHTML = '<div class="text-center text-muted small py-4">Memuat riwayat...</div>';
-            fetch(`${SCRIPT_URL}?action=get_kegiatan&nip=${nip}`).then(res => res.json()).then(d => {
-                if(d.status === "sukses" && d.data.length > 0) {
+            const session = ambilSession();
+            if (!div) return;
+            if (!session || !session.token) {
+                div.innerHTML = '<div class="alert alert-warning">Session tidak ditemukan. Silakan login ulang.</div>';
+                return;
+            }
+            div.innerHTML = '<div class="text-center text-muted small py-4"><span class="spinner-border spinner-border-sm"></span> Memuat riwayat...</div>';
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'get_kegiatan');
+                p.append('token', session.token);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                p.append('limit', '20');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if(d.status === "sukses" && d.data && d.data.length > 0) {
                     div.innerHTML = d.data.map(k => `
                         <div class="card border-0 shadow-sm p-3 mb-3" style="border-left: 4px solid var(--primary-color);">
-                            <div class="fw-bold small text-primary">${k.topik}</div>
-                            <div class="fw-bold">${k.judul}</div>
-                            <div class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> ${k.desa} | <i class="bi bi-calendar"></i> ${k.waktu.split('T')[0]}</div>
-                            <div>
-                                ${k.url_notulen !== "-" ? `<a href="${k.url_notulen}" target="_blank" class="badge bg-success text-decoration-none me-1"><i class="bi bi-file-earmark-word"></i> Notulen</a>` : ""}
-                                ${k.url_foto !== "-" ? `<a href="${k.url_foto}" target="_blank" class="badge bg-info text-decoration-none"><i class="bi bi-image"></i> Foto</a>` : ""}
+                            <div class="d-flex justify-content-between gap-2 flex-wrap">
+                                <div>
+                                    <div class="fw-bold small text-primary">${escapeHtml(k.topik || '-')} ${k.jenis ? '• ' + escapeHtml(k.jenis) : ''}</div>
+                                    <div class="fw-bold">${escapeHtml(k.judul || 'Laporan Kegiatan')}</div>
+                                </div>
+                                <span class="badge bg-light text-dark border">${escapeHtml(k.tanggal_label || k.tanggal || '-')}</span>
+                            </div>
+                            <div class="small text-muted mt-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(k.nama_lokasi_kegiatan || k.desa || '-')} ${k.lokasi ? ' / ' + escapeHtml(k.lokasi) : ''}</div>
+                            <div class="small text-muted mt-1">Scope: ${escapeHtml(k.lokasi_scope || '-')} ${k.level_lokasi_kegiatan ? '• ' + escapeHtml(k.level_lokasi_kegiatan) : ''}</div>
+                            <div class="small text-muted mt-1">Status: ${escapeHtml(k.status || 'TERSIMPAN')}</div>
+                            <div class="mt-2">
+                                ${k.url_foto ? `<a href="${escapeHtml(k.url_foto)}" target="_blank" class="badge bg-info text-decoration-none me-1"><i class="bi bi-image"></i> Foto</a>` : ""}
+                                ${k.url_dokumen ? `<a href="${escapeHtml(k.url_dokumen)}" target="_blank" class="badge bg-success text-decoration-none"><i class="bi bi-file-earmark"></i> Dokumen</a>` : ""}
                             </div>
                         </div>
                     `).join('');
-                } else { div.innerHTML = '<div class="text-center text-muted small py-4">Belum ada kegiatan yang dilaporkan.</div>'; }
-            });
+                } else {
+                    div.innerHTML = '<div class="text-center text-muted small py-4">Belum ada kegiatan yang dilaporkan.</div>';
+                }
+            } catch(e) {
+                console.warn('[E-PKB] Gagal memuat riwayat kegiatan:', e);
+                div.innerHTML = '<div class="alert alert-warning">Riwayat belum dapat dimuat. Periksa jaringan lalu buka ulang menu ini.</div>';
+            }
         }
 
-        const readF = (file) => new Promise(res => { if(!file) return res(null); const r = new FileReader(); r.onload = (e) => res({ n: file.name, m: file.type, d: e.target.result.split(',')[1] }); r.readAsDataURL(file); });
+        function validasiFileUpload_(file, kind) {
+            if (!file) return { ok: true };
+            const max = kind === 'foto' ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
+            if (file.size > max) return { ok: false, pesan: `${kind === 'foto' ? 'Foto' : 'Dokumen'} melebihi batas ${kind === 'foto' ? '5 MB' : '10 MB'}.` };
+            return { ok: true };
+        }
+
+        const readF = (file, kind) => new Promise((res, rej) => {
+            if(!file) return res(null);
+            const cek = validasiFileUpload_(file, kind);
+            if (!cek.ok) return rej(new Error(cek.pesan));
+            const r = new FileReader();
+            r.onload = (e) => res({ n: file.name, m: file.type || 'application/octet-stream', d: e.target.result.split(',')[1] });
+            r.onerror = () => rej(new Error('Gagal membaca file.'));
+            r.readAsDataURL(file);
+        });
 
         async function kirimLaporan() {
-            const user = JSON.parse(localStorage.getItem('userPKB'));
+            const user = JSON.parse(localStorage.getItem('userPKB') || '{}');
+            const session = ambilSession();
             const btn = document.getElementById('btnKirimTugas');
             const dSel = document.getElementById('tg-desa');
-            if(!dSel.value || !document.getElementById('tg-judul').value) return alert("Pilih Desa & Judul!");
+            const lokasiScope = (document.getElementById('tg-lokasi-scope')?.value || 'DALAM_BINAAN');
+            const isLuarBinaan = lokasiScope === 'LUAR_BINAAN';
+            const selected = (!isLuarBinaan && dSel && dSel.selectedIndex >= 0) ? dSel.options[dSel.selectedIndex] : null;
+            const topik = document.getElementById('tg-topik').value;
+            const jenis = (topik === "LAINNYA") ? document.getElementById('tg-jenis-lain').value.trim() : document.getElementById('tg-jenis').value;
+            const tanggal = document.getElementById('tg-tanggal').value || tanggalHariIniClient_();
+            const lokasi = document.getElementById('tg-lokasi').value.trim();
+            const levelLokasi = document.getElementById('tg-level-lokasi')?.value || '';
+            const namaLokasiLuar = document.getElementById('tg-nama-lokasi-luar')?.value.trim() || '';
+            const ketLuar = document.getElementById('tg-keterangan-luar')?.value.trim() || '';
+            const namaLokasiKegiatan = isLuarBinaan ? namaLokasiLuar : getSelectedDesaBinaanLabel_();
+            const peserta = document.getElementById('tg-peserta').value.trim();
+            const jmlHadir = document.getElementById('tg-jml').value;
+            const judul = document.getElementById('tg-judul').value.trim();
+            const deskripsi = document.getElementById('tg-deskripsi').value.trim();
 
-            btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
+            if (!session || !session.token) return alert('Session tidak ditemukan. Silakan login ulang.');
+            if(!isLuarBinaan && !dSel.value) return alert('Pilih desa binaan terlebih dahulu.');
+            if(isLuarBinaan && !levelLokasi) return alert('Pilih level lokasi luar binaan.');
+            if(isLuarBinaan && !namaLokasiLuar) return alert('Nama lokasi/instansi kegiatan luar binaan wajib diisi.');
+            if(isLuarBinaan && !ketLuar) return alert('Keterangan atau alasan kegiatan luar binaan wajib diisi.');
+            if(!tanggal) return alert('Tanggal kegiatan wajib diisi.');
+            if(tanggal > tanggalHariIniClient_()) return alert('Tanggal kegiatan tidak boleh melebihi hari ini.');
+            if(!lokasi) return alert('Tempat/detail lokasi kegiatan wajib diisi.');
+            if(!peserta) return alert('Peserta kegiatan wajib diisi.');
+            if(jmlHadir === '' || Number(jmlHadir) < 0) return alert('Jumlah peserta hadir wajib diisi dengan angka valid.');
+            if(!judul) return alert('Judul kegiatan wajib diisi.');
+            if(!topik) return alert('Topik kegiatan wajib dipilih.');
+            if(!jenis) return alert('Jenis kegiatan wajib diisi/dipilih.');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
             
-            let dataKb = "-";
+            let dataKb = "";
             if(document.getElementById('tg-jenis').value === 'Pelayanan KB') {
                 const gV = (id) => document.getElementById(id).value || "0";
                 dataKb = `IUD(B:${gV('kb-iud-b')},U:${gV('kb-iud-u')},G:${gV('kb-iud-g')}); IMP(B:${gV('kb-imp-b')},U:${gV('kb-imp-u')},G:${gV('kb-imp-g')}); MOW(B:${gV('kb-mow-b')},U:${gV('kb-mow-u')},G:${gV('kb-mow-g')}); MOP(B:${gV('kb-mop-b')},U:${gV('kb-mop-u')},G:${gV('kb-mop-g')})`;
             }
 
-            const topik = document.getElementById('tg-topik').value;
-            const jenis = (topik === "LAINNYA") ? document.getElementById('tg-jenis-lain').value : document.getElementById('tg-jenis').value;
-            const foto = await readF(document.getElementById('tg-foto').files[0]);
-            const dok = await readF(document.getElementById('tg-dokumen').files[0]);
+            let foto = null;
+            let dok = null;
+            try {
+                foto = await readF(document.getElementById('tg-foto').files[0], 'foto');
+                dok = await readF(document.getElementById('tg-dokumen').files[0], 'dokumen');
+            } catch(fileErr) {
+                alert(fileErr.message || 'File lampiran tidak valid.');
+                btn.disabled = false;
+                btn.innerText = 'SIMPAN KEGIATAN';
+                return;
+            }
 
-            const session = ambilSession();
             const p = new URLSearchParams();
             p.append('action', 'lapor_tugas');
-            if (session && session.token) p.append('token', session.token);
+            p.append('token', session.token);
             p.append('device_id', getDeviceId());
             p.append('app_version', EPKB_APP_VERSION);
             p.append('user_agent', navigator.userAgent || '');
+            p.append('client_submit_id', buatClientSubmitId_());
             p.append('id_user', user.id_user || '');
             p.append('id_pkb', user.id_pkb || '');
             p.append('id_nip', user.id_nip || '');
             p.append('nip', user.nip || user.id_nip || '');
             p.append('nama_pkb', user.nama_asli || user.nama_user || '');
-            p.append('id_desa', dSel.value); p.append('nama_desa', dSel.options[dSel.selectedIndex].getAttribute('data-nama'));
-            p.append('lokasi', document.getElementById('tg-lokasi').value || "-"); p.append('tanggal', document.getElementById('tg-tanggal').value || "-");
-            p.append('waktu_mulai', document.getElementById('tg-mulai').value || "-"); p.append('waktu_selesai', document.getElementById('tg-selesai').value || "-");
-            p.append('peserta', document.getElementById('tg-peserta').value || "-"); p.append('jml_hadir', document.getElementById('tg-jml').value || "0");
-            p.append('judul', document.getElementById('tg-judul').value); p.append('topik', topik); p.append('jenis', jenis);
-            p.append('deskripsi', document.getElementById('tg-deskripsi').value || "-"); p.append('data_kb', dataKb);
+            p.append('lokasi_scope', lokasiScope);
+            p.append('is_dalam_wilayah_binaan', isLuarBinaan ? 'FALSE' : 'TRUE');
+            p.append('level_lokasi_kegiatan', isLuarBinaan ? levelLokasi : 'DESA_BINAAN');
+            p.append('nama_lokasi_kegiatan', namaLokasiKegiatan || '');
+            p.append('keterangan_lokasi_luar_binaan', isLuarBinaan ? ketLuar : '');
+            p.append('id_desa', isLuarBinaan ? '' : dSel.value);
+            p.append('scope_code', isLuarBinaan ? '' : dSel.value);
+            p.append('id_wilayah', selected ? (selected.getAttribute('data-id-wilayah') || '') : '');
+            p.append('id_kecamatan', selected ? (selected.getAttribute('data-id-kecamatan') || '') : '');
+            p.append('kode_kecamatan', selected ? (selected.getAttribute('data-kode-kecamatan') || '') : '');
+            p.append('nama_kecamatan', selected ? (selected.getAttribute('data-nama-kecamatan') || '') : '');
+            p.append('kode_desa_kelurahan', selected ? (selected.getAttribute('data-kode-desa') || dSel.value) : '');
+            p.append('nama_desa', selected ? (selected.getAttribute('data-nama') || '') : '');
+            p.append('lokasi', lokasi);
+            p.append('tanggal', tanggal);
+            p.append('waktu_mulai', document.getElementById('tg-mulai').value || '');
+            p.append('waktu_selesai', document.getElementById('tg-selesai').value || '');
+            p.append('peserta', peserta);
+            p.append('jml_hadir', jmlHadir || '0');
+            p.append('judul', judul);
+            p.append('topik', topik);
+            p.append('jenis', jenis);
+            p.append('deskripsi', deskripsi || '-');
+            p.append('data_kb', dataKb);
             if(foto) { p.append('fotoName', foto.n); p.append('fotoMime', foto.m); p.append('fotoData', foto.d); }
             if(dok) { p.append('dokName', dok.n); p.append('dokMime', dok.m); p.append('dokData', dok.d); }
 
             try {
                 const r = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                 const res = await r.json();
-                if(res.status === "sukses") {
-                    if(topik === "PERTEMUAN" && confirm("Kegiatan Disimpan!\nBuat NOTULEN otomatis di Google Drive?")) {
-                        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Membuat Notulen...';
-                        p.set('action', 'buat_notulen'); p.append('row_index', res.row_index);
-                        const resN = await fetch(SCRIPT_URL, { method: 'POST', body: p });
-                        const dN = await resN.json();
-                        if(dN.status === "sukses") alert("Notulen berhasil dibuat di Drive Anda!");
-                        else alert("Gagal membuat notulen: " + dN.pesan);
-                    } else { alert("Kegiatan berhasil tersimpan!"); }
-                    document.getElementById('formTugas').reset(); 
-                    document.getElementById('box-jenis').classList.add('hidden'); document.getElementById('box-tabel-kb').classList.add('hidden');
-                    siapkanLaporTugas();
+                if(res.status === "sukses" || res.success === true) {
+                    alert(res.pesan || 'Kegiatan berhasil tersimpan.');
+                    document.getElementById('formTugas').reset();
+                    document.getElementById('box-jenis').classList.add('hidden');
+                    document.getElementById('box-tabel-kb').classList.add('hidden');
+                    aturDefaultTanggalTugas_();
+                    aturScopeLokasiKegiatan_();
+                    await muatRiwayat();
                     muatPkbDashboardLite_();
-                } else { alert("Gagal: " + res.pesan); }
-            } catch(err) { alert("Kesalahan koneksi."); } finally { btn.disabled = false; btn.innerText = "SIMPAN KEGIATAN"; }
+                } else {
+                    alert('Gagal: ' + (res.pesan || res.code || 'Laporan tidak tersimpan.'));
+                }
+            } catch(err) {
+                console.warn('[E-PKB] Gagal simpan kegiatan:', err);
+                alert('Kesalahan koneksi saat menyimpan kegiatan. Coba ulang saat jaringan stabil.');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'SIMPAN KEGIATAN';
+            }
         }
 
         function logout() {

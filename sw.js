@@ -1,5 +1,5 @@
 // E-PKB Kabupaten Buleleng - Service Worker ringan
-// Version: 0.1.9-DASHBOARD-PKB-V1
+// Version: 0.2.1-LAPOR-KEGIATAN-PKB-V1-R1
 self.addEventListener('install', function(event) {
   self.skipWaiting();
 });
