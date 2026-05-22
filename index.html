@@ -376,7 +376,7 @@
                 <div class="mb-3"><label class="form-label small fw-bold">Jurusan</label><input type="text" id="edit-jurusan" class="form-control"></div>
                 <div class="mb-3"><label class="form-label small fw-bold">Status ASN</label><select id="edit-status" class="form-select" onchange="aturGolongan()"><option value="">Pilih Status</option><option value="PNS">PNS</option><option value="CPNS">CPNS</option><option value="PPPK">PPPK</option></select></div>
                 <div class="mb-3"><label class="form-label small fw-bold">Jabatan</label>
-                    <input type="text" id="edit-jabatan" class="form-control" list="jabatan-saran-list" placeholder="Tulis jabatan">
+                    <input type="text" id="edit-jabatan" class="form-control" placeholder="Tulis jabatan">
                     <datalist id="jabatan-saran-list"></datalist>
                 </div>
                 <div class="mb-3"><label class="form-label small fw-bold">Golongan</label><select id="edit-gol" class="form-select"><option value="">Pilih Status ASN Dahulu</option></select></div>
@@ -414,7 +414,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.1.9-DASHBOARD-PKB-V1";
+        const EPKB_APP_VERSION = "0.1.9-DASHBOARD-PKB-V1-R1";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -448,24 +448,40 @@
         };
 
         const JABATAN_PKB_OPTIONS = ["PKB AHLI PERTAMA", "PKB AHLI MUDA", "PKB AHLI MADYA", "PLKB PEMULA", "PLKB TERAMPIL", "PLKB MAHIR", "PLKB PENYELIA"];
-        const JABATAN_ADMIN_OPTIONS = ["Admin Provinsi", "Admin Kabupaten", "Admin Kecamatan", "Operator Admin", "Koordinator Admin"];
+
+        function getDefaultAdminJabatan_(roleAktif) {
+            const role = filterText(roleAktif).toUpperCase();
+            if (role === 'ADMIN_PROVINSI') return 'Admin Provinsi';
+            if (role === 'ADMIN_KABUPATEN') return 'Admin Kabupaten';
+            if (role === 'ADMIN_KECAMATAN') return 'Admin Kecamatan';
+            return '';
+        }
 
         function setJabatanOptions_(isAdminProfile, currentValue, roleAktif) {
             const input = document.getElementById('edit-jabatan');
             const list = document.getElementById('jabatan-saran-list');
             if (!input) return;
             let current = filterText(currentValue);
-            if (isAdminProfile && !current) {
-                const role = filterText(roleAktif).toUpperCase();
-                if (role === 'ADMIN_PROVINSI') current = 'Admin Provinsi';
-                else if (role === 'ADMIN_KABUPATEN') current = 'Admin Kabupaten';
-                else if (role === 'ADMIN_KECAMATAN') current = 'Admin Kecamatan';
+
+            if (isAdminProfile) {
+                if (!current) current = getDefaultAdminJabatan_(roleAktif);
+                input.removeAttribute('list');
+                input.classList.remove('form-select');
+                input.classList.add('form-control');
+                input.placeholder = 'Tulis jabatan admin sesuai SK/penugasan';
+                input.value = current || '';
+                if (list) list.innerHTML = '';
+                return;
             }
-            const source = (isAdminProfile ? JABATAN_ADMIN_OPTIONS : JABATAN_PKB_OPTIONS).slice();
+
+            input.setAttribute('list', 'jabatan-saran-list');
+            input.classList.remove('form-select');
+            input.classList.add('form-control');
+            const source = JABATAN_PKB_OPTIONS.slice();
             if (current && source.indexOf(current) === -1) source.unshift(current);
             if (list) list.innerHTML = source.map(v => `<option value="${escapeHtml(v)}"></option>`).join('');
             input.value = current || '';
-            input.placeholder = isAdminProfile ? 'Tulis jabatan admin' : 'Tulis/pilih jabatan';
+            input.placeholder = 'Tulis/pilih jabatan PKB/PLKB';
         }
 
 
