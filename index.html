@@ -39,6 +39,10 @@
         .status-dot.warn { background: #ffc107; }
         .status-dot.danger { background: #dc3545; }
         .riwayat-item { border-left: 4px solid #0d6efd; border-radius: 14px; }
+
+        .kegiatan-thumb-link { display:inline-block; text-decoration:none; }
+        .kegiatan-thumb { width:96px; height:72px; object-fit:cover; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 2px 6px rgba(0,0,0,.08); }
+        @media (max-width: 576px) { .kegiatan-thumb { width:82px; height:62px; } }
     </style>
 </head>
 <body>
@@ -445,7 +449,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.2.2-LAPOR-KEGIATAN-PKB-V1-R2";
+        const EPKB_APP_VERSION = "0.2.3-LAPOR-KEGIATAN-PKB-V1-R3";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -1683,15 +1687,24 @@ ${label}`)) return;
             }
             list.innerHTML = records.map(r => `
                 <div class="card border-0 shadow-sm p-3 mb-3 riwayat-item">
-                    <div class="d-flex justify-content-between gap-2 flex-wrap">
-                        <div>
-                            <div class="fw-bold">${escapeHtml(r.judul || 'Laporan Kegiatan')}</div>
-                            <div class="small text-primary fw-bold">${escapeHtml(r.topik || '-')} ${r.jenis ? '• ' + escapeHtml(r.jenis) : ''}</div>
+                    <div class="d-flex gap-2 align-items-start">
+                        ${thumbnailKegiatanHtml_(r)}
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between gap-2 flex-wrap">
+                                <div>
+                                    <div class="fw-bold">${escapeHtml(r.judul || 'Laporan Kegiatan')}</div>
+                                    <div class="small text-primary fw-bold">${escapeHtml(r.topik || '-')} ${r.jenis ? '• ' + escapeHtml(r.jenis) : ''}</div>
+                                </div>
+                                <span class="badge bg-light text-dark border">${escapeHtml(r.tanggal_label || r.tanggal || '-')}</span>
+                            </div>
+                            <div class="small text-muted mt-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(r.nama_lokasi_kegiatan || r.desa || '-')} ${r.lokasi ? ' / ' + escapeHtml(r.lokasi) : ''}</div>
+                            <div class="small text-muted mt-1">Status: ${escapeHtml(r.status || 'TERSIMPAN')}</div>
+                            <div class="mt-2">
+                                ${r.url_foto ? `<a href="${escapeHtml(r.url_foto)}" target="_blank" class="badge bg-info text-decoration-none me-1"><i class="bi bi-image"></i> Foto</a>` : ""}
+                                ${r.url_dokumen ? `<a href="${escapeHtml(r.url_dokumen)}" target="_blank" class="badge bg-success text-decoration-none"><i class="bi bi-file-earmark"></i> Dokumen</a>` : ""}
+                            </div>
                         </div>
-                        <span class="badge bg-light text-dark border">${escapeHtml(r.tanggal_label || r.tanggal || '-')}</span>
                     </div>
-                    <div class="small text-muted mt-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(r.nama_lokasi_kegiatan || r.desa || '-')} ${r.lokasi ? ' / ' + escapeHtml(r.lokasi) : ''}</div>
-                    <div class="small text-muted mt-1">Status: ${escapeHtml(r.status || 'TERSIMPAN')}</div>
                 </div>
             `).join('');
         }
@@ -1807,6 +1820,18 @@ ${label}`)) return;
             muatRiwayat();
         }
 
+
+        function thumbnailKegiatanHtml_(item) {
+            const thumb = item.thumbnail_foto || item.foto_thumbnail_url || item.thumbnail_url || '';
+            const foto = item.url_foto || item.foto_url || '';
+            if (!thumb && !foto) return '';
+            const src = thumb || foto;
+            const href = foto || src;
+            return `<a href="${escapeHtml(href)}" target="_blank" class="kegiatan-thumb-link me-3 mb-2" title="Buka foto kegiatan">
+                <img src="${escapeHtml(src)}" alt="Foto kegiatan" class="kegiatan-thumb" loading="lazy" onerror="this.closest('a').classList.add('hidden')">
+            </a>`;
+        }
+
         async function muatRiwayat() {
             const div = document.getElementById('list-kegiatan');
             const session = ambilSession();
@@ -1829,19 +1854,24 @@ ${label}`)) return;
                 if(d.status === "sukses" && d.data && d.data.length > 0) {
                     div.innerHTML = d.data.map(k => `
                         <div class="card border-0 shadow-sm p-3 mb-3" style="border-left: 4px solid var(--primary-color);">
-                            <div class="d-flex justify-content-between gap-2 flex-wrap">
-                                <div>
-                                    <div class="fw-bold small text-primary">${escapeHtml(k.topik || '-')} ${k.jenis ? '• ' + escapeHtml(k.jenis) : ''}</div>
-                                    <div class="fw-bold">${escapeHtml(k.judul || 'Laporan Kegiatan')}</div>
+                            <div class="d-flex gap-2 align-items-start">
+                                ${thumbnailKegiatanHtml_(k)}
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between gap-2 flex-wrap">
+                                        <div>
+                                            <div class="fw-bold small text-primary">${escapeHtml(k.topik || '-')} ${k.jenis ? '• ' + escapeHtml(k.jenis) : ''}</div>
+                                            <div class="fw-bold">${escapeHtml(k.judul || 'Laporan Kegiatan')}</div>
+                                        </div>
+                                        <span class="badge bg-light text-dark border">${escapeHtml(k.tanggal_label || k.tanggal || '-')}</span>
+                                    </div>
+                                    <div class="small text-muted mt-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(k.nama_lokasi_kegiatan || k.desa || '-')} ${k.lokasi ? ' / ' + escapeHtml(k.lokasi) : ''}</div>
+                                    <div class="small text-muted mt-1">Scope: ${escapeHtml(k.lokasi_scope || '-')} ${k.level_lokasi_kegiatan ? '• ' + escapeHtml(k.level_lokasi_kegiatan) : ''}</div>
+                                    <div class="small text-muted mt-1">Status: ${escapeHtml(k.status || 'TERSIMPAN')}</div>
+                                    <div class="mt-2">
+                                        ${k.url_foto ? `<a href="${escapeHtml(k.url_foto)}" target="_blank" class="badge bg-info text-decoration-none me-1"><i class="bi bi-image"></i> Foto</a>` : ""}
+                                        ${k.url_dokumen ? `<a href="${escapeHtml(k.url_dokumen)}" target="_blank" class="badge bg-success text-decoration-none"><i class="bi bi-file-earmark"></i> Dokumen</a>` : ""}
+                                    </div>
                                 </div>
-                                <span class="badge bg-light text-dark border">${escapeHtml(k.tanggal_label || k.tanggal || '-')}</span>
-                            </div>
-                            <div class="small text-muted mt-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(k.nama_lokasi_kegiatan || k.desa || '-')} ${k.lokasi ? ' / ' + escapeHtml(k.lokasi) : ''}</div>
-                            <div class="small text-muted mt-1">Scope: ${escapeHtml(k.lokasi_scope || '-')} ${k.level_lokasi_kegiatan ? '• ' + escapeHtml(k.level_lokasi_kegiatan) : ''}</div>
-                            <div class="small text-muted mt-1">Status: ${escapeHtml(k.status || 'TERSIMPAN')}</div>
-                            <div class="mt-2">
-                                ${k.url_foto ? `<a href="${escapeHtml(k.url_foto)}" target="_blank" class="badge bg-info text-decoration-none me-1"><i class="bi bi-image"></i> Foto</a>` : ""}
-                                ${k.url_dokumen ? `<a href="${escapeHtml(k.url_dokumen)}" target="_blank" class="badge bg-success text-decoration-none"><i class="bi bi-file-earmark"></i> Dokumen</a>` : ""}
                             </div>
                         </div>
                     `).join('');
