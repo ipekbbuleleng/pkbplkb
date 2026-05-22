@@ -1,5 +1,5 @@
 // E-PKB Kabupaten Buleleng - Service Worker ringan
-// Version: 0.2.3-LAPOR-KEGIATAN-PKB-V1-R3
+// Version: 0.2.4-LAPOR-KEGIATAN-PKB-V1-R4
 self.addEventListener('install', function(event) {
   self.skipWaiting();
 });
