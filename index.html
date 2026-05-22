@@ -40,9 +40,13 @@
         .status-dot.danger { background: #dc3545; }
         .riwayat-item { border-left: 4px solid #0d6efd; border-radius: 14px; }
 
-        .kegiatan-thumb-link { display:inline-block; text-decoration:none; }
+        .kegiatan-thumb-link { display:inline-block; text-decoration:none; padding:0; border:0; background:transparent; }
         .kegiatan-thumb { width:96px; height:72px; object-fit:cover; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 2px 6px rgba(0,0,0,.08); }
-        @media (max-width: 576px) { .kegiatan-thumb { width:82px; height:62px; } }
+        .attachment-preview-overlay { position: fixed; inset: 0; z-index: 1080; background: rgba(15,23,42,.72); display:flex; align-items:center; justify-content:center; padding: 16px; }
+        .attachment-preview-card { width:min(860px, 96vw); max-height:92vh; overflow:auto; background:#fff; border-radius:18px; box-shadow:0 18px 45px rgba(0,0,0,.25); }
+        .attachment-preview-img { width:100%; max-height:70vh; object-fit:contain; background:#111827; border-radius:12px; }
+        .filter-card { border-radius:16px; border:1px solid #e5e7eb; background:#fff; }
+        @media (max-width: 576px) { .kegiatan-thumb { width:82px; height:62px; } .attachment-preview-card { max-height:88vh; } }
     </style>
 </head>
 <body>
@@ -348,6 +352,37 @@
             <button onclick="muatRiwayatTugasSaya()" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
         </div>
         <div id="riwayatTugasSummary" class="mb-3"></div>
+        <div class="filter-card shadow-sm p-3 mb-3">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted mb-1">Bulan/Tahun</label>
+                    <input type="month" id="filterRiwayatBulan" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted mb-1">Topik Kegiatan</label>
+                    <select id="filterRiwayatTopik" class="form-select form-select-sm">
+                        <option value="">Semua Topik</option>
+                        <option value="KIE">KIE</option>
+                        <option value="PELAYANAN DAN PENGGERAKAN">PELAYANAN DAN PENGGERAKAN</option>
+                        <option value="PENCATATAN DAN PELAPORAN">PENCATATAN DAN PELAPORAN</option>
+                        <option value="PERTEMUAN">PERTEMUAN</option>
+                        <option value="LAINNYA">LAINNYA</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted mb-1">Scope Lokasi</label>
+                    <select id="filterRiwayatScope" class="form-select form-select-sm">
+                        <option value="">Semua Scope</option>
+                        <option value="DALAM_BINAAN">Dalam Wilayah Binaan</option>
+                        <option value="LUAR_BINAAN">Luar Wilayah Binaan</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="button" onclick="muatRiwayatTugasSaya()" class="btn btn-sm btn-primary fw-bold flex-fill"><i class="bi bi-funnel"></i> Terapkan</button>
+                    <button type="button" onclick="resetFilterRiwayatTugas_()" class="btn btn-sm btn-outline-secondary fw-bold">Reset</button>
+                </div>
+            </div>
+        </div>
         <div id="riwayatTugasList">
             <div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">Klik Muat untuk mengambil riwayat tugas.</div>
         </div>
@@ -442,6 +477,23 @@
         </div>
     </div>
 
+    <div id="attachmentPreviewOverlay" class="attachment-preview-overlay hidden" onclick="tutupPreviewLampiran_(event)">
+        <div class="attachment-preview-card p-3" onclick="event.stopPropagation()">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <div>
+                    <div class="small text-muted">Preview Foto Kegiatan</div>
+                    <div id="attachmentPreviewTitle" class="fw-bold">Foto kegiatan</div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="tutupPreviewLampiran_()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <img id="attachmentPreviewImage" src="" alt="Preview foto kegiatan" class="attachment-preview-img" loading="lazy">
+            <div class="d-flex justify-content-between align-items-center gap-2 mt-3 flex-wrap">
+                <div class="small text-muted">Gunakan tombol buka Drive jika gambar tidak tampil penuh.</div>
+                <a id="attachmentPreviewDriveLink" href="#" target="_blank" rel="noopener" class="btn btn-primary btn-sm fw-bold"><i class="bi bi-box-arrow-up-right"></i> Buka Foto di Drive</a>
+            </div>
+        </div>
+    </div>
+
     <footer class="app-footer">
         <div class="copyright">E-PKB © 2026</div>
         <div class="version" id="footer-version">Versi aplikasi: -</div>
@@ -449,7 +501,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.2.3-LAPOR-KEGIATAN-PKB-V1-R3";
+        const EPKB_APP_VERSION = "0.2.4-LAPOR-KEGIATAN-PKB-V1-R4";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -1634,6 +1686,23 @@ ${label}`)) return;
             muatRiwayatTugasSaya();
         }
 
+        function getRiwayatFilterParams_() {
+            const bulan = (document.getElementById('filterRiwayatBulan')?.value || '').trim();
+            const topik = (document.getElementById('filterRiwayatTopik')?.value || '').trim();
+            const scope = (document.getElementById('filterRiwayatScope')?.value || '').trim();
+            return { bulan, topik, scope };
+        }
+
+        function resetFilterRiwayatTugas_() {
+            const bulan = document.getElementById('filterRiwayatBulan');
+            const topik = document.getElementById('filterRiwayatTopik');
+            const scope = document.getElementById('filterRiwayatScope');
+            if (bulan) bulan.value = '';
+            if (topik) topik.value = '';
+            if (scope) scope.value = '';
+            muatRiwayatTugasSaya();
+        }
+
         async function muatRiwayatTugasSaya() {
             const session = ambilSession();
             const summaryBox = document.getElementById('riwayatTugasSummary');
@@ -1646,18 +1715,27 @@ ${label}`)) return;
             if (summaryBox) summaryBox.innerHTML = '';
             if (list) list.innerHTML = '<div class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm"></span> Memuat riwayat tugas...</div>';
             try {
+                const filters = getRiwayatFilterParams_();
                 const p = new URLSearchParams();
-                p.append('action', 'getPkbDashboardLite');
+                p.append('action', 'get_kegiatan');
                 p.append('token', session.token);
                 p.append('device_id', getDeviceId());
                 p.append('app_version', EPKB_APP_VERSION);
                 p.append('user_agent', navigator.userAgent || '');
+                p.append('limit', '75');
+                if (filters.bulan) p.append('periode', filters.bulan);
+                if (filters.topik) p.append('topik_kegiatan', filters.topik);
+                if (filters.scope) p.append('lokasi_scope', filters.scope);
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                 const d = await res.json();
                 if (d.status === 'sukses') {
-                    const dashboard = d.dashboard || d.data || {};
-                    localStorage.setItem('epkb_pkb_dashboard_lite', JSON.stringify(dashboard));
-                    renderRiwayatTugasList_(dashboard);
+                    const records = d.data || [];
+                    renderRiwayatTugasList_({
+                        summary: buildRiwayatSummaryClient_(records, filters),
+                        recent_records: records,
+                        filters: filters,
+                        backend: d
+                    });
                 } else {
                     list.innerHTML = `<div class="alert alert-warning">${escapeHtml(d.pesan || d.code || 'Gagal memuat riwayat tugas.')}</div>`;
                 }
@@ -1667,6 +1745,21 @@ ${label}`)) return;
             }
         }
 
+        function buildRiwayatSummaryClient_(records, filters) {
+            records = Array.isArray(records) ? records : [];
+            const today = tanggalHariIniClient_();
+            const bulanLabel = filters && filters.bulan ? filters.bulan : 'Semua bulan';
+            const adaHariIni = records.some(r => (r.tanggal || '').substring(0, 10) === today);
+            return {
+                laporan_bulan_ini: records.length,
+                laporan_terakhir: records.length ? (records[0].tanggal_label || records[0].tanggal || '-') : '-',
+                status_laporan_hari_ini_label: adaHariIni ? 'Sudah lapor' : 'Belum lapor',
+                filter_label: bulanLabel,
+                topik_label: filters && filters.topik ? filters.topik : 'Semua topik',
+                scope_label: filters && filters.scope ? filters.scope : 'Semua scope'
+            };
+        }
+
         function renderRiwayatTugasList_(dashboard) {
             const summaryBox = document.getElementById('riwayatTugasSummary');
             const list = document.getElementById('riwayatTugasList');
@@ -1674,7 +1767,9 @@ ${label}`)) return;
             const records = dashboard.recent_records || [];
             if (summaryBox) {
                 summaryBox.innerHTML = `<div class="alert alert-light border rounded-4 shadow-sm mb-0">
-                    <b>Bulan ini:</b> ${escapeHtml(s.laporan_bulan_ini || 0)} laporan
+                    <b>Data tampil:</b> ${escapeHtml(s.laporan_bulan_ini || 0)} laporan
+                    <span class="mx-2">•</span>
+                    <b>Filter:</b> ${escapeHtml(s.filter_label || 'Semua bulan')} / ${escapeHtml(s.topik_label || 'Semua topik')} / ${escapeHtml(s.scope_label || 'Semua scope')}
                     <span class="mx-2">•</span>
                     <b>Terakhir:</b> ${escapeHtml(s.laporan_terakhir || '-')}
                     <span class="mx-2">•</span>
@@ -1682,7 +1777,7 @@ ${label}`)) return;
                 </div>`;
             }
             if (!records.length) {
-                list.innerHTML = '<div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">Belum ada laporan tugas yang terbaca.</div>';
+                list.innerHTML = '<div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">Tidak ada laporan sesuai filter.</div>';
                 return;
             }
             list.innerHTML = records.map(r => `
@@ -1698,10 +1793,11 @@ ${label}`)) return;
                                 <span class="badge bg-light text-dark border">${escapeHtml(r.tanggal_label || r.tanggal || '-')}</span>
                             </div>
                             <div class="small text-muted mt-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(r.nama_lokasi_kegiatan || r.desa || '-')} ${r.lokasi ? ' / ' + escapeHtml(r.lokasi) : ''}</div>
+                            <div class="small text-muted mt-1">Scope: ${escapeHtml(r.lokasi_scope || '-')} ${r.level_lokasi_kegiatan ? '• ' + escapeHtml(r.level_lokasi_kegiatan) : ''}</div>
                             <div class="small text-muted mt-1">Status: ${escapeHtml(r.status || 'TERSIMPAN')}</div>
                             <div class="mt-2">
-                                ${r.url_foto ? `<a href="${escapeHtml(r.url_foto)}" target="_blank" class="badge bg-info text-decoration-none me-1"><i class="bi bi-image"></i> Foto</a>` : ""}
-                                ${r.url_dokumen ? `<a href="${escapeHtml(r.url_dokumen)}" target="_blank" class="badge bg-success text-decoration-none"><i class="bi bi-file-earmark"></i> Dokumen</a>` : ""}
+                                ${fotoButtonHtml_(r)}
+                                ${r.url_dokumen ? `<a href="${escapeHtml(r.url_dokumen)}" target="_blank" rel="noopener" class="badge bg-success text-decoration-none"><i class="bi bi-file-earmark"></i> Dokumen</a>` : ""}
                             </div>
                         </div>
                     </div>
@@ -1821,15 +1917,56 @@ ${label}`)) return;
         }
 
 
+        function jsString_(value) {
+            return JSON.stringify(filterText(value));
+        }
+
+        function largeThumbnailUrl_(url) {
+            const s = filterText(url);
+            if (!s) return '';
+            if (s.includes('drive.google.com/thumbnail')) return s.replace(/sz=w\d+/i, 'sz=w1000');
+            return s;
+        }
+
+        function bukaPreviewFotoKegiatan_(fotoUrl, thumbUrl, title) {
+            const overlay = document.getElementById('attachmentPreviewOverlay');
+            const img = document.getElementById('attachmentPreviewImage');
+            const titleEl = document.getElementById('attachmentPreviewTitle');
+            const link = document.getElementById('attachmentPreviewDriveLink');
+            const src = largeThumbnailUrl_(thumbUrl || fotoUrl);
+            const drive = filterText(fotoUrl || thumbUrl || '#');
+            if (!overlay || !img || !link) return;
+            img.src = src || drive;
+            if (titleEl) titleEl.innerText = filterText(title || 'Foto kegiatan');
+            link.href = drive || '#';
+            overlay.classList.remove('hidden');
+        }
+
+        function tutupPreviewLampiran_(event) {
+            if (event && event.target && event.target.id !== 'attachmentPreviewOverlay') return;
+            const overlay = document.getElementById('attachmentPreviewOverlay');
+            const img = document.getElementById('attachmentPreviewImage');
+            if (overlay) overlay.classList.add('hidden');
+            if (img) img.src = '';
+        }
+
+        function fotoButtonHtml_(item) {
+            const thumb = item.thumbnail_foto || item.foto_thumbnail_url || item.thumbnail_url || '';
+            const foto = item.url_foto || item.foto_url || '';
+            if (!thumb && !foto) return '';
+            const title = item.judul || 'Foto kegiatan';
+            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)})' class="badge bg-info border-0 text-decoration-none me-1"><i class="bi bi-image"></i> Foto</button>`;
+        }
+
         function thumbnailKegiatanHtml_(item) {
             const thumb = item.thumbnail_foto || item.foto_thumbnail_url || item.thumbnail_url || '';
             const foto = item.url_foto || item.foto_url || '';
             if (!thumb && !foto) return '';
-            const src = thumb || foto;
-            const href = foto || src;
-            return `<a href="${escapeHtml(href)}" target="_blank" class="kegiatan-thumb-link me-3 mb-2" title="Buka foto kegiatan">
-                <img src="${escapeHtml(src)}" alt="Foto kegiatan" class="kegiatan-thumb" loading="lazy" onerror="this.closest('a').classList.add('hidden')">
-            </a>`;
+            const src = largeThumbnailUrl_(thumb || foto);
+            const title = item.judul || 'Foto kegiatan';
+            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)})' class="kegiatan-thumb-link me-3 mb-2" title="Preview foto kegiatan">
+                <img src="${escapeHtml(src)}" alt="Foto kegiatan" class="kegiatan-thumb" loading="lazy" onerror="this.closest('button').classList.add('hidden')">
+            </button>`;
         }
 
         async function muatRiwayat() {
@@ -1868,7 +2005,7 @@ ${label}`)) return;
                                     <div class="small text-muted mt-1">Scope: ${escapeHtml(k.lokasi_scope || '-')} ${k.level_lokasi_kegiatan ? '• ' + escapeHtml(k.level_lokasi_kegiatan) : ''}</div>
                                     <div class="small text-muted mt-1">Status: ${escapeHtml(k.status || 'TERSIMPAN')}</div>
                                     <div class="mt-2">
-                                        ${k.url_foto ? `<a href="${escapeHtml(k.url_foto)}" target="_blank" class="badge bg-info text-decoration-none me-1"><i class="bi bi-image"></i> Foto</a>` : ""}
+                                        ${fotoButtonHtml_(k)}
                                         ${k.url_dokumen ? `<a href="${escapeHtml(k.url_dokumen)}" target="_blank" class="badge bg-success text-decoration-none"><i class="bi bi-file-earmark"></i> Dokumen</a>` : ""}
                                     </div>
                                 </div>
