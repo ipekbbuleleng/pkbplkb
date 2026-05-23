@@ -585,7 +585,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.2.5-LAPOR-KEGIATAN-PKB-V1-R5";
+        const EPKB_APP_VERSION = "0.2.5-LAPOR-KEGIATAN-PKB-V1-R5-R1";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -1771,6 +1771,11 @@ ${label}`)) return;
         };
         window.__epkbKegiatanCache = window.__epkbKegiatanCache || {};
         window.__epkbRekapRows = window.__epkbRekapRows || [];
+        window.__epkbKegiatanPhotoPreviewCache = window.__epkbKegiatanPhotoPreviewCache || {};
+        window.__epkbKegiatanPhotoThumbCache = window.__epkbKegiatanPhotoThumbCache || {};
+        window.__epkbKegiatanPhotoPending = window.__epkbKegiatanPhotoPending || {};
+        window.__epkbKegiatanThumbObserver = window.__epkbKegiatanThumbObserver || null;
+        const EPKB_THUMB_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'%3E%3Crect x='1' y='1' width='158' height='118' rx='14' fill='%23f8fafc' stroke='%23cbd5e1' stroke-width='2' stroke-dasharray='6 5'/%3E%3Cpath d='M50 78l20-22 15 15 10-12 22 25H43z' fill='%2364748b' opacity='.55'/%3E%3Crect x='45' y='34' width='70' height='52' rx='6' fill='none' stroke='%2364748b' stroke-width='5' opacity='.85'/%3E%3Ccircle cx='99' cy='48' r='7' fill='%2364748b' opacity='.75'/%3E%3C/svg%3E";
 
         function bukaRiwayatTugasSaya() {
             bukaHalaman('riwayat-tugas-page');
@@ -1907,6 +1912,7 @@ ${label}`)) return;
                 return;
             }
             list.innerHTML = records.map(r => renderKegiatanCardHtml_(r, 'riwayat')).join('');
+            setTimeout(initLazyKegiatanThumbs_, 0);
         }
 
         function renderKegiatanCardHtml_(k, context) {
@@ -1972,6 +1978,7 @@ ${label}`)) return;
                     ${item.url_dokumen ? `<a href="${escapeHtml(item.url_dokumen)}" target="_blank" rel="noopener" class="btn btn-sm btn-success fw-bold"><i class="bi bi-file-earmark"></i> Buka Dokumen</a>` : ''}
                 </div>`;
             overlay.classList.remove('hidden');
+            setTimeout(initLazyKegiatanThumbs_, 0);
         }
 
         function tutupDetailKegiatan_(event) {
@@ -2269,6 +2276,118 @@ ${label}`)) return;
             return driveThumbnailUrl_(url, 1200);
         }
 
+        function getPhotoCacheKey_(idKegiatan, mode) {
+            return `${mode || 'preview'}:${filterText(idKegiatan)}`;
+        }
+
+        async function fetchKegiatanPhotoDataUrl_(idKegiatan, mode) {
+            const cleanId = filterText(idKegiatan);
+            const cleanMode = filterText(mode || 'preview') || 'preview';
+            if (!cleanId) throw new Error('ID kegiatan kosong.');
+            const cache = cleanMode === 'thumbnail' ? window.__epkbKegiatanPhotoThumbCache : window.__epkbKegiatanPhotoPreviewCache;
+            const key = getPhotoCacheKey_(cleanId, cleanMode);
+            if (cache[key] && cache[key].data_url) return cache[key];
+            if (window.__epkbKegiatanPhotoPending[key]) return window.__epkbKegiatanPhotoPending[key];
+
+            const session = ambilSession();
+            if (!session || !session.token) throw new Error('Session tidak ditemukan. Silakan login ulang.');
+            const p = new URLSearchParams();
+            p.append('action', 'get_kegiatan_photo');
+            p.append('token', session.token);
+            p.append('device_id', getDeviceId());
+            p.append('app_version', EPKB_APP_VERSION);
+            p.append('user_agent', navigator.userAgent || '');
+            p.append('id_kegiatan', cleanId);
+            p.append('mode', cleanMode);
+            if (cleanMode === 'thumbnail') p.append('size', '320');
+
+            window.__epkbKegiatanPhotoPending[key] = fetch(SCRIPT_URL, { method: 'POST', body: p })
+                .then(res => res.json())
+                .then(d => {
+                    if (d.status !== 'sukses' || !d.data_url) throw new Error(d.pesan || d.code || 'Foto tidak dapat dimuat.');
+                    const payload = {
+                        data_url: d.data_url,
+                        drive_url: d.drive_url || '',
+                        thumbnail_url: d.thumbnail_url || '',
+                        mime_type: d.mime_type || '',
+                        cache_key: d.cache_key || key
+                    };
+                    cache[key] = payload;
+                    return payload;
+                })
+                .finally(() => { delete window.__epkbKegiatanPhotoPending[key]; });
+            return window.__epkbKegiatanPhotoPending[key];
+        }
+
+        function initLazyKegiatanThumbs_() {
+            const imgs = Array.from(document.querySelectorAll('img.js-kegiatan-lazy-thumb:not([data-lazy-bound="1"])'));
+            if (!imgs.length) return;
+            if ('IntersectionObserver' in window) {
+                if (!window.__epkbKegiatanThumbObserver) {
+                    window.__epkbKegiatanThumbObserver = new IntersectionObserver(entries => {
+                        entries.forEach(entry => {
+                            if (!entry.isIntersecting) return;
+                            window.__epkbKegiatanThumbObserver.unobserve(entry.target);
+                            loadKegiatanThumbElement_(entry.target);
+                        });
+                    }, { root: null, rootMargin: '180px 0px', threshold: 0.01 });
+                }
+                imgs.forEach(img => {
+                    img.dataset.lazyBound = '1';
+                    window.__epkbKegiatanThumbObserver.observe(img);
+                });
+            } else {
+                imgs.forEach(img => {
+                    img.dataset.lazyBound = '1';
+                    loadKegiatanThumbElement_(img);
+                });
+            }
+        }
+
+        function loadKegiatanThumbElement_(img) {
+            if (!img || img.dataset.loaded === '1') return;
+            const id = filterText(img.dataset.idKegiatan);
+            const key = getPhotoCacheKey_(id, 'thumbnail');
+            img.dataset.loaded = '1';
+            if (window.__epkbKegiatanPhotoThumbCache[key] && window.__epkbKegiatanPhotoThumbCache[key].data_url) {
+                img.src = window.__epkbKegiatanPhotoThumbCache[key].data_url;
+                return;
+            }
+            const driveSrc = filterText(img.dataset.driveSrc);
+            if (driveSrc) img.src = driveSrc;
+            else handleThumbImgError_(img);
+        }
+
+        async function handleThumbImgError_(img) {
+            if (!img || img.dataset.backendFallback === '1') {
+                setThumbPlaceholder_(img);
+                return;
+            }
+            img.dataset.backendFallback = '1';
+            try {
+                const id = filterText(img.dataset.idKegiatan);
+                if (!id) throw new Error('ID kegiatan kosong.');
+                const payload = await fetchKegiatanPhotoDataUrl_(id, 'thumbnail');
+                if (payload && payload.data_url) {
+                    img.onerror = function(){ setThumbPlaceholder_(this); };
+                    img.src = payload.data_url;
+                    return;
+                }
+                setThumbPlaceholder_(img);
+            } catch (err) {
+                console.warn('[E-PKB] Thumbnail foto gagal dimuat:', err);
+                setThumbPlaceholder_(img);
+            }
+        }
+
+        function setThumbPlaceholder_(img) {
+            if (!img) return;
+            img.onerror = null;
+            img.src = EPKB_THUMB_PLACEHOLDER;
+            img.classList.add('kegiatan-thumb-placeholder-img');
+            img.alt = 'Thumbnail foto tidak tersedia';
+        }
+
         async function bukaPreviewFotoKegiatan_(idKegiatan, fotoUrl, thumbUrl, title) {
             const overlay = document.getElementById('attachmentPreviewOverlay');
             const img = document.getElementById('attachmentPreviewImage');
@@ -2279,26 +2398,20 @@ ${label}`)) return;
             if (titleEl) titleEl.innerText = filterText(title || 'Foto kegiatan');
             link.href = drive || '#';
             img.alt = 'Memuat preview foto kegiatan...';
-            img.src = largeThumbnailUrl_(thumbUrl || fotoUrl);
+            img.src = largeThumbnailUrl_(thumbUrl || fotoUrl) || EPKB_THUMB_PLACEHOLDER;
             overlay.classList.remove('hidden');
 
-            // Fallback lebih andal: ambil data URL dari backend hanya saat preview diklik.
-            // Ini mengatasi link/thumbnail Drive privat yang tidak bisa dirender langsung oleh GitHub Pages.
             try {
-                const session = ambilSession();
-                if (!session || !session.token || !idKegiatan) return;
-                const p = new URLSearchParams();
-                p.append('action', 'get_kegiatan_photo');
-                p.append('token', session.token);
-                p.append('device_id', getDeviceId());
-                p.append('app_version', EPKB_APP_VERSION);
-                p.append('user_agent', navigator.userAgent || '');
-                p.append('id_kegiatan', idKegiatan);
-                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
-                const d = await res.json();
-                if (d.status === 'sukses' && d.data_url) {
-                    img.src = d.data_url;
-                    link.href = d.drive_url || drive || '#';
+                const key = getPhotoCacheKey_(idKegiatan, 'preview');
+                if (window.__epkbKegiatanPhotoPreviewCache[key] && window.__epkbKegiatanPhotoPreviewCache[key].data_url) {
+                    img.src = window.__epkbKegiatanPhotoPreviewCache[key].data_url;
+                    link.href = window.__epkbKegiatanPhotoPreviewCache[key].drive_url || drive || '#';
+                    return;
+                }
+                const payload = await fetchKegiatanPhotoDataUrl_(idKegiatan, 'preview');
+                if (payload && payload.data_url) {
+                    img.src = payload.data_url;
+                    link.href = payload.drive_url || drive || '#';
                 }
             } catch (err) {
                 console.warn('[E-PKB] Fallback preview foto gagal:', err);
@@ -2329,8 +2442,10 @@ ${label}`)) return;
             if (!thumb && !foto) return '';
             const src = driveThumbnailUrl_(thumb || foto, 320);
             const title = item.judul || 'Foto kegiatan';
+            const cached = window.__epkbKegiatanPhotoThumbCache[getPhotoCacheKey_(id, 'thumbnail')];
+            const initial = cached && cached.data_url ? cached.data_url : EPKB_THUMB_PLACEHOLDER;
             return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)})' class="kegiatan-thumb-link me-3 mb-2" title="Preview foto kegiatan">
-                <img src="${escapeHtml(src)}" alt="Foto kegiatan" class="kegiatan-thumb" loading="lazy" onerror="this.outerHTML='<span class=&quot;kegiatan-thumb-placeholder&quot;><i class=&quot;bi bi-image&quot;></i></span>'">
+                <img src="${escapeHtml(initial)}" data-drive-src="${escapeHtml(src)}" data-id-kegiatan="${escapeHtml(id)}" alt="Foto kegiatan" class="kegiatan-thumb js-kegiatan-lazy-thumb" loading="lazy" onerror="handleThumbImgError_(this)">
             </button>`;
         }
 
@@ -2347,6 +2462,7 @@ ${label}`)) return;
                 const hasil = await ambilKegiatanPkb_(5, {});
                 if(hasil.data && hasil.data.length > 0) {
                     div.innerHTML = hasil.data.map(k => renderKegiatanCardHtml_(k, 'dashboard')).join('');
+                    setTimeout(initLazyKegiatanThumbs_, 0);
                     if (hasil.data.length >= 5) {
                         div.innerHTML += '<div class="text-center mt-2"><button type="button" onclick="bukaRiwayatTugasSaya()" class="btn btn-sm btn-outline-primary fw-bold">Lihat semua riwayat</button></div>';
                     }
