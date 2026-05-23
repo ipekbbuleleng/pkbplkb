@@ -52,6 +52,11 @@
         .attachment-preview-card { width:min(860px, 96vw); max-height:92vh; overflow:auto; background:#fff; border-radius:18px; box-shadow:0 18px 45px rgba(0,0,0,.25); }
         .attachment-preview-img { width:100%; max-height:70vh; object-fit:contain; background:#111827; border-radius:12px; }
         .filter-card { border-radius:16px; border:1px solid #e5e7eb; background:#fff; }
+        .kegiatan-gallery-strip { display:flex; gap:10px; overflow-x:auto; padding:8px 2px 10px; scroll-snap-type:x proximity; }
+        .kegiatan-gallery-strip::-webkit-scrollbar { height:7px; }
+        .kegiatan-gallery-item { flex:0 0 auto; width:128px; scroll-snap-align:start; border:1px solid #e5e7eb; border-radius:12px; padding:6px; background:#f8fafc; }
+        .kegiatan-gallery-item img { width:100%; height:82px; object-fit:cover; border-radius:10px; background:#e5e7eb; }
+        .attachment-count-pill { display:inline-flex; align-items:center; gap:4px; border-radius:999px; padding:3px 8px; font-size:.72rem; background:#eef2ff; color:#3730a3; font-weight:700; margin-left:4px; }
         @media (max-width: 576px) { .kegiatan-thumb, .kegiatan-thumb-placeholder, .kegiatan-thumb-link { width:82px; height:62px; min-width:82px; min-height:62px; } .attachment-preview-card { max-height:88vh; } }
     </style>
 </head>
@@ -334,8 +339,8 @@
                 <div class="mb-3"><label class="small fw-bold">Deskripsi / Keterangan Kegiatan</label><textarea id="tg-deskripsi" class="form-control" rows="3" placeholder="Tuliskan ringkasan pelaksanaan, hasil, dan catatan penting."></textarea></div>
 
                 <div class="form-section-title">Lampiran Dokumentasi</div>
-                <div class="mb-3"><label class="small fw-bold">Lampiran Foto Dokumentasi</label><input type="file" id="tg-foto" class="form-control" accept="image/*"><div class="form-text">Opsional. Maksimal 5 MB.</div></div>
-                <div class="mb-4"><label class="small fw-bold">Lampiran Dokumen (PDF/Word/Excel)</label><input type="file" id="tg-dokumen" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx"><div class="form-text">Opsional. Maksimal 10 MB.</div></div>
+                <div class="mb-3"><label class="small fw-bold">Lampiran Foto Dokumentasi</label><input type="file" id="tg-foto" class="form-control" accept="image/*" multiple><div class="form-text">Opsional. Maksimal 5 foto. Foto akan dikompres otomatis di browser sebelum dikirim.</div><div id="tg-foto-info" class="small text-muted mt-1"></div></div>
+                <div class="mb-4"><label class="small fw-bold">Lampiran Dokumen (PDF/Word/Excel)</label><input type="file" id="tg-dokumen" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx" multiple><div class="form-text">Opsional. Maksimal 3 dokumen, 10 MB/file.</div><div id="tg-dokumen-info" class="small text-muted mt-1"></div></div>
 
                 <button type="button" onclick="kirimLaporan()" id="btnKirimTugas" class="btn btn-success w-100 py-3 fw-bold rounded-4 shadow">SIMPAN KEGIATAN</button>
             </form>
@@ -585,7 +590,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.2.5-LAPOR-KEGIATAN-PKB-V1-R5-R1";
+        const EPKB_APP_VERSION = "0.2.6-LAPOR-KEGIATAN-PKB-V1-R6";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -1776,6 +1781,8 @@ ${label}`)) return;
         window.__epkbKegiatanPhotoPending = window.__epkbKegiatanPhotoPending || {};
         window.__epkbKegiatanThumbObserver = window.__epkbKegiatanThumbObserver || null;
         const EPKB_THUMB_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'%3E%3Crect x='1' y='1' width='158' height='118' rx='14' fill='%23f8fafc' stroke='%23cbd5e1' stroke-width='2' stroke-dasharray='6 5'/%3E%3Cpath d='M50 78l20-22 15 15 10-12 22 25H43z' fill='%2364748b' opacity='.55'/%3E%3Crect x='45' y='34' width='70' height='52' rx='6' fill='none' stroke='%2364748b' stroke-width='5' opacity='.85'/%3E%3Ccircle cx='99' cy='48' r='7' fill='%2364748b' opacity='.75'/%3E%3C/svg%3E";
+        const EPKB_ACTIVITY_ATTACHMENT_LIMITS = { fotoMax: 5, dokumenMax: 3, fotoRawMax: 10 * 1024 * 1024, dokumenMaxBytes: 10 * 1024 * 1024, fotoLongestSide: 1600, fotoQuality: 0.8 };
+
 
         function bukaRiwayatTugasSaya() {
             bukaHalaman('riwayat-tugas-page');
@@ -1938,10 +1945,10 @@ ${label}`)) return;
                             </div>
                             <div class="small text-muted mt-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(k.nama_lokasi_kegiatan || k.desa || '-')} ${k.lokasi ? ' / ' + escapeHtml(k.lokasi) : ''}</div>
                             <div class="small text-muted mt-1">Lokasi: ${escapeHtml(k.lokasi_scope || '-')} ${k.level_lokasi_kegiatan ? '• ' + escapeHtml(k.level_lokasi_kegiatan) : ''}</div>
-                            <div class="small text-muted mt-1">Status: ${escapeHtml(k.status || 'TERSIMPAN')}</div>
+                            <div class="small text-muted mt-1">Status: ${escapeHtml(k.status || 'TERSIMPAN')} ${lampiranCountHtml_(k)}</div>
                             <div class="mt-2">
                                 ${fotoButtonHtml_(k)}
-                                ${k.url_dokumen ? `<a href="${escapeHtml(k.url_dokumen)}" target="_blank" rel="noopener" class="badge bg-success text-decoration-none"><i class="bi bi-file-earmark"></i> Dokumen</a>` : ""}
+                                ${dokumenButtonsHtml_(k)}
                             </div>
                         </div>
                     </div>
@@ -1950,6 +1957,60 @@ ${label}`)) return;
 
         function infoRowHtml_(label, value) {
             return `<div class="info-row"><span class="info-label">${escapeHtml(label)}:</span><span class="info-value">${escapeHtml(value || '-')}</span></div>`;
+        }
+
+
+        function getFotoItems_(item) {
+            if (item && Array.isArray(item.foto_items) && item.foto_items.length) return item.foto_items;
+            if (item && item.attachments && Array.isArray(item.attachments.fotos) && item.attachments.fotos.length) return item.attachments.fotos;
+            const fid = item && (item.foto_file_id || extractDriveFileId_(item.foto_url || item.url_foto || ''));
+            const url = item && (item.foto_url || item.url_foto || '');
+            const thumb = item && (item.foto_thumbnail_url || item.thumbnail_foto || '');
+            return (fid || url || thumb) ? [{ file_id: fid || '', url: url || '', thumbnail_url: thumb || '' }] : [];
+        }
+
+        function getDokumenItems_(item) {
+            if (item && Array.isArray(item.dokumen_items) && item.dokumen_items.length) return item.dokumen_items;
+            if (item && item.attachments && Array.isArray(item.attachments.dokumens) && item.attachments.dokumens.length) return item.attachments.dokumens;
+            const fid = item && (item.dokumen_file_id || extractDriveFileId_(item.dokumen_url || item.url_dokumen || ''));
+            const url = item && (item.dokumen_url || item.url_dokumen || '');
+            return (fid || url) ? [{ file_id: fid || '', url: url || '', name: 'Dokumen' }] : [];
+        }
+
+        function lampiranCountHtml_(item) {
+            const f = Number(item.foto_count || getFotoItems_(item).length || 0);
+            const d = Number(item.dokumen_count || getDokumenItems_(item).length || 0);
+            const parts = [];
+            if (f > 1) parts.push(`<span class="attachment-count-pill"><i class="bi bi-images"></i>${f} foto</span>`);
+            if (d > 1) parts.push(`<span class="attachment-count-pill"><i class="bi bi-files"></i>${d} dokumen</span>`);
+            return parts.join('');
+        }
+
+        function dokumenButtonsHtml_(item, btnClass = 'badge bg-success text-decoration-none') {
+            const docs = getDokumenItems_(item);
+            if (!docs.length) return '';
+            if (docs.length === 1) {
+                const url = docs[0].url || docs[0].file_url || item.url_dokumen || item.dokumen_url || '#';
+                return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="${btnClass}"><i class="bi bi-file-earmark"></i> Dokumen</a>`;
+            }
+            return docs.map((d, i) => {
+                const url = d.url || d.file_url || '#';
+                return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="${btnClass} me-1"><i class="bi bi-file-earmark"></i> Dok ${i + 1}</a>`;
+            }).join('');
+        }
+
+        function galleryKegiatanHtml_(item) {
+            const fotos = getFotoItems_(item);
+            if (!fotos.length) return '<div class="small text-muted">Tidak ada foto kegiatan.</div>';
+            return `<div class="mt-3"><div class="small fw-bold text-muted mb-1"><i class="bi bi-images"></i> Galeri Foto (${fotos.length})</div><div class="kegiatan-gallery-strip">${fotos.map((f, idx) => {
+                const fid = f.file_id || extractDriveFileId_(f.url || f.file_url || f.thumbnail_url || '');
+                const thumb = driveThumbnailUrl_(f.thumbnail_url || f.url || f.file_url || fid, 320) || EPKB_THUMB_PLACEHOLDER;
+                const foto = f.url || f.file_url || (fid ? `https://drive.google.com/file/d/${fid}/view` : '');
+                return `<button type="button" class="kegiatan-gallery-item text-start" onclick='bukaPreviewFotoKegiatan_(${jsString_(item.id_kegiatan)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_((item.judul || 'Foto kegiatan') + ' #' + (idx + 1))}, ${jsString_(fid)}, ${idx + 1})'>
+                    <img src="${escapeHtml(thumb)}" alt="Foto kegiatan ${idx + 1}" loading="lazy" onerror="this.src=EPKB_THUMB_PLACEHOLDER">
+                    <div class="small text-muted mt-1">Foto ${idx + 1}</div>
+                </button>`;
+            }).join('')}</div></div>`;
         }
 
         function bukaDetailKegiatanById_(id) {
@@ -1972,10 +2033,12 @@ ${label}`)) return;
                     ${infoRowHtml_('Jumlah Hadir', item.jumlah_peserta_hadir)}
                     ${infoRowHtml_('Deskripsi', item.deskripsi_kegiatan)}
                     ${infoRowHtml_('Status', item.status || 'TERSIMPAN')}
+                    ${infoRowHtml_('Jumlah Lampiran', `${getFotoItems_(item).length} foto / ${getDokumenItems_(item).length} dokumen`)}
                 </div>
+                ${galleryKegiatanHtml_(item)}
                 <div class="mt-3 d-flex gap-2 flex-wrap">
                     ${fotoButtonHtml_(item)}
-                    ${item.url_dokumen ? `<a href="${escapeHtml(item.url_dokumen)}" target="_blank" rel="noopener" class="btn btn-sm btn-success fw-bold"><i class="bi bi-file-earmark"></i> Buka Dokumen</a>` : ''}
+                    ${dokumenButtonsHtml_(item, 'btn btn-sm btn-success fw-bold')}
                 </div>`;
             overlay.classList.remove('hidden');
             setTimeout(initLazyKegiatanThumbs_, 0);
@@ -2276,16 +2339,17 @@ ${label}`)) return;
             return driveThumbnailUrl_(url, 1200);
         }
 
-        function getPhotoCacheKey_(idKegiatan, mode) {
-            return `${mode || 'preview'}:${filterText(idKegiatan)}`;
+        function getPhotoCacheKey_(idKegiatan, mode, fileId) {
+            return `${mode || 'preview'}:${filterText(idKegiatan)}:${filterText(fileId || '')}`;
         }
 
-        async function fetchKegiatanPhotoDataUrl_(idKegiatan, mode) {
+        async function fetchKegiatanPhotoDataUrl_(idKegiatan, mode, fileId, fotoIndex) {
             const cleanId = filterText(idKegiatan);
             const cleanMode = filterText(mode || 'preview') || 'preview';
+            const cleanFileId = filterText(fileId || '');
             if (!cleanId) throw new Error('ID kegiatan kosong.');
             const cache = cleanMode === 'thumbnail' ? window.__epkbKegiatanPhotoThumbCache : window.__epkbKegiatanPhotoPreviewCache;
-            const key = getPhotoCacheKey_(cleanId, cleanMode);
+            const key = getPhotoCacheKey_(cleanId, cleanMode, cleanFileId);
             if (cache[key] && cache[key].data_url) return cache[key];
             if (window.__epkbKegiatanPhotoPending[key]) return window.__epkbKegiatanPhotoPending[key];
 
@@ -2299,6 +2363,8 @@ ${label}`)) return;
             p.append('user_agent', navigator.userAgent || '');
             p.append('id_kegiatan', cleanId);
             p.append('mode', cleanMode);
+            if (cleanFileId) p.append('file_id', cleanFileId);
+            if (fotoIndex) p.append('foto_index', String(fotoIndex));
             if (cleanMode === 'thumbnail') p.append('size', '320');
 
             window.__epkbKegiatanPhotoPending[key] = fetch(SCRIPT_URL, { method: 'POST', body: p })
@@ -2347,7 +2413,7 @@ ${label}`)) return;
         function loadKegiatanThumbElement_(img) {
             if (!img || img.dataset.loaded === '1') return;
             const id = filterText(img.dataset.idKegiatan);
-            const key = getPhotoCacheKey_(id, 'thumbnail');
+            const key = getPhotoCacheKey_(id, 'thumbnail', filterText(img.dataset.fileId));
             img.dataset.loaded = '1';
             if (window.__epkbKegiatanPhotoThumbCache[key] && window.__epkbKegiatanPhotoThumbCache[key].data_url) {
                 img.src = window.__epkbKegiatanPhotoThumbCache[key].data_url;
@@ -2367,7 +2433,7 @@ ${label}`)) return;
             try {
                 const id = filterText(img.dataset.idKegiatan);
                 if (!id) throw new Error('ID kegiatan kosong.');
-                const payload = await fetchKegiatanPhotoDataUrl_(id, 'thumbnail');
+                const payload = await fetchKegiatanPhotoDataUrl_(id, 'thumbnail', filterText(img.dataset.fileId));
                 if (payload && payload.data_url) {
                     img.onerror = function(){ setThumbPlaceholder_(this); };
                     img.src = payload.data_url;
@@ -2388,7 +2454,7 @@ ${label}`)) return;
             img.alt = 'Thumbnail foto tidak tersedia';
         }
 
-        async function bukaPreviewFotoKegiatan_(idKegiatan, fotoUrl, thumbUrl, title) {
+        async function bukaPreviewFotoKegiatan_(idKegiatan, fotoUrl, thumbUrl, title, fileId, fotoIndex) {
             const overlay = document.getElementById('attachmentPreviewOverlay');
             const img = document.getElementById('attachmentPreviewImage');
             const titleEl = document.getElementById('attachmentPreviewTitle');
@@ -2402,13 +2468,13 @@ ${label}`)) return;
             overlay.classList.remove('hidden');
 
             try {
-                const key = getPhotoCacheKey_(idKegiatan, 'preview');
+                const key = getPhotoCacheKey_(idKegiatan, 'preview', fileId);
                 if (window.__epkbKegiatanPhotoPreviewCache[key] && window.__epkbKegiatanPhotoPreviewCache[key].data_url) {
                     img.src = window.__epkbKegiatanPhotoPreviewCache[key].data_url;
                     link.href = window.__epkbKegiatanPhotoPreviewCache[key].drive_url || drive || '#';
                     return;
                 }
-                const payload = await fetchKegiatanPhotoDataUrl_(idKegiatan, 'preview');
+                const payload = await fetchKegiatanPhotoDataUrl_(idKegiatan, 'preview', fileId, fotoIndex);
                 if (payload && payload.data_url) {
                     img.src = payload.data_url;
                     link.href = payload.drive_url || drive || '#';
@@ -2427,25 +2493,34 @@ ${label}`)) return;
         }
 
         function fotoButtonHtml_(item) {
-            const thumb = item.thumbnail_foto || item.foto_thumbnail_url || item.thumbnail_url || '';
-            const foto = item.url_foto || item.foto_url || '';
+            const fotos = getFotoItems_(item);
+            if (!fotos.length) return '';
+            const first = fotos[0] || {};
+            const thumb = first.thumbnail_url || item.thumbnail_foto || item.foto_thumbnail_url || item.thumbnail_url || '';
+            const foto = first.url || first.file_url || item.url_foto || item.foto_url || '';
+            const fileId = first.file_id || extractDriveFileId_(foto || thumb || '');
             const id = item.id_kegiatan || '';
-            if (!thumb && !foto) return '';
             const title = item.judul || 'Foto kegiatan';
-            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)})' class="badge bg-info border-0 text-decoration-none me-1"><i class="bi bi-image"></i> Foto</button>`;
+            const label = fotos.length > 1 ? `Foto (${fotos.length})` : 'Foto';
+            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)}, ${jsString_(fileId)}, 1)' class="badge bg-info border-0 text-decoration-none me-1"><i class="bi bi-image"></i> ${label}</button>`;
         }
 
         function thumbnailKegiatanHtml_(item) {
-            const thumb = item.thumbnail_foto || item.foto_thumbnail_url || item.thumbnail_url || '';
-            const foto = item.url_foto || item.foto_url || '';
+            const fotos = getFotoItems_(item);
+            if (!fotos.length) return '';
+            const first = fotos[0] || {};
+            const fileId = first.file_id || extractDriveFileId_(first.url || first.file_url || first.thumbnail_url || '');
+            const thumb = first.thumbnail_url || item.thumbnail_foto || item.foto_thumbnail_url || item.thumbnail_url || '';
+            const foto = first.url || first.file_url || item.url_foto || item.foto_url || '';
             const id = item.id_kegiatan || '';
-            if (!thumb && !foto) return '';
-            const src = driveThumbnailUrl_(thumb || foto, 320);
+            const src = driveThumbnailUrl_(thumb || foto || fileId, 320);
             const title = item.judul || 'Foto kegiatan';
-            const cached = window.__epkbKegiatanPhotoThumbCache[getPhotoCacheKey_(id, 'thumbnail')];
+            const cached = window.__epkbKegiatanPhotoThumbCache[getPhotoCacheKey_(id, 'thumbnail', fileId)];
             const initial = cached && cached.data_url ? cached.data_url : EPKB_THUMB_PLACEHOLDER;
-            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)})' class="kegiatan-thumb-link me-3 mb-2" title="Preview foto kegiatan">
-                <img src="${escapeHtml(initial)}" data-drive-src="${escapeHtml(src)}" data-id-kegiatan="${escapeHtml(id)}" alt="Foto kegiatan" class="kegiatan-thumb js-kegiatan-lazy-thumb" loading="lazy" onerror="handleThumbImgError_(this)">
+            const more = fotos.length > 1 ? `<span class="position-absolute bottom-0 end-0 badge bg-primary rounded-pill">+${fotos.length - 1}</span>` : '';
+            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)}, ${jsString_(fileId)}, 1)' class="kegiatan-thumb-link me-3 mb-2 position-relative" title="Preview foto kegiatan">
+                <img src="${escapeHtml(initial)}" data-drive-src="${escapeHtml(src)}" data-id-kegiatan="${escapeHtml(id)}" data-file-id="${escapeHtml(fileId)}" alt="Foto kegiatan" class="kegiatan-thumb js-kegiatan-lazy-thumb" loading="lazy" onerror="handleThumbImgError_(this)">
+                ${more}
             </button>`;
         }
 
@@ -2477,20 +2552,88 @@ ${label}`)) return;
 
         function validasiFileUpload_(file, kind) {
             if (!file) return { ok: true };
-            const max = kind === 'foto' ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
-            if (file.size > max) return { ok: false, pesan: `${kind === 'foto' ? 'Foto' : 'Dokumen'} melebihi batas ${kind === 'foto' ? '5 MB' : '10 MB'}.` };
+            const max = kind === 'foto' ? EPKB_ACTIVITY_ATTACHMENT_LIMITS.fotoRawMax : EPKB_ACTIVITY_ATTACHMENT_LIMITS.dokumenMaxBytes;
+            const label = kind === 'foto' ? 'Foto mentah' : 'Dokumen';
+            if (file.size > max) return { ok: false, pesan: `${label} ${file.name} melebihi batas 10 MB/file.` };
             return { ok: true };
         }
 
-        const readF = (file, kind) => new Promise((res, rej) => {
-            if(!file) return res(null);
-            const cek = validasiFileUpload_(file, kind);
-            if (!cek.ok) return rej(new Error(cek.pesan));
-            const r = new FileReader();
-            r.onload = (e) => res({ n: file.name, m: file.type || 'application/octet-stream', d: e.target.result.split(',')[1] });
-            r.onerror = () => rej(new Error('Gagal membaca file.'));
-            r.readAsDataURL(file);
+        function updateAttachmentInputInfo_() {
+            const fotoEl = document.getElementById('tg-foto');
+            const dokEl = document.getElementById('tg-dokumen');
+            const fotoInfo = document.getElementById('tg-foto-info');
+            const dokInfo = document.getElementById('tg-dokumen-info');
+            if (fotoInfo && fotoEl) fotoInfo.innerText = fotoEl.files.length ? `${fotoEl.files.length} foto dipilih. Akan dikompres sebelum upload.` : '';
+            if (dokInfo && dokEl) dokInfo.innerText = dokEl.files.length ? `${dokEl.files.length} dokumen dipilih.` : '';
+        }
+        document.addEventListener('change', function(ev) {
+            if (ev.target && (ev.target.id === 'tg-foto' || ev.target.id === 'tg-dokumen')) updateAttachmentInputInfo_();
         });
+
+        function readFileAsDataUrl_(file) {
+            return new Promise((res, rej) => {
+                const r = new FileReader();
+                r.onload = (e) => res(e.target.result || '');
+                r.onerror = () => rej(new Error('Gagal membaca file.'));
+                r.readAsDataURL(file);
+            });
+        }
+
+        function loadImageForCompression_(dataUrl) {
+            return new Promise((res, rej) => {
+                const img = new Image();
+                img.onload = () => res(img);
+                img.onerror = () => rej(new Error('Gagal membaca gambar untuk kompresi.'));
+                img.src = dataUrl;
+            });
+        }
+
+        async function compressImageFileForUpload_(file) {
+            const cek = validasiFileUpload_(file, 'foto');
+            if (!cek.ok) throw new Error(cek.pesan);
+            const dataUrl = await readFileAsDataUrl_(file);
+            let img;
+            try { img = await loadImageForCompression_(dataUrl); }
+            catch (err) { return { n: file.name, m: file.type || 'image/jpeg', d: dataUrl.split(',')[1], original_size: file.size, compressed_size: file.size, compressed: false }; }
+            const maxSide = EPKB_ACTIVITY_ATTACHMENT_LIMITS.fotoLongestSide;
+            let w = img.naturalWidth || img.width;
+            let h = img.naturalHeight || img.height;
+            if (w > maxSide || h > maxSide) {
+                const ratio = Math.min(maxSide / w, maxSide / h);
+                w = Math.round(w * ratio);
+                h = Math.round(h * ratio);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, w);
+            canvas.height = Math.max(1, h);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const outMime = 'image/jpeg';
+            const outDataUrl = canvas.toDataURL(outMime, EPKB_ACTIVITY_ATTACHMENT_LIMITS.fotoQuality);
+            const base64 = outDataUrl.split(',')[1];
+            const compressedSize = Math.round((base64.length * 3) / 4);
+            const safeName = file.name.replace(/\.[^.]+$/, '') + '_compressed.jpg';
+            return { n: safeName, m: outMime, d: base64, original_size: file.size, compressed_size: compressedSize, compressed: true };
+        }
+
+        async function readDocumentFileForUpload_(file) {
+            const cek = validasiFileUpload_(file, 'dokumen');
+            if (!cek.ok) throw new Error(cek.pesan);
+            const dataUrl = await readFileAsDataUrl_(file);
+            return { n: file.name, m: file.type || 'application/octet-stream', d: dataUrl.split(',')[1], original_size: file.size };
+        }
+
+        async function readMultipleAttachmentsForUpload_() {
+            const fotoFiles = Array.from(document.getElementById('tg-foto')?.files || []);
+            const dokFiles = Array.from(document.getElementById('tg-dokumen')?.files || []);
+            if (fotoFiles.length > EPKB_ACTIVITY_ATTACHMENT_LIMITS.fotoMax) throw new Error(`Maksimal ${EPKB_ACTIVITY_ATTACHMENT_LIMITS.fotoMax} foto per kegiatan.`);
+            if (dokFiles.length > EPKB_ACTIVITY_ATTACHMENT_LIMITS.dokumenMax) throw new Error(`Maksimal ${EPKB_ACTIVITY_ATTACHMENT_LIMITS.dokumenMax} dokumen per kegiatan.`);
+            const fotos = [];
+            for (let i = 0; i < fotoFiles.length; i++) { const item = await compressImageFileForUpload_(fotoFiles[i]); item.seq = i + 1; fotos.push(item); }
+            const dokumens = [];
+            for (let j = 0; j < dokFiles.length; j++) { const item = await readDocumentFileForUpload_(dokFiles[j]); item.seq = j + 1; dokumens.push(item); }
+            return { fotos, dokumens };
+        }
 
         async function kirimLaporan() {
             const user = JSON.parse(localStorage.getItem('userPKB') || '{}');
@@ -2536,11 +2679,10 @@ ${label}`)) return;
                 dataKb = `IUD(B:${gV('kb-iud-b')},U:${gV('kb-iud-u')},G:${gV('kb-iud-g')}); IMP(B:${gV('kb-imp-b')},U:${gV('kb-imp-u')},G:${gV('kb-imp-g')}); MOW(B:${gV('kb-mow-b')},U:${gV('kb-mow-u')},G:${gV('kb-mow-g')}); MOP(B:${gV('kb-mop-b')},U:${gV('kb-mop-u')},G:${gV('kb-mop-g')})`;
             }
 
-            let foto = null;
-            let dok = null;
+            let lampiran = { fotos: [], dokumens: [] };
             try {
-                foto = await readF(document.getElementById('tg-foto').files[0], 'foto');
-                dok = await readF(document.getElementById('tg-dokumen').files[0], 'dokumen');
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Mengompres lampiran...';
+                lampiran = await readMultipleAttachmentsForUpload_();
             } catch(fileErr) {
                 alert(fileErr.message || 'File lampiran tidak valid.');
                 btn.disabled = false;
@@ -2584,8 +2726,19 @@ ${label}`)) return;
             p.append('jenis', jenis);
             p.append('deskripsi', deskripsi || '-');
             p.append('data_kb', dataKb);
-            if(foto) { p.append('fotoName', foto.n); p.append('fotoMime', foto.m); p.append('fotoData', foto.d); }
-            if(dok) { p.append('dokName', dok.n); p.append('dokMime', dok.m); p.append('dokData', dok.d); }
+            if(lampiran.fotos.length) {
+                p.append('fotoItems', JSON.stringify(lampiran.fotos));
+                p.append('fotoName', lampiran.fotos[0].n);
+                p.append('fotoMime', lampiran.fotos[0].m);
+                p.append('fotoData', lampiran.fotos[0].d);
+            }
+            if(lampiran.dokumens.length) {
+                p.append('dokItems', JSON.stringify(lampiran.dokumens));
+                p.append('dokName', lampiran.dokumens[0].n);
+                p.append('dokMime', lampiran.dokumens[0].m);
+                p.append('dokData', lampiran.dokumens[0].d);
+            }
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Mengupload & menyimpan...';
 
             try {
                 const r = await fetch(SCRIPT_URL, { method: 'POST', body: p });
@@ -2597,6 +2750,7 @@ ${label}`)) return;
                     document.getElementById('box-tabel-kb').classList.add('hidden');
                     aturDefaultTanggalTugas_();
                     aturScopeLokasiKegiatan_();
+                    updateAttachmentInputInfo_();
                     await muatRiwayat();
                     muatPkbDashboardLite_();
                 } else {
