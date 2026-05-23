@@ -40,13 +40,19 @@
         .status-dot.danger { background: #dc3545; }
         .riwayat-item { border-left: 4px solid #0d6efd; border-radius: 14px; }
 
-        .kegiatan-thumb-link { display:inline-block; text-decoration:none; padding:0; border:0; background:transparent; }
+        .kegiatan-thumb-link { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; padding:0; border:0; background:#f8fafc; border-radius:12px; min-width:96px; min-height:72px; }
         .kegiatan-thumb { width:96px; height:72px; object-fit:cover; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 2px 6px rgba(0,0,0,.08); }
+        .kegiatan-thumb-placeholder { width:96px; height:72px; border-radius:12px; border:1px dashed #cbd5e1; display:flex; align-items:center; justify-content:center; color:#64748b; background:#f8fafc; font-size:1.4rem; }
+        .kegiatan-title-btn { border:0; background:transparent; padding:0; color:#111827; font-weight:800; text-align:left; }
+        .kegiatan-title-btn:hover { color:#0d6efd; text-decoration:underline; }
+        .kegiatan-actions .btn { padding:2px 7px; }
+        .rekap-table-wrap { max-height:60vh; overflow:auto; border:1px solid #e5e7eb; border-radius:14px; }
+        .rekap-table-wrap table { margin-bottom:0; }
         .attachment-preview-overlay { position: fixed; inset: 0; z-index: 1080; background: rgba(15,23,42,.72); display:flex; align-items:center; justify-content:center; padding: 16px; }
         .attachment-preview-card { width:min(860px, 96vw); max-height:92vh; overflow:auto; background:#fff; border-radius:18px; box-shadow:0 18px 45px rgba(0,0,0,.25); }
         .attachment-preview-img { width:100%; max-height:70vh; object-fit:contain; background:#111827; border-radius:12px; }
         .filter-card { border-radius:16px; border:1px solid #e5e7eb; background:#fff; }
-        @media (max-width: 576px) { .kegiatan-thumb { width:82px; height:62px; } .attachment-preview-card { max-height:88vh; } }
+        @media (max-width: 576px) { .kegiatan-thumb, .kegiatan-thumb-placeholder, .kegiatan-thumb-link { width:82px; height:62px; min-width:82px; min-height:62px; } .attachment-preview-card { max-height:88vh; } }
     </style>
 </head>
 <body>
@@ -349,14 +355,27 @@
                     <div class="small text-muted">Daftar ringkas laporan kegiatan terbaru berdasarkan data tugas_kegiatan.</div>
                 </div>
             </div>
-            <button onclick="muatRiwayatTugasSaya()" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
+            <div class="d-flex gap-2">
+                <button onclick="bukaRekapKegiatanPkb_()" class="btn btn-sm btn-success fw-bold"><i class="bi bi-table"></i> Rekap</button>
+                <button onclick="muatRiwayatTugasSaya()" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
+            </div>
         </div>
         <div id="riwayatTugasSummary" class="mb-3"></div>
         <div class="filter-card shadow-sm p-3 mb-3">
             <div class="row g-2 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted mb-1">Bulan/Tahun</label>
-                    <input type="month" id="filterRiwayatBulan" class="form-control form-control-sm">
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted mb-1">Bulan</label>
+                    <select id="filterRiwayatBulan" class="form-select form-select-sm">
+                        <option value="">Semua Bulan</option>
+                        <option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option>
+                        <option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option>
+                        <option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option>
+                        <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted mb-1">Tahun</label>
+                    <select id="filterRiwayatTahun" class="form-select form-select-sm"></select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small fw-bold text-muted mb-1">Topik Kegiatan</label>
@@ -370,14 +389,14 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted mb-1">Scope Lokasi</label>
+                    <label class="form-label small fw-bold text-muted mb-1">Lokasi</label>
                     <select id="filterRiwayatScope" class="form-select form-select-sm">
-                        <option value="">Semua Scope</option>
+                        <option value="">Semua Lokasi</option>
                         <option value="DALAM_BINAAN">Dalam Wilayah Binaan</option>
                         <option value="LUAR_BINAAN">Luar Wilayah Binaan</option>
                     </select>
                 </div>
-                <div class="col-md-3 d-flex gap-2">
+                <div class="col-md-2 d-flex gap-2">
                     <button type="button" onclick="muatRiwayatTugasSaya()" class="btn btn-sm btn-primary fw-bold flex-fill"><i class="bi bi-funnel"></i> Terapkan</button>
                     <button type="button" onclick="resetFilterRiwayatTugas_()" class="btn btn-sm btn-outline-secondary fw-bold">Reset</button>
                 </div>
@@ -385,6 +404,26 @@
         </div>
         <div id="riwayatTugasList">
             <div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">Klik Muat untuk mengambil riwayat tugas.</div>
+        </div>
+    </div>
+
+    <div id="rekap-kegiatan-page" class="container mt-4 mb-5 hidden">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <button onclick="bukaHalaman('riwayat-tugas-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
+                <div>
+                    <h4 class="fw-bold m-0" id="rekapKegiatanTitle">Rekap Kegiatan</h4>
+                    <div class="small text-muted" id="rekapKegiatanSubtitle">Rekap berdasarkan riwayat tugas PKB.</div>
+                </div>
+            </div>
+            <button onclick="muatRekapKegiatanPkb_()" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
+        </div>
+        <div id="rekapKegiatanSummary" class="mb-3"></div>
+        <div id="rekapKegiatanTable" class="card border-0 shadow-sm rounded-4 p-4 text-muted text-center">Klik Muat untuk membuat rekap.</div>
+        <div class="d-flex gap-2 mt-3 flex-wrap">
+            <button type="button" onclick="cetakRekapKegiatanPkb_()" class="btn btn-primary fw-bold"><i class="bi bi-printer"></i> Cetak / PDF</button>
+            <button type="button" onclick="exportRekapKegiatanCsv_()" class="btn btn-success fw-bold"><i class="bi bi-file-earmark-spreadsheet"></i> Export Excel/CSV</button>
+            <button type="button" onclick="bukaHalaman('riwayat-tugas-page')" class="btn btn-outline-secondary fw-bold"><i class="bi bi-arrow-left"></i> Kembali</button>
         </div>
     </div>
 
@@ -494,6 +533,51 @@
         </div>
     </div>
 
+    <div id="kegiatanDetailOverlay" class="attachment-preview-overlay hidden" onclick="tutupDetailKegiatan_(event)">
+        <div class="attachment-preview-card p-3" onclick="event.stopPropagation()">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <div>
+                    <div class="small text-muted">Detail Kegiatan</div>
+                    <div id="kegiatanDetailTitle" class="fw-bold">Kegiatan</div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="tutupDetailKegiatan_()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div id="kegiatanDetailContent"></div>
+        </div>
+    </div>
+
+    <div id="kegiatanEditOverlay" class="attachment-preview-overlay hidden" onclick="tutupEditKegiatan_(event)">
+        <div class="attachment-preview-card p-3" onclick="event.stopPropagation()">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <div>
+                    <div class="small text-muted">Edit Ringkas Kegiatan</div>
+                    <div class="fw-bold">Perbarui data kegiatan tersimpan</div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="tutupEditKegiatan_()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form id="formEditKegiatan" class="mt-2">
+                <input type="hidden" id="edit-kegiatan-id">
+                <div class="row g-2">
+                    <div class="col-md-4"><label class="small fw-bold">Tanggal</label><input type="date" id="edit-kegiatan-tanggal" class="form-control form-control-sm"></div>
+                    <div class="col-md-4"><label class="small fw-bold">Waktu Mulai</label><input type="time" id="edit-kegiatan-mulai" class="form-control form-control-sm"></div>
+                    <div class="col-md-4"><label class="small fw-bold">Waktu Selesai</label><input type="time" id="edit-kegiatan-selesai" class="form-control form-control-sm"></div>
+                </div>
+                <div class="mt-2"><label class="small fw-bold">Judul Kegiatan</label><input type="text" id="edit-kegiatan-judul" class="form-control"></div>
+                <div class="row g-2 mt-1">
+                    <div class="col-md-6"><label class="small fw-bold">Topik</label><select id="edit-kegiatan-topik" class="form-select"><option value="KIE">KIE</option><option value="PELAYANAN DAN PENGGERAKAN">PELAYANAN DAN PENGGERAKAN</option><option value="PENCATATAN DAN PELAPORAN">PENCATATAN DAN PELAPORAN</option><option value="PERTEMUAN">PERTEMUAN</option><option value="LAINNYA">LAINNYA</option></select></div>
+                    <div class="col-md-6"><label class="small fw-bold">Jenis/Sub Jenis</label><input type="text" id="edit-kegiatan-jenis" class="form-control"></div>
+                </div>
+                <div class="mt-2"><label class="small fw-bold">Tempat/Detail Lokasi</label><input type="text" id="edit-kegiatan-lokasi" class="form-control"></div>
+                <div class="row g-2 mt-1">
+                    <div class="col-md-8"><label class="small fw-bold">Peserta Kegiatan</label><input type="text" id="edit-kegiatan-peserta" class="form-control"></div>
+                    <div class="col-md-4"><label class="small fw-bold">Jumlah Hadir</label><input type="number" id="edit-kegiatan-jumlah" class="form-control"></div>
+                </div>
+                <div class="mt-2"><label class="small fw-bold">Deskripsi</label><textarea id="edit-kegiatan-deskripsi" rows="3" class="form-control"></textarea></div>
+                <button type="button" onclick="simpanEditKegiatan_()" id="btnEditKegiatanSimpan" class="btn btn-success w-100 fw-bold mt-3 py-2">SIMPAN PERUBAHAN KEGIATAN</button>
+            </form>
+        </div>
+    </div>
+
     <footer class="app-footer">
         <div class="copyright">E-PKB © 2026</div>
         <div class="version" id="footer-version">Versi aplikasi: -</div>
@@ -501,7 +585,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.2.4-LAPOR-KEGIATAN-PKB-V1-R4";
+        const EPKB_APP_VERSION = "0.2.5-LAPOR-KEGIATAN-PKB-V1-R5";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -794,7 +878,7 @@
         });
 
         function bukaHalaman(id) {
-            ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page', 'riwayat-tugas-page', 'verifikasi-binaan-page', 'superadmin-monitor-page'].forEach(pg => {
+            ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page', 'riwayat-tugas-page', 'rekap-kegiatan-page', 'verifikasi-binaan-page', 'superadmin-monitor-page'].forEach(pg => {
                 const el = document.getElementById(pg); if(el) el.classList.add('hidden');
             });
             document.getElementById(id).classList.remove('hidden');
@@ -1681,32 +1765,90 @@ ${label}`)) return;
         }
 
 
+        const EPKB_BULAN_LABEL = {
+            '01':'Januari','02':'Februari','03':'Maret','04':'April','05':'Mei','06':'Juni',
+            '07':'Juli','08':'Agustus','09':'September','10':'Oktober','11':'November','12':'Desember'
+        };
+        window.__epkbKegiatanCache = window.__epkbKegiatanCache || {};
+        window.__epkbRekapRows = window.__epkbRekapRows || [];
+
         function bukaRiwayatTugasSaya() {
             bukaHalaman('riwayat-tugas-page');
+            siapkanFilterRiwayatOptions_();
             muatRiwayatTugasSaya();
+        }
+
+        function siapkanFilterRiwayatOptions_() {
+            const tahunEl = document.getElementById('filterRiwayatTahun');
+            if (tahunEl && !tahunEl.dataset.ready) {
+                const now = new Date().getFullYear();
+                let html = '<option value="">Semua Tahun</option>';
+                for (let y = now; y >= now - 5; y--) html += `<option value="${y}">${y}</option>`;
+                tahunEl.innerHTML = html;
+                tahunEl.dataset.ready = '1';
+            }
         }
 
         function getRiwayatFilterParams_() {
             const bulan = (document.getElementById('filterRiwayatBulan')?.value || '').trim();
+            const tahun = (document.getElementById('filterRiwayatTahun')?.value || '').trim();
             const topik = (document.getElementById('filterRiwayatTopik')?.value || '').trim();
             const scope = (document.getElementById('filterRiwayatScope')?.value || '').trim();
-            return { bulan, topik, scope };
+            return { bulan, tahun, topik, scope };
+        }
+
+        function labelFilterBulanTahun_(filters) {
+            filters = filters || {};
+            const b = filters.bulan ? (EPKB_BULAN_LABEL[filters.bulan] || filters.bulan) : 'Semua bulan';
+            const t = filters.tahun || 'Semua tahun';
+            return `${b} / ${t}`;
         }
 
         function resetFilterRiwayatTugas_() {
             const bulan = document.getElementById('filterRiwayatBulan');
+            const tahun = document.getElementById('filterRiwayatTahun');
             const topik = document.getElementById('filterRiwayatTopik');
             const scope = document.getElementById('filterRiwayatScope');
             if (bulan) bulan.value = '';
+            if (tahun) tahun.value = '';
             if (topik) topik.value = '';
             if (scope) scope.value = '';
             muatRiwayatTugasSaya();
+        }
+
+        async function ambilKegiatanPkb_(limit = 75, filters = {}) {
+            const session = ambilSession();
+            if (!session || !session.token) throw new Error('Session tidak ditemukan. Silakan login ulang.');
+            const p = new URLSearchParams();
+            p.append('action', 'get_kegiatan');
+            p.append('token', session.token);
+            p.append('device_id', getDeviceId());
+            p.append('app_version', EPKB_APP_VERSION);
+            p.append('user_agent', navigator.userAgent || '');
+            p.append('limit', String(limit));
+            if (filters.bulan) p.append('bulan', filters.bulan);
+            if (filters.tahun) p.append('tahun', filters.tahun);
+            if (filters.topik) p.append('topik_kegiatan', filters.topik);
+            if (filters.scope) p.append('lokasi_scope', filters.scope);
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+            const d = await res.json();
+            if (d.status !== 'sukses') throw new Error(d.pesan || d.code || 'Gagal memuat data kegiatan.');
+            const records = Array.isArray(d.data) ? d.data : [];
+            storeKegiatanCache_(records);
+            return { data: records, backend: d };
+        }
+
+        function storeKegiatanCache_(records) {
+            (records || []).forEach(r => {
+                if (r && r.id_kegiatan) window.__epkbKegiatanCache[r.id_kegiatan] = r;
+            });
         }
 
         async function muatRiwayatTugasSaya() {
             const session = ambilSession();
             const summaryBox = document.getElementById('riwayatTugasSummary');
             const list = document.getElementById('riwayatTugasList');
+            siapkanFilterRiwayatOptions_();
             if (!session || !session.token) {
                 alert('Session tidak ditemukan. Silakan login ulang.');
                 bukaHalaman('login-page');
@@ -1716,47 +1858,30 @@ ${label}`)) return;
             if (list) list.innerHTML = '<div class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm"></span> Memuat riwayat tugas...</div>';
             try {
                 const filters = getRiwayatFilterParams_();
-                const p = new URLSearchParams();
-                p.append('action', 'get_kegiatan');
-                p.append('token', session.token);
-                p.append('device_id', getDeviceId());
-                p.append('app_version', EPKB_APP_VERSION);
-                p.append('user_agent', navigator.userAgent || '');
-                p.append('limit', '75');
-                if (filters.bulan) p.append('periode', filters.bulan);
-                if (filters.topik) p.append('topik_kegiatan', filters.topik);
-                if (filters.scope) p.append('lokasi_scope', filters.scope);
-                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
-                const d = await res.json();
-                if (d.status === 'sukses') {
-                    const records = d.data || [];
-                    renderRiwayatTugasList_({
-                        summary: buildRiwayatSummaryClient_(records, filters),
-                        recent_records: records,
-                        filters: filters,
-                        backend: d
-                    });
-                } else {
-                    list.innerHTML = `<div class="alert alert-warning">${escapeHtml(d.pesan || d.code || 'Gagal memuat riwayat tugas.')}</div>`;
-                }
+                const hasil = await ambilKegiatanPkb_(75, filters);
+                renderRiwayatTugasList_({
+                    summary: buildRiwayatSummaryClient_(hasil.data, filters),
+                    recent_records: hasil.data,
+                    filters: filters,
+                    backend: hasil.backend
+                });
             } catch(e) {
                 console.warn('[E-PKB] Riwayat tugas gagal dimuat:', e);
-                list.innerHTML = '<div class="alert alert-danger">Koneksi terputus saat memuat riwayat tugas.</div>';
+                if (list) list.innerHTML = `<div class="alert alert-danger">${escapeHtml(e.message || 'Koneksi terputus saat memuat riwayat tugas.')}</div>`;
             }
         }
 
         function buildRiwayatSummaryClient_(records, filters) {
             records = Array.isArray(records) ? records : [];
             const today = tanggalHariIniClient_();
-            const bulanLabel = filters && filters.bulan ? filters.bulan : 'Semua bulan';
             const adaHariIni = records.some(r => (r.tanggal || '').substring(0, 10) === today);
             return {
                 laporan_bulan_ini: records.length,
                 laporan_terakhir: records.length ? (records[0].tanggal_label || records[0].tanggal || '-') : '-',
                 status_laporan_hari_ini_label: adaHariIni ? 'Sudah lapor' : 'Belum lapor',
-                filter_label: bulanLabel,
+                filter_label: labelFilterBulanTahun_(filters),
                 topik_label: filters && filters.topik ? filters.topik : 'Semua topik',
-                scope_label: filters && filters.scope ? filters.scope : 'Semua scope'
+                scope_label: filters && filters.scope ? (filters.scope === 'DALAM_BINAAN' ? 'Dalam wilayah binaan' : 'Luar wilayah binaan') : 'Semua Lokasi'
             };
         }
 
@@ -1765,11 +1890,12 @@ ${label}`)) return;
             const list = document.getElementById('riwayatTugasList');
             const s = dashboard.summary || {};
             const records = dashboard.recent_records || [];
+            storeKegiatanCache_(records);
             if (summaryBox) {
                 summaryBox.innerHTML = `<div class="alert alert-light border rounded-4 shadow-sm mb-0">
                     <b>Data tampil:</b> ${escapeHtml(s.laporan_bulan_ini || 0)} laporan
                     <span class="mx-2">•</span>
-                    <b>Filter:</b> ${escapeHtml(s.filter_label || 'Semua bulan')} / ${escapeHtml(s.topik_label || 'Semua topik')} / ${escapeHtml(s.scope_label || 'Semua scope')}
+                    <b>Filter:</b> ${escapeHtml(s.filter_label || 'Semua bulan / Semua tahun')} / ${escapeHtml(s.topik_label || 'Semua topik')} / ${escapeHtml(s.scope_label || 'Semua Lokasi')}
                     <span class="mx-2">•</span>
                     <b>Terakhir:</b> ${escapeHtml(s.laporan_terakhir || '-')}
                     <span class="mx-2">•</span>
@@ -1780,29 +1906,227 @@ ${label}`)) return;
                 list.innerHTML = '<div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">Tidak ada laporan sesuai filter.</div>';
                 return;
             }
-            list.innerHTML = records.map(r => `
+            list.innerHTML = records.map(r => renderKegiatanCardHtml_(r, 'riwayat')).join('');
+        }
+
+        function renderKegiatanCardHtml_(k, context) {
+            const id = k.id_kegiatan || '';
+            const title = k.judul || 'Laporan Kegiatan';
+            return `
                 <div class="card border-0 shadow-sm p-3 mb-3 riwayat-item">
                     <div class="d-flex gap-2 align-items-start">
-                        ${thumbnailKegiatanHtml_(r)}
+                        ${thumbnailKegiatanHtml_(k)}
                         <div class="flex-grow-1">
                             <div class="d-flex justify-content-between gap-2 flex-wrap">
                                 <div>
-                                    <div class="fw-bold">${escapeHtml(r.judul || 'Laporan Kegiatan')}</div>
-                                    <div class="small text-primary fw-bold">${escapeHtml(r.topik || '-')} ${r.jenis ? '• ' + escapeHtml(r.jenis) : ''}</div>
+                                    <div class="small text-primary fw-bold">${escapeHtml(k.topik || '-')} ${k.jenis ? '• ' + escapeHtml(k.jenis) : ''}</div>
+                                    <button type="button" onclick="bukaDetailKegiatanById_('${escapeHtml(id)}')" class="kegiatan-title-btn">${escapeHtml(title)}</button>
                                 </div>
-                                <span class="badge bg-light text-dark border">${escapeHtml(r.tanggal_label || r.tanggal || '-')}</span>
+                                <div class="d-flex align-items-start gap-2">
+                                    <span class="badge bg-light text-dark border">${escapeHtml(k.tanggal_label || k.tanggal || '-')}</span>
+                                    <div class="kegiatan-actions btn-group btn-group-sm" role="group">
+                                        <button type="button" onclick="bukaEditKegiatanById_('${escapeHtml(id)}')" class="btn btn-outline-primary" title="Edit kegiatan"><i class="bi bi-pencil-square"></i></button>
+                                        <button type="button" onclick="hapusKegiatanById_('${escapeHtml(id)}')" class="btn btn-outline-danger" title="Hapus kegiatan"><i class="bi bi-trash"></i></button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="small text-muted mt-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(r.nama_lokasi_kegiatan || r.desa || '-')} ${r.lokasi ? ' / ' + escapeHtml(r.lokasi) : ''}</div>
-                            <div class="small text-muted mt-1">Scope: ${escapeHtml(r.lokasi_scope || '-')} ${r.level_lokasi_kegiatan ? '• ' + escapeHtml(r.level_lokasi_kegiatan) : ''}</div>
-                            <div class="small text-muted mt-1">Status: ${escapeHtml(r.status || 'TERSIMPAN')}</div>
+                            <div class="small text-muted mt-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(k.nama_lokasi_kegiatan || k.desa || '-')} ${k.lokasi ? ' / ' + escapeHtml(k.lokasi) : ''}</div>
+                            <div class="small text-muted mt-1">Lokasi: ${escapeHtml(k.lokasi_scope || '-')} ${k.level_lokasi_kegiatan ? '• ' + escapeHtml(k.level_lokasi_kegiatan) : ''}</div>
+                            <div class="small text-muted mt-1">Status: ${escapeHtml(k.status || 'TERSIMPAN')}</div>
                             <div class="mt-2">
-                                ${fotoButtonHtml_(r)}
-                                ${r.url_dokumen ? `<a href="${escapeHtml(r.url_dokumen)}" target="_blank" rel="noopener" class="badge bg-success text-decoration-none"><i class="bi bi-file-earmark"></i> Dokumen</a>` : ""}
+                                ${fotoButtonHtml_(k)}
+                                ${k.url_dokumen ? `<a href="${escapeHtml(k.url_dokumen)}" target="_blank" rel="noopener" class="badge bg-success text-decoration-none"><i class="bi bi-file-earmark"></i> Dokumen</a>` : ""}
                             </div>
                         </div>
                     </div>
+                </div>`;
+        }
+
+        function infoRowHtml_(label, value) {
+            return `<div class="info-row"><span class="info-label">${escapeHtml(label)}:</span><span class="info-value">${escapeHtml(value || '-')}</span></div>`;
+        }
+
+        function bukaDetailKegiatanById_(id) {
+            const item = window.__epkbKegiatanCache[id];
+            if (!item) return alert('Detail kegiatan belum tersedia. Silakan muat ulang riwayat.');
+            const overlay = document.getElementById('kegiatanDetailOverlay');
+            const title = document.getElementById('kegiatanDetailTitle');
+            const body = document.getElementById('kegiatanDetailContent');
+            if (!overlay || !body) return;
+            if (title) title.innerText = item.judul || 'Detail Kegiatan';
+            body.innerHTML = `
+                ${thumbnailKegiatanHtml_(item)}
+                <div class="mt-3">
+                    ${infoRowHtml_('Tanggal', item.tanggal_label || item.tanggal)}
+                    ${infoRowHtml_('Topik/Jenis', `${item.topik || '-'} / ${item.jenis || '-'}`)}
+                    ${infoRowHtml_('Lokasi', `${item.nama_lokasi_kegiatan || '-'}${item.lokasi ? ' / ' + item.lokasi : ''}`)}
+                    ${infoRowHtml_('Scope', `${item.lokasi_scope || '-'} ${item.level_lokasi_kegiatan ? '• ' + item.level_lokasi_kegiatan : ''}`)}
+                    ${infoRowHtml_('Waktu', `${item.waktu_mulai || '-'} - ${item.waktu_selesai || '-'}`)}
+                    ${infoRowHtml_('Peserta', item.peserta_kegiatan)}
+                    ${infoRowHtml_('Jumlah Hadir', item.jumlah_peserta_hadir)}
+                    ${infoRowHtml_('Deskripsi', item.deskripsi_kegiatan)}
+                    ${infoRowHtml_('Status', item.status || 'TERSIMPAN')}
                 </div>
-            `).join('');
+                <div class="mt-3 d-flex gap-2 flex-wrap">
+                    ${fotoButtonHtml_(item)}
+                    ${item.url_dokumen ? `<a href="${escapeHtml(item.url_dokumen)}" target="_blank" rel="noopener" class="btn btn-sm btn-success fw-bold"><i class="bi bi-file-earmark"></i> Buka Dokumen</a>` : ''}
+                </div>`;
+            overlay.classList.remove('hidden');
+        }
+
+        function tutupDetailKegiatan_(event) {
+            if (event && event.target && event.target.id !== 'kegiatanDetailOverlay') return;
+            const overlay = document.getElementById('kegiatanDetailOverlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+
+        function bukaEditKegiatanById_(id) {
+            const item = window.__epkbKegiatanCache[id];
+            if (!item) return alert('Data kegiatan belum tersedia. Silakan muat ulang riwayat.');
+            document.getElementById('edit-kegiatan-id').value = item.id_kegiatan || '';
+            document.getElementById('edit-kegiatan-tanggal').value = (item.tanggal || '').substring(0, 10);
+            document.getElementById('edit-kegiatan-mulai').value = item.waktu_mulai || '';
+            document.getElementById('edit-kegiatan-selesai').value = item.waktu_selesai || '';
+            document.getElementById('edit-kegiatan-judul').value = item.judul || '';
+            document.getElementById('edit-kegiatan-topik').value = item.topik || 'KIE';
+            document.getElementById('edit-kegiatan-jenis').value = item.jenis || '';
+            document.getElementById('edit-kegiatan-lokasi').value = item.lokasi || '';
+            document.getElementById('edit-kegiatan-peserta').value = item.peserta_kegiatan || '';
+            document.getElementById('edit-kegiatan-jumlah').value = item.jumlah_peserta_hadir || '';
+            document.getElementById('edit-kegiatan-deskripsi').value = item.deskripsi_kegiatan || '';
+            document.getElementById('kegiatanEditOverlay').classList.remove('hidden');
+        }
+
+        function tutupEditKegiatan_(event) {
+            if (event && event.target && event.target.id !== 'kegiatanEditOverlay') return;
+            const overlay = document.getElementById('kegiatanEditOverlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+
+        async function simpanEditKegiatan_() {
+            const session = ambilSession();
+            if (!session || !session.token) return alert('Session tidak ditemukan. Silakan login ulang.');
+            const btn = document.getElementById('btnEditKegiatanSimpan');
+            const id = document.getElementById('edit-kegiatan-id').value;
+            const judul = document.getElementById('edit-kegiatan-judul').value.trim();
+            if (!id || !judul) return alert('ID dan judul kegiatan wajib ada.');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'update_kegiatan');
+                p.append('token', session.token);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                p.append('id_kegiatan', id);
+                p.append('tanggal', document.getElementById('edit-kegiatan-tanggal').value || '');
+                p.append('waktu_mulai', document.getElementById('edit-kegiatan-mulai').value || '');
+                p.append('waktu_selesai', document.getElementById('edit-kegiatan-selesai').value || '');
+                p.append('judul', judul);
+                p.append('topik', document.getElementById('edit-kegiatan-topik').value || '');
+                p.append('jenis', document.getElementById('edit-kegiatan-jenis').value || '');
+                p.append('lokasi', document.getElementById('edit-kegiatan-lokasi').value || '');
+                p.append('peserta', document.getElementById('edit-kegiatan-peserta').value || '');
+                p.append('jml_hadir', document.getElementById('edit-kegiatan-jumlah').value || '0');
+                p.append('deskripsi', document.getElementById('edit-kegiatan-deskripsi').value || '-');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status !== 'sukses' && d.success !== true) throw new Error(d.pesan || d.code || 'Gagal menyimpan perubahan.');
+                alert(d.pesan || 'Kegiatan berhasil diperbarui.');
+                tutupEditKegiatan_();
+                await muatRiwayat();
+                if (!document.getElementById('riwayat-tugas-page').classList.contains('hidden')) await muatRiwayatTugasSaya();
+            } catch (err) {
+                alert(err.message || 'Gagal menyimpan perubahan kegiatan.');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'SIMPAN PERUBAHAN KEGIATAN';
+            }
+        }
+
+        async function hapusKegiatanById_(id) {
+            const item = window.__epkbKegiatanCache[id];
+            if (!id || !confirm(`Hapus kegiatan "${item ? item.judul : id}" dari tampilan?`)) return;
+            const session = ambilSession();
+            if (!session || !session.token) return alert('Session tidak ditemukan. Silakan login ulang.');
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'delete_kegiatan');
+                p.append('token', session.token);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                p.append('id_kegiatan', id);
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status !== 'sukses' && d.success !== true) throw new Error(d.pesan || d.code || 'Gagal menghapus kegiatan.');
+                alert(d.pesan || 'Kegiatan berhasil dihapus.');
+                await muatRiwayat();
+                if (!document.getElementById('riwayat-tugas-page').classList.contains('hidden')) await muatRiwayatTugasSaya();
+            } catch (err) {
+                alert(err.message || 'Gagal menghapus kegiatan.');
+            }
+        }
+
+        async function bukaRekapKegiatanPkb_() {
+            bukaHalaman('rekap-kegiatan-page');
+            await muatRekapKegiatanPkb_();
+        }
+
+        async function muatRekapKegiatanPkb_() {
+            const user = JSON.parse(localStorage.getItem('userPKB') || '{}');
+            const title = document.getElementById('rekapKegiatanTitle');
+            const sub = document.getElementById('rekapKegiatanSubtitle');
+            const box = document.getElementById('rekapKegiatanTable');
+            const summary = document.getElementById('rekapKegiatanSummary');
+            const filters = getRiwayatFilterParams_();
+            if (title) title.innerText = 'Rekap Kegiatan - ' + (user.nama_asli || user.nama_user || user.username || 'PKB');
+            if (sub) sub.innerText = `Filter: ${labelFilterBulanTahun_(filters)} / ${filters.topik || 'Semua topik'} / ${filters.scope || 'Semua Lokasi'}`;
+            if (box) box.innerHTML = '<div class="text-center text-muted p-4"><span class="spinner-border spinner-border-sm"></span> Membuat rekap...</div>';
+            try {
+                const hasil = await ambilKegiatanPkb_(200, filters);
+                const rows = buildRekapRows_(hasil.data || []);
+                window.__epkbRekapRows = rows;
+                if (summary) summary.innerHTML = `<div class="alert alert-light border rounded-4 shadow-sm"><b>Total kegiatan:</b> ${hasil.data.length} <span class="mx-2">•</span><b>Total peserta hadir:</b> ${rows.reduce((a,r)=>a+r.jumlah_peserta,0)}</div>`;
+                if (!rows.length) {
+                    box.innerHTML = '<div class="card border-0 shadow-sm rounded-4 p-4 text-center text-muted">Tidak ada data untuk direkap.</div>';
+                    return;
+                }
+                box.innerHTML = `<div class="rekap-table-wrap"><table class="table table-sm table-hover align-middle"><thead class="table-light"><tr><th>No</th><th>Bulan</th><th>Topik</th><th>Jenis</th><th>Lokasi</th><th class="text-end">Jumlah Kegiatan</th><th class="text-end">Peserta Hadir</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.bulan)}</td><td>${escapeHtml(r.topik)}</td><td>${escapeHtml(r.jenis)}</td><td>${escapeHtml(r.lokasi)}</td><td class="text-end">${r.jumlah_kegiatan}</td><td class="text-end">${r.jumlah_peserta}</td></tr>`).join('')}</tbody></table></div>`;
+            } catch (err) {
+                box.innerHTML = `<div class="alert alert-danger">${escapeHtml(err.message || 'Gagal membuat rekap.')}</div>`;
+            }
+        }
+
+        function buildRekapRows_(records) {
+            const map = {};
+            (records || []).forEach(r => {
+                const bulan = (r.tanggal || '').substring(0,7) || `${r.periode_tahun || '-'}-${String(r.periode_bulan || '').padStart(2,'0')}`;
+                const key = [bulan, r.topik || '-', r.jenis || '-', r.lokasi_scope || '-'].join('|');
+                if (!map[key]) map[key] = { bulan, topik: r.topik || '-', jenis: r.jenis || '-', lokasi: r.lokasi_scope || '-', jumlah_kegiatan:0, jumlah_peserta:0 };
+                map[key].jumlah_kegiatan += 1;
+                map[key].jumlah_peserta += Number(r.jumlah_peserta_hadir || 0) || 0;
+            });
+            return Object.values(map).sort((a,b) => (b.bulan || '').localeCompare(a.bulan || '') || a.topik.localeCompare(b.topik));
+        }
+
+        function exportRekapKegiatanCsv_() {
+            const rows = window.__epkbRekapRows || [];
+            if (!rows.length) return alert('Belum ada data rekap untuk diekspor.');
+            const header = ['Bulan','Topik','Jenis','Lokasi','Jumlah Kegiatan','Peserta Hadir'];
+            const csv = [header].concat(rows.map(r => [r.bulan,r.topik,r.jenis,r.lokasi,r.jumlah_kegiatan,r.jumlah_peserta]))
+                .map(cols => cols.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'rekap_kegiatan_epkb.csv';
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        }
+
+        function cetakRekapKegiatanPkb_() {
+            window.print();
         }
 
         // --- LAPOR KEGIATAN LOGIC ---
@@ -1921,25 +2245,64 @@ ${label}`)) return;
             return JSON.stringify(filterText(value));
         }
 
-        function largeThumbnailUrl_(url) {
+        function extractDriveFileId_(url) {
             const s = filterText(url);
             if (!s) return '';
-            if (s.includes('drive.google.com/thumbnail')) return s.replace(/sz=w\d+/i, 'sz=w1000');
+            let m = s.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+            if (m && m[1]) return m[1];
+            m = s.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (m && m[1]) return m[1];
+            if (/^[a-zA-Z0-9_-]{20,}$/.test(s)) return s;
+            return '';
+        }
+
+        function driveThumbnailUrl_(urlOrId, size = 320) {
+            const s = filterText(urlOrId);
+            if (!s) return '';
+            const id = extractDriveFileId_(s);
+            if (id) return `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w${size}`;
+            if (s.includes('drive.google.com/thumbnail')) return s.replace(/sz=w\d+/i, `sz=w${size}`);
             return s;
         }
 
-        function bukaPreviewFotoKegiatan_(fotoUrl, thumbUrl, title) {
+        function largeThumbnailUrl_(url) {
+            return driveThumbnailUrl_(url, 1200);
+        }
+
+        async function bukaPreviewFotoKegiatan_(idKegiatan, fotoUrl, thumbUrl, title) {
             const overlay = document.getElementById('attachmentPreviewOverlay');
             const img = document.getElementById('attachmentPreviewImage');
             const titleEl = document.getElementById('attachmentPreviewTitle');
             const link = document.getElementById('attachmentPreviewDriveLink');
-            const src = largeThumbnailUrl_(thumbUrl || fotoUrl);
             const drive = filterText(fotoUrl || thumbUrl || '#');
             if (!overlay || !img || !link) return;
-            img.src = src || drive;
             if (titleEl) titleEl.innerText = filterText(title || 'Foto kegiatan');
             link.href = drive || '#';
+            img.alt = 'Memuat preview foto kegiatan...';
+            img.src = largeThumbnailUrl_(thumbUrl || fotoUrl);
             overlay.classList.remove('hidden');
+
+            // Fallback lebih andal: ambil data URL dari backend hanya saat preview diklik.
+            // Ini mengatasi link/thumbnail Drive privat yang tidak bisa dirender langsung oleh GitHub Pages.
+            try {
+                const session = ambilSession();
+                if (!session || !session.token || !idKegiatan) return;
+                const p = new URLSearchParams();
+                p.append('action', 'get_kegiatan_photo');
+                p.append('token', session.token);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                p.append('id_kegiatan', idKegiatan);
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status === 'sukses' && d.data_url) {
+                    img.src = d.data_url;
+                    link.href = d.drive_url || drive || '#';
+                }
+            } catch (err) {
+                console.warn('[E-PKB] Fallback preview foto gagal:', err);
+            }
         }
 
         function tutupPreviewLampiran_(event) {
@@ -1953,19 +2316,21 @@ ${label}`)) return;
         function fotoButtonHtml_(item) {
             const thumb = item.thumbnail_foto || item.foto_thumbnail_url || item.thumbnail_url || '';
             const foto = item.url_foto || item.foto_url || '';
+            const id = item.id_kegiatan || '';
             if (!thumb && !foto) return '';
             const title = item.judul || 'Foto kegiatan';
-            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)})' class="badge bg-info border-0 text-decoration-none me-1"><i class="bi bi-image"></i> Foto</button>`;
+            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)})' class="badge bg-info border-0 text-decoration-none me-1"><i class="bi bi-image"></i> Foto</button>`;
         }
 
         function thumbnailKegiatanHtml_(item) {
             const thumb = item.thumbnail_foto || item.foto_thumbnail_url || item.thumbnail_url || '';
             const foto = item.url_foto || item.foto_url || '';
+            const id = item.id_kegiatan || '';
             if (!thumb && !foto) return '';
-            const src = largeThumbnailUrl_(thumb || foto);
+            const src = driveThumbnailUrl_(thumb || foto, 320);
             const title = item.judul || 'Foto kegiatan';
-            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)})' class="kegiatan-thumb-link me-3 mb-2" title="Preview foto kegiatan">
-                <img src="${escapeHtml(src)}" alt="Foto kegiatan" class="kegiatan-thumb" loading="lazy" onerror="this.closest('button').classList.add('hidden')">
+            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)})' class="kegiatan-thumb-link me-3 mb-2" title="Preview foto kegiatan">
+                <img src="${escapeHtml(src)}" alt="Foto kegiatan" class="kegiatan-thumb" loading="lazy" onerror="this.outerHTML='<span class=&quot;kegiatan-thumb-placeholder&quot;><i class=&quot;bi bi-image&quot;></i></span>'">
             </button>`;
         }
 
@@ -1979,39 +2344,12 @@ ${label}`)) return;
             }
             div.innerHTML = '<div class="text-center text-muted small py-4"><span class="spinner-border spinner-border-sm"></span> Memuat riwayat...</div>';
             try {
-                const p = new URLSearchParams();
-                p.append('action', 'get_kegiatan');
-                p.append('token', session.token);
-                p.append('device_id', getDeviceId());
-                p.append('app_version', EPKB_APP_VERSION);
-                p.append('user_agent', navigator.userAgent || '');
-                p.append('limit', '20');
-                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
-                const d = await res.json();
-                if(d.status === "sukses" && d.data && d.data.length > 0) {
-                    div.innerHTML = d.data.map(k => `
-                        <div class="card border-0 shadow-sm p-3 mb-3" style="border-left: 4px solid var(--primary-color);">
-                            <div class="d-flex gap-2 align-items-start">
-                                ${thumbnailKegiatanHtml_(k)}
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between gap-2 flex-wrap">
-                                        <div>
-                                            <div class="fw-bold small text-primary">${escapeHtml(k.topik || '-')} ${k.jenis ? '• ' + escapeHtml(k.jenis) : ''}</div>
-                                            <div class="fw-bold">${escapeHtml(k.judul || 'Laporan Kegiatan')}</div>
-                                        </div>
-                                        <span class="badge bg-light text-dark border">${escapeHtml(k.tanggal_label || k.tanggal || '-')}</span>
-                                    </div>
-                                    <div class="small text-muted mt-2"><i class="bi bi-geo-alt"></i> ${escapeHtml(k.nama_lokasi_kegiatan || k.desa || '-')} ${k.lokasi ? ' / ' + escapeHtml(k.lokasi) : ''}</div>
-                                    <div class="small text-muted mt-1">Scope: ${escapeHtml(k.lokasi_scope || '-')} ${k.level_lokasi_kegiatan ? '• ' + escapeHtml(k.level_lokasi_kegiatan) : ''}</div>
-                                    <div class="small text-muted mt-1">Status: ${escapeHtml(k.status || 'TERSIMPAN')}</div>
-                                    <div class="mt-2">
-                                        ${fotoButtonHtml_(k)}
-                                        ${k.url_dokumen ? `<a href="${escapeHtml(k.url_dokumen)}" target="_blank" class="badge bg-success text-decoration-none"><i class="bi bi-file-earmark"></i> Dokumen</a>` : ""}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
+                const hasil = await ambilKegiatanPkb_(5, {});
+                if(hasil.data && hasil.data.length > 0) {
+                    div.innerHTML = hasil.data.map(k => renderKegiatanCardHtml_(k, 'dashboard')).join('');
+                    if (hasil.data.length >= 5) {
+                        div.innerHTML += '<div class="text-center mt-2"><button type="button" onclick="bukaRiwayatTugasSaya()" class="btn btn-sm btn-outline-primary fw-bold">Lihat semua riwayat</button></div>';
+                    }
                 } else {
                     div.innerHTML = '<div class="text-center text-muted small py-4">Belum ada kegiatan yang dilaporkan.</div>';
                 }
