@@ -7,24 +7,57 @@
     <link rel="apple-touch-icon" href="IPeKB26-PWA.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <style>
-        :root { --primary-color: #0d6efd; --shell-height: 54px; --footer-height: 50px; }
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; padding-top: var(--shell-height); padding-bottom: calc(var(--footer-height) + 16px); }
+        <style>
+        :root {
+            --primary-color: #0d6efd;
+            --shell-height: 54px;
+            --footer-height: 50px;
+            --card-radius: 15px;
+        }
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', sans-serif;
+            padding-top: var(--shell-height);
+            padding-bottom: calc(var(--footer-height) + 16px);
+        }
         .hidden { display: none !important; }
-        .app-shell-header { position: fixed; top: 0; left: 0; right: 0; height: var(--shell-height); z-index: 1060; background: linear-gradient(135deg, #0d6efd, #0648a8); color: #fff; box-shadow: 0 3px 12px rgba(0,0,0,0.16); }
-        .app-shell-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; max-width: 1180px; margin: 0 auto; padding: 0 14px; }
+
+        .app-shell-header {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: var(--shell-height); z-index: 1060;
+            background: linear-gradient(135deg, #0d6efd, #0648a8);
+            color: #fff; box-shadow: 0 3px 12px rgba(0,0,0,0.16);
+        }
+        .app-shell-inner {
+            height: 100%; display: flex; align-items: center; justify-content: space-between;
+            max-width: 1180px; margin: 0 auto; padding: 0 14px;
+        }
         .app-shell-title { font-size: 1rem; font-weight: 900; letter-spacing: .02em; white-space: nowrap; }
         .app-shell-actions { display: flex; align-items: center; gap: 7px; }
-        .app-shell-actions .btn { width: 34px; height: 34px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; color: #fff; border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.08); }
+        .app-shell-actions .btn {
+            width: 34px; height: 34px; padding: 0;
+            display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 999px; color: #fff;
+            border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.08);
+        }
         .app-shell-actions .btn:hover { background: rgba(255,255,255,.18); color: #fff; }
-        .notification-panel { position: fixed; right: 14px; top: calc(var(--shell-height) + 8px); width: min(360px, calc(100vw - 28px)); z-index: 1070; border: 0; border-radius: 16px; box-shadow: 0 14px 34px rgba(15,23,42,.22); overflow: hidden; }
+        .notification-panel {
+            position: fixed; right: 14px; top: calc(var(--shell-height) + 8px);
+            width: min(360px, calc(100vw - 28px)); z-index: 1070;
+            border: 0; border-radius: 16px; box-shadow: 0 14px 34px rgba(15,23,42,.22); overflow: hidden;
+        }
         .notification-item { border-bottom: 1px solid #eef2f7; padding: 10px 12px; }
         .notification-item:last-child { border-bottom: 0; }
-        .card-profile { border-radius: 15px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.08); overflow: hidden; }
+
+        .card-profile { border-radius: var(--card-radius); border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.08); overflow: hidden; }
         .profile-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid white; background: white; }
         .header-bg { background: linear-gradient(135deg, var(--primary-color), #0056b3); height: 100px; }
         .menu-card { transition: transform 0.2s; cursor: pointer; border-radius: 12px; height: 100%; }
-        .form-section-title { font-size: 0.9rem; font-weight: bold; color: var(--primary-color); margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #e9ecef; margin-top: 25px; }
+        .menu-card:hover { transform: translateY(-2px); }
+        .form-section-title {
+            font-size: 0.9rem; font-weight: bold; color: var(--primary-color);
+            margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #e9ecef; margin-top: 25px;
+        }
         .info-row { border-bottom: 1px dashed #dee2e6; padding: 10px 0; font-size:0.9rem; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
         .info-label { font-weight:700; color:#6c757d; min-width:160px; flex:0 0 160px; }
         .info-value { color:#111827; text-align:right; flex:1; word-break:break-word; }
@@ -36,9 +69,48 @@
         .mapping-warning { background:#fff3cd; border:1px solid #ffecb5; color:#664d03; border-radius:10px; padding:8px 10px; font-size:0.82rem; }
         .status-pill { border-radius: 999px; padding: 4px 10px; font-size: 0.75rem; font-weight: 800; }
         .dashboard-topbar { background: transparent; padding: 4px 0 10px; border-bottom: 0; }
-        .app-footer { position: fixed; left: 0; right: 0; bottom: 0; height: var(--footer-height); z-index: 1040; background: linear-gradient(135deg, #0d6efd, #0648a8); border-top: 1px solid rgba(255,255,255,0.18); box-shadow: 0 -2px 10px rgba(0,0,0,0.10); padding: 7px 12px; text-align: center; line-height: 1.15; color: #fff; }
+        .app-footer {
+            position: fixed; left: 0; right: 0; bottom: 0; height: var(--footer-height); z-index: 1040;
+            background: linear-gradient(135deg, #0d6efd, #0648a8);
+            border-top: 1px solid rgba(255,255,255,0.18);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.10);
+            padding: 7px 12px; text-align: center; line-height: 1.15; color: #fff;
+        }
         .app-footer .copyright { font-size: 0.78rem; font-weight: 800; color: #fff; }
         .app-footer .version { font-size: 0.68rem; color: rgba(255,255,255,0.82); margin-top: 2px; word-break: break-word; }
+
+        .dashboard-summary-card { border-radius: 16px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+        .summary-mini { border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; height: 100%; background: #fff; }
+        .summary-mini .label { font-size: 0.78rem; color: #6b7280; }
+        .summary-mini .value { font-size: 1.18rem; font-weight: 800; color: #111827; line-height: 1.15; }
+        .summary-mini .sub { font-size: 0.72rem; color: #6b7280; margin-top: 3px; }
+        .status-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: #adb5bd; }
+        .status-dot.ok { background: #198754; }
+        .status-dot.warn { background: #ffc107; }
+        .status-dot.danger { background: #dc3545; }
+        .riwayat-item { border-left: 4px solid #0d6efd; border-radius: 14px; }
+
+        .kegiatan-thumb-link { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; padding:0; border:0; background:#f8fafc; border-radius:12px; min-width:96px; min-height:72px; }
+        .kegiatan-thumb { width:96px; height:72px; object-fit:cover; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 2px 6px rgba(0,0,0,.08); }
+        .kegiatan-thumb-placeholder { width:96px; height:72px; border-radius:12px; border:1px dashed #cbd5e1; display:flex; align-items:center; justify-content:center; color:#64748b; background:#f8fafc; font-size:1.4rem; }
+        .kegiatan-title-btn { border:0; background:transparent; padding:0; color:#111827; font-weight:800; text-align:left; }
+        .kegiatan-title-btn:hover { color:#0d6efd; text-decoration:underline; }
+        .kegiatan-actions .btn { padding:2px 7px; }
+        .rekap-table-wrap { max-height:60vh; overflow:auto; border:1px solid #e5e7eb; border-radius:14px; }
+        .rekap-table-wrap table { margin-bottom:0; }
+        .attachment-preview-overlay { position: fixed; inset: 0; z-index: 1080; background: rgba(15,23,42,.72); display:flex; align-items:center; justify-content:center; padding: 16px; }
+        .attachment-preview-card { width:min(860px, 96vw); max-height:92vh; overflow:auto; background:#fff; border-radius:18px; box-shadow:0 18px 45px rgba(0,0,0,.25); }
+        .attachment-preview-img { width:100%; max-height:70vh; object-fit:contain; background:#111827; border-radius:12px; }
+        .filter-card { border-radius:16px; border:1px solid #e5e7eb; background:#fff; }
+        .kegiatan-gallery-strip { display:flex; gap:10px; overflow-x:auto; padding:8px 2px 10px; scroll-snap-type:x proximity; }
+        .kegiatan-gallery-strip::-webkit-scrollbar { height:7px; }
+        .kegiatan-gallery-item { flex:0 0 auto; width:128px; scroll-snap-align:start; border:1px solid #e5e7eb; border-radius:12px; padding:6px; background:#f8fafc; }
+        .kegiatan-gallery-item img { width:100%; height:82px; object-fit:cover; border-radius:10px; background:#e5e7eb; }
+        .attachment-count-pill { display:inline-flex; align-items:center; gap:4px; border-radius:999px; padding:3px 8px; font-size:.72rem; background:#eef2ff; color:#3730a3; font-weight:700; margin-left:4px; }
+        @media (max-width: 576px) {
+            .kegiatan-thumb, .kegiatan-thumb-placeholder, .kegiatan-thumb-link { width:82px; height:62px; min-width:82px; min-height:62px; }
+            .attachment-preview-card { max-height:88vh; }
+        }
     </style>
 </head>
 <body>
@@ -69,6 +141,7 @@
         <div class="spinner-border text-primary mt-3" role="status"></div>
         <h5 class="mt-3 text-secondary text-center">E-PKB Buleleng<br><small>Menyiapkan Data...</small></h5>
     </div>
+
 
     <header id="appShellHeader" class="app-shell-header hidden">
         <div class="app-shell-inner">
@@ -197,15 +270,15 @@
             <div class="d-flex align-items-center">
                 <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
                 <div>
-                    <h4 class="fw-bold m-0" id="mappingVerifyTitle">Monitoring Wilayah Binaan</h4>
-                    <div class="small text-muted" id="mappingVerifySubtitle">Pantau status wilayah binaan dan usulan perubahan. Sistem menjaga satu wilayah tidak aktif untuk lebih dari satu PKB.</div>
+                    <h4 class="fw-bold m-0" id="mappingVerifyTitle">Verifikasi Mapping Binaan</h4>
+                    <div class="small text-muted" id="mappingVerifySubtitle">Setujui atau tolak usulan wilayah binaan dari update profil.</div>
                 </div>
             </div>
             <button onclick="muatPendingMappingBinaan()" id="btnRefreshMapping" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
         </div>
         <div id="mappingScopeNote" class="alert alert-light border small rounded-4 shadow-sm mb-3">Memuat status kewenangan admin...</div>
         <div class="row g-3 mb-3">
-            <div class="col-md-4"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Usulan/Perubahan</div><div class="h4 fw-bold mb-0" id="mapPendingCount">0</div></div></div>
+            <div class="col-md-4"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">PENDING</div><div class="h4 fw-bold mb-0" id="mapPendingCount">0</div></div></div>
             <div class="col-md-4"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Ditemukan</div><div class="h4 fw-bold mb-0" id="mapReturnedCount">0</div></div></div>
             <div class="col-md-4"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Status</div><div class="h6 fw-bold mb-0" id="mapLoadStatus">-</div></div></div>
         </div>
@@ -240,26 +313,61 @@
         </div>
     </div>
 
+    
     <div id="lapor-tugas-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex align-items-center mb-4">
             <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
-            <h4 class="fw-bold m-0">Lapor Kegiatan</h4>
+            <h4 class="fw-bold m-0">Lapor Kegiatan PKB</h4>
         </div>
         <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 15px;">
             <form id="formTugas">
                 <div class="form-section-title mt-0">Data Dasar</div>
-                <div class="mb-3"><label class="small fw-bold">Wilayah (Desa Binaan)</label><select id="tg-desa" class="form-select" required></select></div>
-                <div class="mb-3"><label class="small fw-bold">Lokasi Kegiatan</label><input type="text" id="tg-lokasi" class="form-control"></div>
-                <div class="mb-3"><label class="small fw-bold">Tanggal Kegiatan</label><input type="date" id="tg-tanggal" class="form-control"></div>
+                <div class="alert alert-info py-2 small mb-3">
+                    Pilih <b>Dalam Wilayah Binaan</b> untuk kegiatan rutin di desa binaan. Pilih <b>Di Luar Wilayah Binaan</b> untuk undangan, koordinasi lintas wilayah, atau kegiatan tingkat kabupaten/provinsi/nasional.
+                </div>
+                <div class="mb-3">
+                    <label class="small fw-bold">Ruang Lingkup Lokasi Kegiatan</label>
+                    <select id="tg-lokasi-scope" class="form-select" onchange="aturScopeLokasiKegiatan_()" required>
+                        <option value="DALAM_BINAAN">Dalam Wilayah Binaan</option>
+                        <option value="LUAR_BINAAN">Di Luar Wilayah Binaan</option>
+                    </select>
+                </div>
+                <div id="tg-desa-binaan-block" class="mb-3">
+                    <label class="small fw-bold">Wilayah (Desa Binaan)</label>
+                    <select id="tg-desa" class="form-select" required></select>
+                </div>
+                <div id="tg-luar-binaan-block" class="hidden">
+                    <div class="mb-3">
+                        <label class="small fw-bold">Level Lokasi Luar Binaan</label>
+                        <select id="tg-level-lokasi" class="form-select">
+                            <option value="">-- Pilih Level --</option>
+                            <option value="KECAMATAN">Lintas Desa / Dalam Kecamatan</option>
+                            <option value="KABUPATEN">Lintas Kecamatan / Dalam Kabupaten</option>
+                            <option value="PROVINSI">Lintas Kabupaten / Dalam Provinsi</option>
+                            <option value="NASIONAL">Nasional</option>
+                            <option value="LAINNYA">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small fw-bold">Nama Lokasi / Instansi Kegiatan</label>
+                        <input type="text" id="tg-nama-lokasi-luar" class="form-control" placeholder="Contoh: Kantor BKKBN Provinsi Bali, Hotel X Denpasar, Jakarta Convention Center">
+                    </div>
+                    <div class="mb-3">
+                        <label class="small fw-bold">Keterangan / Alasan Luar Binaan</label>
+                        <textarea id="tg-keterangan-luar" class="form-control" rows="2" placeholder="Contoh: Undangan rapat koordinasi provinsi / pertemuan nasional / koordinasi lintas sektor"></textarea>
+                    </div>
+                </div>
+                <div class="mb-3"><label class="small fw-bold">Tempat/Detail Lokasi Kegiatan</label><input type="text" id="tg-lokasi" class="form-control" required placeholder="Contoh: Posyandu, Balai Banjar, Kantor Desa, ruang rapat, aula hotel"></div>
+                <div class="mb-3"><label class="small fw-bold">Tanggal Kegiatan</label><input type="date" id="tg-tanggal" class="form-control" required></div>
                 <div class="row">
                     <div class="col-6 mb-3"><label class="small fw-bold">Waktu Mulai</label><input type="time" id="tg-mulai" class="form-control"></div>
                     <div class="col-6 mb-3"><label class="small fw-bold">Waktu Selesai</label><input type="time" id="tg-selesai" class="form-control"></div>
                 </div>
 
                 <div class="form-section-title">Detail Kegiatan</div>
-                <div class="mb-3"><label class="small fw-bold">Peserta Kegiatan</label><input type="text" id="tg-peserta" class="form-control" placeholder="Cth: Kader, PUS, Tokoh"></div>
-                <div class="mb-3"><label class="small fw-bold">Jumlah Peserta Hadir (Orang)</label><input type="number" id="tg-jml" class="form-control"></div>
-                <div class="mb-3"><label class="small fw-bold">Judul Kegiatan</label><input type="text" id="tg-judul" class="form-control"></div>
+                <div class="mb-3"><label class="small fw-bold">Peserta Kegiatan</label><input type="text" id="tg-peserta" class="form-control" required placeholder="Cth: Kader, PUS, Tokoh masyarakat"></div>
+                <div class="mb-3"><label class="small fw-bold">Jumlah Peserta Hadir (Orang)</label><input type="number" id="tg-jml" class="form-control" min="0" required></div>
+                <div class="mb-3"><label class="small fw-bold">Judul Kegiatan</label><input type="text" id="tg-judul" class="form-control" required placeholder="Contoh: KIE KB pada Posyandu"></div>
                 <div class="mb-3"><label class="small fw-bold">Topik Kegiatan</label>
                     <select id="tg-topik" class="form-select" onchange="aturJenis()" required>
                         <option value="">-- Pilih Topik --</option>
@@ -289,11 +397,21 @@
                     </table>
                 </div>
 
-                <div class="mb-3"><label class="small fw-bold">Deskripsi / Keterangan Kegiatan</label><textarea id="tg-deskripsi" class="form-control" rows="3"></textarea></div>
+                <div class="mb-3"><label class="small fw-bold">Deskripsi / Keterangan Kegiatan</label><textarea id="tg-deskripsi" class="form-control" rows="3" placeholder="Tuliskan ringkasan pelaksanaan, hasil, dan catatan penting."></textarea></div>
 
                 <div class="form-section-title">Lampiran Dokumentasi</div>
-                <div class="mb-3"><label class="small fw-bold">Lampiran Foto Dokumentasi</label><input type="file" id="tg-foto" class="form-control" accept="image/*"></div>
-                <div class="mb-4"><label class="small fw-bold">Lampiran Dokumen (PDF/Word/Excel)</label><input type="file" id="tg-dokumen" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx"></div>
+                <div class="mb-3">
+                    <label class="small fw-bold">Lampiran Foto Dokumentasi</label>
+                    <input type="file" id="tg-foto" class="form-control" accept="image/*" multiple>
+                    <div class="form-text">Opsional. Maksimal 5 foto. Foto akan dikompres otomatis di browser sebelum dikirim.</div>
+                    <div id="tg-foto-info" class="small text-muted mt-1"></div>
+                </div>
+                <div class="mb-4">
+                    <label class="small fw-bold">Lampiran Dokumen (PDF/Word/Excel)</label>
+                    <input type="file" id="tg-dokumen" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx" multiple>
+                    <div class="form-text">Opsional. Maksimal 3 dokumen, 10 MB/file.</div>
+                    <div id="tg-dokumen-info" class="small text-muted mt-1"></div>
+                </div>
 
                 <button type="button" onclick="kirimLaporan()" id="btnKirimTugas" class="btn btn-success w-100 py-3 fw-bold rounded-4 shadow">SIMPAN KEGIATAN</button>
             </form>
@@ -303,7 +421,82 @@
         <div id="list-kegiatan"></div>
     </div>
 
-    <div id="detail-profil-page" class="container mt-4 mb-5 hidden">
+    <div id="riwayat-tugas-page" class="container mt-4 mb-5 hidden">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
+                <div>
+                    <h4 class="fw-bold m-0">Riwayat Tugas Saya</h4>
+                    <div class="small text-muted">Daftar ringkas laporan kegiatan terbaru berdasarkan data tugas_kegiatan.</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button onclick="bukaRekapKegiatanPkb_()" class="btn btn-sm btn-success fw-bold"><i class="bi bi-table"></i> Rekap</button>
+                <button onclick="muatRiwayatTugasSaya()" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
+            </div>
+        </div>
+        <div id="riwayatTugasSummary" class="mb-3"></div>
+        <div class="filter-card shadow-sm p-3 mb-3">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted mb-1">Bulan</label>
+                    <select id="filterRiwayatBulan" class="form-select form-select-sm">
+                        <option value="">Semua Bulan</option>
+                        <option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option><option value="04">April</option>
+                        <option value="05">Mei</option><option value="06">Juni</option><option value="07">Juli</option><option value="08">Agustus</option>
+                        <option value="09">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted mb-1">Tahun</label>
+                    <select id="filterRiwayatTahun" class="form-select form-select-sm"><option value="">Semua Tahun</option></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted mb-1">Topik</label>
+                    <select id="filterRiwayatTopik" class="form-select form-select-sm">
+                        <option value="">Semua Topik</option>
+                        <option value="KIE">KIE</option>
+                        <option value="PELAYANAN DAN PENGGERAKAN">PELAYANAN DAN PENGGERAKAN</option>
+                        <option value="PENCATATAN DAN PELAPORAN">PENCATATAN DAN PELAPORAN</option>
+                        <option value="PERTEMUAN">PERTEMUAN</option>
+                        <option value="LAINNYA">LAINNYA</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted mb-1">Lokasi</label>
+                    <select id="filterRiwayatScope" class="form-select form-select-sm">
+                        <option value="">Semua Lokasi</option>
+                        <option value="DALAM_BINAAN">Dalam Wilayah Binaan</option>
+                        <option value="LUAR_BINAAN">Di Luar Wilayah Binaan</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button onclick="muatRiwayatTugasSaya()" class="btn btn-sm btn-primary fw-bold flex-fill">Filter</button>
+                    <button onclick="resetFilterRiwayatTugas_()" class="btn btn-sm btn-outline-secondary fw-bold" title="Reset filter"><i class="bi bi-x-circle"></i></button>
+                </div>
+            </div>
+        </div>
+        <div id="riwayatTugasList"></div>
+    </div>
+
+    <div id="rekap-kegiatan-page" class="container mt-4 mb-5 hidden">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <button onclick="bukaRiwayatTugasSaya()" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
+                <div>
+                    <h4 class="fw-bold m-0">Rekap Kegiatan PKB</h4>
+                    <div class="small text-muted" id="rekapKegiatanSubtitle">Rekap dari riwayat kegiatan sesuai filter aktif.</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button onclick="cetakRekapKegiatanPkb_()" class="btn btn-sm btn-outline-secondary fw-bold"><i class="bi bi-printer"></i> Cetak/PDF</button>
+                <button onclick="exportRekapKegiatanCsv_()" class="btn btn-sm btn-success fw-bold"><i class="bi bi-filetype-csv"></i> CSV</button>
+            </div>
+        </div>
+        <div id="rekapKegiatanContent"></div>
+    </div>
+
+<div id="detail-profil-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex align-items-center mb-4">
             <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
             <h4 class="fw-bold m-0">Detail Profil</h4>
@@ -391,6 +584,54 @@
         </div>
     </div>
 
+
+    <div id="attachmentPreviewOverlay" class="attachment-preview-overlay hidden" onclick="if(event.target.id==='attachmentPreviewOverlay') tutupPreviewFotoKegiatan_();">
+        <div class="attachment-preview-card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="fw-bold" id="attachmentPreviewTitle">Preview Foto</div>
+                <button type="button" class="btn btn-sm btn-light" onclick="tutupPreviewFotoKegiatan_()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <img id="attachmentPreviewImg" class="attachment-preview-img" alt="Preview foto kegiatan">
+            <div id="attachmentPreviewMeta" class="small text-muted mt-2"></div>
+        </div>
+    </div>
+
+    <div id="kegiatanDetailOverlay" class="attachment-preview-overlay hidden" onclick="if(event.target.id==='kegiatanDetailOverlay') tutupDetailKegiatan_();">
+        <div class="attachment-preview-card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="fw-bold">Detail Kegiatan</div>
+                <button type="button" class="btn btn-sm btn-light" onclick="tutupDetailKegiatan_()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div id="kegiatanDetailContent"></div>
+        </div>
+    </div>
+
+    <div id="kegiatanEditOverlay" class="attachment-preview-overlay hidden" onclick="if(event.target.id==='kegiatanEditOverlay') tutupEditKegiatan_();">
+        <div class="attachment-preview-card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="fw-bold">Edit Kegiatan</div>
+                <button type="button" class="btn btn-sm btn-light" onclick="tutupEditKegiatan_()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form id="formEditKegiatan">
+                <input type="hidden" id="edit-kegiatan-id">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Judul Kegiatan</label>
+                    <input type="text" id="edit-kegiatan-judul" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Jumlah Peserta</label>
+                    <input type="number" id="edit-kegiatan-peserta" class="form-control" min="0">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Deskripsi / Keterangan</label>
+                    <textarea id="edit-kegiatan-deskripsi" class="form-control" rows="4"></textarea>
+                </div>
+                <button type="button" onclick="simpanEditKegiatan_()" id="btnSimpanEditKegiatan" class="btn btn-success w-100 fw-bold">SIMPAN EDIT</button>
+            </form>
+        </div>
+    </div>
+
+
     <footer class="app-footer">
         <div class="copyright">E-PKB © 2026</div>
         <div class="version" id="footer-version">Versi aplikasi: -</div>
@@ -398,7 +639,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.2.8-GOVERNANCE-SHELL-V1";
+        const EPKB_APP_VERSION = "0.2.8-GOVERNANCE-SHELL-V1-R2";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -507,35 +748,6 @@
             let v = String(val).trim();
             if(v === "undefined" || v === "null" || v === "-") return "";
             return v;
-        }
-
-        function extractDriveFileIdClient_(ref) {
-            const s = filterText(ref);
-            if (!s) return '';
-            let m = s.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-            if (m && m[1]) return m[1];
-            m = s.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-            if (m && m[1]) return m[1];
-            if (/^[a-zA-Z0-9_-]{20,}$/.test(s)) return s;
-            return '';
-        }
-
-        function driveThumbnailProfileClient_(ref, size = 320) {
-            const s = filterText(ref);
-            if (!s) return '';
-            const id = extractDriveFileIdClient_(s);
-            if (id) return `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w${size}`;
-            if (/^https?:\/\//i.test(s)) return s;
-            return '';
-        }
-
-        function getProfilePhotoDisplayClient_(d) {
-            d = d || {};
-            return filterText(d.foto_profile_thumbnail_url) ||
-                driveThumbnailProfileClient_(d.foto_profile_file_id || d.foto_profile_url || d.foto) ||
-                filterText(d.foto_profile_url) ||
-                filterText(d.foto) ||
-                EPKB_DEFAULT_AVATAR;
         }
 
 
@@ -702,7 +914,7 @@
         });
 
         function bukaHalaman(id) {
-            ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page', 'verifikasi-binaan-page', 'superadmin-monitor-page'].forEach(pg => {
+            ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page', 'riwayat-tugas-page', 'rekap-kegiatan-page', 'verifikasi-binaan-page', 'superadmin-monitor-page'].forEach(pg => {
                 const el = document.getElementById(pg); if(el) el.classList.add('hidden');
             });
             const target = document.getElementById(id);
@@ -758,7 +970,6 @@
             }
         }
 
-
         function setRefreshButtonsBusy_(busy) {
             document.querySelectorAll('[data-refresh-btn="1"], #btnRefresh').forEach(function(btn) {
                 if (!btn) return;
@@ -797,7 +1008,7 @@
                 p.append('user_agent', navigator.userAgent || '');
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                 const d = await res.json();
-                if (d.status === 'sukses' || d.status === 'OK') renderNotifikasi_(d.notifications || []);
+                if (d.status === 'sukses' || d.status === 'OK') renderNotifikasi_(d.notifications || d.data || []);
                 else box.innerHTML = `<div class="notification-item small text-warning">${escapeHtml(d.pesan || d.code || 'Notifikasi belum tersedia.')}</div>`;
             } catch(e) {
                 if (!silent) box.innerHTML = '<div class="notification-item small text-danger">Gagal memuat notifikasi.</div>';
@@ -816,7 +1027,7 @@
                 const icon = tone === 'WARNING' || tone === 'YELLOW' ? 'bi-exclamation-triangle-fill text-warning' : (tone === 'DANGER' || tone === 'RED' ? 'bi-shield-exclamation text-danger' : 'bi-info-circle-fill text-primary');
                 return `<div class="notification-item small">
                     <div class="fw-bold"><i class="bi ${icon} me-1"></i>${escapeHtml(n.title || 'Informasi')}</div>
-                    <div class="text-muted mt-1">${escapeHtml(n.message || '')}</div>
+                    <div class="text-muted mt-1">${escapeHtml(n.message || n.pesan || '')}</div>
                     ${n.timestamp ? `<div class="text-secondary mt-1" style="font-size:.72rem;">${escapeHtml(n.timestamp)}</div>` : ''}
                 </div>`;
             }).join('');
@@ -1026,10 +1237,9 @@
             document.getElementById('view-kec').innerText = strWilayah || "-";
             
             const defFoto = EPKB_DEFAULT_AVATAR;
-            const fotoProfilDisplay = getProfilePhotoDisplayClient_(d);
-            document.getElementById('view-foto').src = fotoProfilDisplay || defFoto;
-            document.getElementById('preview-foto-edit').src = fotoProfilDisplay || defFoto;
-            document.getElementById('edit-foto-url').value = filterText(d.foto_profile_file_id || d.foto_profile_url || d.foto); 
+            document.getElementById('view-foto').src = filterText(d.foto) ? filterText(d.foto) : defFoto;
+            document.getElementById('preview-foto-edit').src = filterText(d.foto) ? filterText(d.foto) : defFoto;
+            document.getElementById('edit-foto-url').value = filterText(d.foto_profile_file_id || d.foto); 
             const dashPhotoBtn = document.getElementById('btn-dashboard-edit-photo');
             if (dashPhotoBtn) dashPhotoBtn.classList.toggle('hidden', isSuperAdminRoleClient(roleAktif));
 
@@ -1143,20 +1353,21 @@
                     ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))']
                 ];
             } else if (isOperationalAdminRoleClient(roleAktif)) {
+                const verifLabel = roleAktif === 'ADMIN_PROVINSI' ? 'Monitoring Binaan' : 'Verifikasi Binaan';
                 menus = [
-                    ['bi-map-fill', '#20c997', 'Monitoring Wilayah', 'bukaVerifikasiBinaan()'],
+                    ['bi-shield-check', '#20c997', verifLabel, 'bukaVerifikasiBinaan()'],
                     ['bi-people-fill', '#0d6efd', 'Data PKB', 'alert("Menu Data PKB akan dibuat pada paket administrasi berikutnya.")'],
-                    ['bi-key-fill', '#fd7e14', 'Reset Password', 'bukaResetPasswordAdmin()'],
-                    ['bi-send-check-fill', '#6f42c1', 'Tugas PKB', 'alert("Menu pemberian tugas PKB akan dibuat pada paket tugas admin berikutnya.")'],
+                    ['bi-card-checklist', '#6f42c1', 'Audit Usulan', 'bukaVerifikasiBinaan()'],
                     ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'],
-                    ['bi-unlock-fill', '#0dcaf0', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))']
+                    ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))'],
+                    ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")']
                 ];
             } else {
                 menus = [
                     ['bi-journal-check', '#0d6efd', 'Lapor Tugas', 'siapkanLaporTugas()'],
                     ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'],
                     ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))'],
-                    ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'toggleNotifikasi(true)'],
+                    ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")'],
                     ['bi-file-earmark-text', '#6f42c1', 'Administrasi', 'alert("Menu Administrasi PKB")']
                 ];
             }
@@ -1189,11 +1400,11 @@
         function getMappingScopeNoteClient(role, data) {
             const r = filterText(role).toUpperCase();
             const scope = filterText(data && (data.scope_label || data.scope_code));
-            if (r === 'ADMIN_KECAMATAN') return 'Mode MONITORING: memantau wilayah PKB dalam kecamatan sendiri' + (scope ? ' (' + scope + ')' : '') + '. Perubahan wilayah dilakukan mandiri oleh PKB dan dibatasi validasi anti-duplikasi oleh sistem.';
-            if (r === 'ADMIN_KABUPATEN') return 'Mode MONITORING: memantau wilayah PKB Kabupaten Buleleng. Admin tidak menjadi approval rutin wilayah binaan.';
-            if (r === 'ADMIN_PROVINSI') return 'Mode MONITORING: supervisi lintas wilayah. Approval rutin wilayah binaan tidak digunakan pada governance ini.';
+            if (r === 'ADMIN_KECAMATAN') return 'Mode APPROVER: hanya dapat melihat dan memverifikasi usulan di kecamatan sendiri' + (scope ? ' (' + scope + ')' : '') + '.';
+            if (r === 'ADMIN_KABUPATEN') return 'Mode APPROVER: dapat melihat dan memverifikasi seluruh usulan Kabupaten Buleleng.';
+            if (r === 'ADMIN_PROVINSI') return 'Mode MONITORING: dapat melihat usulan untuk supervisi, tetapi approval rutin dilakukan Admin Kecamatan atau Admin Kabupaten.';
             if (r === 'SUPER_ADMIN') return 'Super Admin hanya blackbox/system monitor dan tidak menjadi approver operasional.';
-            return 'Role ini tidak berwenang mengakses monitoring wilayah binaan.';
+            return 'Role ini tidak berwenang mengakses verifikasi mapping binaan.';
         }
 
         function bukaSuperAdminMonitor() {
@@ -1283,10 +1494,12 @@
             const titleEl = document.getElementById('mappingVerifyTitle');
             const subEl = document.getElementById('mappingVerifySubtitle');
             const noteEl = document.getElementById('mappingScopeNote');
-            if (titleEl) titleEl.innerText = 'Monitoring Wilayah Binaan';
-            if (subEl) subEl.innerText = 'Pantau wilayah binaan PKB. Update wilayah dilakukan mandiri oleh PKB dan dicegah duplikasi aktif oleh sistem.';
+            if (titleEl) titleEl.innerText = role === 'ADMIN_PROVINSI' ? 'Monitoring Mapping Binaan' : 'Verifikasi Mapping Binaan';
+            if (subEl) subEl.innerText = role === 'ADMIN_PROVINSI' ? 'Pantau usulan wilayah binaan. Approval rutin dilakukan Admin Kecamatan/Kabupaten.' : 'Setujui atau tolak usulan wilayah binaan sesuai scope admin.';
             if (noteEl) {
-                noteEl.className = 'alert alert-info border small rounded-4 shadow-sm mb-3';
+                const canVerify = (ctx.can_verify !== false) && canApproveMappingClient(role);
+                const cls = canVerify ? 'alert-success' : (role === 'ADMIN_PROVINSI' ? 'alert-info' : 'alert-warning');
+                noteEl.className = 'alert ' + cls + ' border small rounded-4 shadow-sm mb-3';
                 noteEl.innerText = getMappingScopeNoteClient(role, ctx);
             }
         }
@@ -1300,7 +1513,7 @@
                 bukaHalaman('login-page');
                 return;
             }
-            list.innerHTML = '<div class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm"></span> Memuat data monitoring...</div>';
+            list.innerHTML = '<div class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm"></span> Memuat PENDING...</div>';
             if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Muat'; }
             try {
                 const p = new URLSearchParams();
@@ -1336,21 +1549,26 @@
             const list = document.getElementById('mappingVerifyList');
             const ctx = verifier || mappingVerifierContext || {};
             const role = filterText(ctx.role_akses || ctx.role).toUpperCase();
+            const canVerify = (ctx.can_verify !== false) && canApproveMappingClient(role);
             if (!records.length) {
-                list.innerHTML = `<div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">Tidak ada usulan/perubahan wilayah yang perlu ditinjau. Sistem governance aktif menjaga satu wilayah hanya aktif untuk satu PKB.</div>`;
+                const emptyNote = role === 'ADMIN_PROVINSI' ? 'Tidak ada usulan mapping_binaan PENDING dalam area monitoring.' : 'Tidak ada usulan mapping_binaan PENDING dalam scope admin ini.';
+                list.innerHTML = `<div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">${escapeHtml(emptyNote)}</div>`;
                 return;
             }
             list.innerHTML = records.map(r => {
-                const warn = r.has_active_same_scope ? '<div class="mapping-warning mt-2"><i class="bi bi-exclamation-triangle"></i> Scope ini sudah ACTIVE. Sistem akan menolak aktivasi ganda untuk PKB berbeda.</div>' : '';
-                const dup = r.has_pending_duplicate_same_scope ? '<div class="mapping-warning mt-2"><i class="bi bi-files"></i> Ada catatan PENDING duplikat untuk scope yang sama.</div>' : '';
-                const actionHtml = `<div class="alert alert-info small mt-3 mb-0"><i class="bi bi-eye-fill"></i> Mode monitoring. Tidak ada tombol approve/reject pada governance ini.</div>`;
+                const warn = r.has_active_same_scope ? '<div class="mapping-warning mt-2"><i class="bi bi-exclamation-triangle"></i> Scope ini sudah ACTIVE untuk user ini. Sebaiknya ditolak.</div>' : '';
+                const dup = r.has_pending_duplicate_same_scope ? '<div class="mapping-warning mt-2"><i class="bi bi-files"></i> Ada PENDING duplikat untuk scope yang sama.</div>' : '';
+                const actionHtml = canVerify ? `<div class="d-flex gap-2 mt-3 flex-wrap">
+                        <button class="btn btn-success fw-bold flex-fill" onclick="verifikasiMappingBinaan('${escapeJs(r.id_mapping)}', ${Number(r.row_number)}, 'APPROVE', '${escapeJs(r.nama_pkb)}', '${escapeJs(r.nama_desa_kelurahan)}')"><i class="bi bi-check-circle"></i> Setujui ACTIVE</button>
+                        <button class="btn btn-outline-danger fw-bold flex-fill" onclick="verifikasiMappingBinaan('${escapeJs(r.id_mapping)}', ${Number(r.row_number)}, 'REJECT', '${escapeJs(r.nama_pkb)}', '${escapeJs(r.nama_desa_kelurahan)}')"><i class="bi bi-x-circle"></i> Tolak</button>
+                    </div>` : `<div class="alert alert-info small mt-3 mb-0"><i class="bi bi-info-circle"></i> Mode monitoring/supervisi. Tombol approve/reject tidak tersedia untuk role ini.</div>`;
                 return `<div class="card mapping-card p-3 mb-3">
                     <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
                         <div>
                             <div class="fw-bold">${escapeHtml(r.nama_pkb || '-')}</div>
                             <div class="mapping-meta">${escapeHtml(r.id_user || '-')} | ${escapeHtml(r.id_nip || '-')} | ${escapeHtml(r.role_akses || '-')}</div>
                         </div>
-                        <span class="status-pill bg-info text-dark">MONITORING</span>
+                        <span class="status-pill bg-warning text-dark">PENDING</span>
                     </div>
                     <div class="mt-3 mapping-scope"><i class="bi bi-geo-alt-fill"></i> ${escapeHtml(r.nama_kecamatan || '-')} / ${escapeHtml(r.nama_desa_kelurahan || '-')}</div>
                     <div class="mapping-meta mt-1">scope_code: ${escapeHtml(r.scope_code || '-')} | source: ${escapeHtml(r.source_penetapan || '-')}</div>
@@ -1526,8 +1744,6 @@ ${label}`)) return;
             }
             btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
             let finalFotoRef = document.getElementById('edit-foto-url').value;
-            let finalFotoUrl = '';
-            let finalFotoThumb = '';
 
             try {
                 if (fileFotoData) {
@@ -1543,11 +1759,7 @@ ${label}`)) return;
                     fd.append('filename', document.getElementById('edit-id-nip').value + "_profil.jpg");
                     const resUpload = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
                     const datUpload = await resUpload.json();
-                    if(datUpload.status === "sukses") {
-                        finalFotoRef = datUpload.file_id || extractDriveFileIdClient_(datUpload.url || datUpload.drive_url || finalFotoRef) || finalFotoRef;
-                        finalFotoUrl = datUpload.foto_profile_url || datUpload.url || '';
-                        finalFotoThumb = datUpload.foto_profile_thumbnail_url || datUpload.thumbnail_url || driveThumbnailProfileClient_(finalFotoRef);
-                    }
+                    if(datUpload.status === "sukses") { finalFotoRef = datUpload.file_id || datUpload.url || finalFotoRef; }
                     else { printLog("Gagal Upload Foto: " + (datUpload.pesan || datUpload.code || ''), "orange"); alert("Gagal mengupload foto. Profil tetap akan disimpan tanpa mengganti foto."); }
                 }
 
@@ -1564,8 +1776,6 @@ ${label}`)) return;
                 p.append('hp', document.getElementById('edit-hp').value);
                 p.append('email', document.getElementById('edit-email').value);
                 p.append('foto_profile_file_id', finalFotoRef);
-                if (finalFotoUrl) p.append('foto_profile_url', finalFotoUrl);
-                if (finalFotoThumb) p.append('foto_profile_thumbnail_url', finalFotoThumb);
                 p.append('foto', finalFotoRef);
                 if (!isAdminProfile) {
                     p.append('g_depan', document.getElementById('edit-g-depan').value); p.append('g_belakang', document.getElementById('edit-g-belakang').value);
@@ -1593,10 +1803,9 @@ ${label}`)) return;
                     simpanSessionLogin({ token: session.token, refresh_token: session.refresh_token, session: session, user: d.user || session.user || {}, dataProfil: profil });
                     tampilkanDashboard(profil);
                     bukaHalaman('detail-profil-page');
-                    const req = d.mapping_request || {};
-                    const changed = (req.activated_count || 0) + (req.deactivated_count || 0);
-                    if (changed > 0) alert(d.pesan || 'Profil berhasil disimpan. Wilayah binaan aktif diperbarui oleh sistem.');
-                    else alert(d.pesan || 'Profil berhasil disimpan.');
+                    const pendingCount = d.mapping_request && d.mapping_request.created_count ? d.mapping_request.created_count : 0;
+                    if (pendingCount > 0) alert('Profil berhasil disimpan. Perubahan wilayah binaan masuk PENDING dan menunggu verifikasi Admin operasional.');
+                    else alert('Profil berhasil disimpan.');
                 } else {
                     printLog("Gagal Simpan Data: " + (d.pesan || d.code), "red");
                     alert(d.pesan || 'Gagal menyimpan profil.');
@@ -1606,6 +1815,289 @@ ${label}`)) return;
         }
 
         // --- LAPOR KEGIATAN LOGIC ---
+        const EPKB_BULAN_LABEL = {
+            '01':'Januari','02':'Februari','03':'Maret','04':'April','05':'Mei','06':'Juni',
+            '07':'Juli','08':'Agustus','09':'September','10':'Oktober','11':'November','12':'Desember'
+        };
+        const EPKB_ACTIVITY_ATTACHMENT_LIMITS = {
+            maxFoto: 5,
+            maxDokumen: 3,
+            fotoRawMax: 10 * 1024 * 1024,
+            dokumenMaxBytes: 10 * 1024 * 1024,
+            maxDimension: 1600,
+            imageQuality: 0.80
+        };
+        const EPKB_THUMB_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 120'%3E%3Crect width='160' height='120' rx='14' fill='%23f1f5f9'/%3E%3Cpath d='M34 86l28-28 20 19 14-14 30 31H34z' fill='%2394a3b8'/%3E%3Ccircle cx='110' cy='36' r='13' fill='%23cbd5e1'/%3E%3C/svg%3E";
+        window.__epkbKegiatanCache = window.__epkbKegiatanCache || {};
+        window.__epkbRekapRows = window.__epkbRekapRows || [];
+        window.__epkbKegiatanPhotoDataCache = window.__epkbKegiatanPhotoDataCache || {};
+        window.__epkbKegiatanPhotoThumbCache = window.__epkbKegiatanPhotoThumbCache || {};
+
+        function jsString_(v) {
+            return JSON.stringify(filterText(v));
+        }
+
+        function tanggalHariIniClient_() {
+            const d = new Date();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${d.getFullYear()}-${m}-${day}`;
+        }
+
+        function buatClientSubmitId_() {
+            const rand = Math.random().toString(16).slice(2, 10);
+            return `WEB-${Date.now()}-${rand}`;
+        }
+
+        function formatBytes_(bytes) {
+            const n = Number(bytes || 0);
+            if (!n) return '0 B';
+            if (n < 1024) return n + ' B';
+            if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+            return (n / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function safeParseJson_(val, fallback) {
+            if (Array.isArray(val) || (val && typeof val === 'object')) return val;
+            const s = filterText(val);
+            if (!s || s === '-') return fallback;
+            try { return JSON.parse(s); } catch(e) { return fallback; }
+        }
+
+        function extractDriveFileId_(ref) {
+            const s = filterText(ref);
+            if (!s) return '';
+            let m = s.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+            if (m && m[1]) return m[1];
+            m = s.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (m && m[1]) return m[1];
+            if (/^[a-zA-Z0-9_-]{20,}$/.test(s)) return s;
+            return '';
+        }
+
+        function driveThumbnailUrl_(ref, size = 320) {
+            const s = filterText(ref);
+            if (!s) return EPKB_THUMB_PLACEHOLDER;
+            if (s.startsWith('data:')) return s;
+            const id = extractDriveFileId_(s);
+            if (id) return `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w${size}`;
+            if (/^https?:\/\//i.test(s)) return s;
+            return EPKB_THUMB_PLACEHOLDER;
+        }
+
+        function getPhotoCacheKey_(idKegiatan, kind, fileId, index) {
+            return [filterText(idKegiatan), filterText(kind), filterText(fileId), String(index || 1)].join('|');
+        }
+
+        function normalisasiAttachmentList_(item, category) {
+            item = item || {};
+            const target = filterText(category).toUpperCase();
+            const sources = [
+                item.attachments,
+                item.attachment_json,
+                item.dokumen_ref_json,
+                item.file_json,
+                item.files_json
+            ];
+            let out = [];
+            sources.forEach(src => {
+                const parsed = safeParseJson_(src, []);
+                if (Array.isArray(parsed)) out = out.concat(parsed);
+                else if (parsed && Array.isArray(parsed.files)) out = out.concat(parsed.files);
+                else if (parsed && Array.isArray(parsed.foto)) out = out.concat(parsed.foto.map(x => Object.assign({file_category:'FOTO'}, x)));
+                else if (parsed && Array.isArray(parsed.dokumen)) out = out.concat(parsed.dokumen.map(x => Object.assign({file_category:'DOKUMEN'}, x)));
+            });
+            if (target === 'FOTO' && Array.isArray(item.foto_items)) out = out.concat(item.foto_items);
+            if (target === 'DOKUMEN' && Array.isArray(item.dokumen_items)) out = out.concat(item.dokumen_items);
+
+            const filtered = out.filter(f => {
+                const cat = filterText(f.file_category || f.category || f.kind || f.tipe || f.type).toUpperCase();
+                const mime = filterText(f.mime_type || f.mimeType || f.m).toLowerCase();
+                const url = filterText(f.url || f.file_url || f.thumbnail_url || f.drive_url);
+                if (target === 'FOTO') return cat.includes('FOTO') || cat.includes('IMAGE') || mime.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(url);
+                if (target === 'DOKUMEN') return cat.includes('DOK') || cat.includes('FILE') || (!mime.startsWith('image/') && !cat.includes('FOTO'));
+                return true;
+            }).map(f => ({
+                file_id: filterText(f.file_id || f.drive_file_id || f.id || extractDriveFileId_(f.url || f.file_url || f.thumbnail_url || '')),
+                url: filterText(f.url || f.file_url || f.drive_url || f.fileUrl || ''),
+                thumbnail_url: filterText(f.thumbnail_url || f.thumb_url || f.thumbnail || ''),
+                filename: filterText(f.original_filename || f.filename || f.name || f.n || ''),
+                mime_type: filterText(f.mime_type || f.mimeType || f.m || ''),
+                file_size_bytes: Number(f.file_size_bytes || f.size || 0)
+            }));
+
+            if (target === 'FOTO' && !filtered.length && filterText(item.url_foto || item.foto_url || item.thumbnail_foto || item.foto_profile_url)) {
+                filtered.push({
+                    file_id: extractDriveFileId_(item.url_foto || item.foto_url || item.thumbnail_foto || ''),
+                    url: filterText(item.url_foto || item.foto_url || ''),
+                    thumbnail_url: filterText(item.thumbnail_foto || item.foto_thumbnail_url || item.thumbnail_url || ''),
+                    filename: 'Foto kegiatan',
+                    mime_type: 'image/*',
+                    file_size_bytes: 0
+                });
+            }
+            if (target === 'DOKUMEN' && !filtered.length && filterText(item.url_dokumen || item.url_notulen || item.dokumen_url)) {
+                filtered.push({
+                    file_id: extractDriveFileId_(item.url_dokumen || item.url_notulen || item.dokumen_url || ''),
+                    url: filterText(item.url_dokumen || item.url_notulen || item.dokumen_url || ''),
+                    thumbnail_url: '',
+                    filename: 'Dokumen',
+                    mime_type: '',
+                    file_size_bytes: 0
+                });
+            }
+            const seen = {};
+            return filtered.filter(f => {
+                const key = f.file_id || f.url || f.filename;
+                if (!key || seen[key]) return false;
+                seen[key] = true;
+                return true;
+            });
+        }
+
+        function getFotoItems_(item) { return normalisasiAttachmentList_(item, 'FOTO'); }
+        function getDokumenItems_(item) { return normalisasiAttachmentList_(item, 'DOKUMEN'); }
+
+        function lampiranCountHtml_(item) {
+            const f = Number(item.foto_count || getFotoItems_(item).length || 0);
+            const d = Number(item.dokumen_count || getDokumenItems_(item).length || 0);
+            const parts = [];
+            if (f > 0) parts.push(`<span class="attachment-count-pill"><i class="bi bi-images"></i>${f} foto</span>`);
+            if (d > 0) parts.push(`<span class="attachment-count-pill"><i class="bi bi-files"></i>${d} dokumen</span>`);
+            return parts.join('');
+        }
+
+        function dokumenButtonsHtml_(item, btnClass = 'badge bg-success text-decoration-none') {
+            const docs = getDokumenItems_(item);
+            if (!docs.length) return '';
+            return docs.map((d, i) => {
+                const url = d.url || (d.file_id ? `https://drive.google.com/file/d/${d.file_id}/view` : '#');
+                const label = docs.length === 1 ? 'Dokumen' : `Dok ${i + 1}`;
+                return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="${btnClass} me-1"><i class="bi bi-file-earmark"></i> ${label}</a>`;
+            }).join('');
+        }
+
+        function galleryKegiatanHtml_(item) {
+            const fotos = getFotoItems_(item);
+            if (!fotos.length) return '<div class="small text-muted">Tidak ada foto kegiatan.</div>';
+            const id = item.id_kegiatan || item.id || '';
+            return `<div class="mt-3">
+                <div class="small fw-bold text-muted mb-1"><i class="bi bi-images"></i> Galeri Foto (${fotos.length})</div>
+                <div class="kegiatan-gallery-strip">${fotos.map((f, idx) => {
+                    const fid = f.file_id || extractDriveFileId_(f.url || f.thumbnail_url || '');
+                    const thumb = driveThumbnailUrl_(f.thumbnail_url || f.url || fid, 320);
+                    const foto = f.url || (fid ? `https://drive.google.com/file/d/${fid}/view` : '');
+                    const cacheKey = getPhotoCacheKey_(id, 'thumbnail', fid, idx + 1);
+                    const cached = window.__epkbKegiatanPhotoThumbCache[cacheKey];
+                    const initial = cached && cached.data_url ? cached.data_url : EPKB_THUMB_PLACEHOLDER;
+                    return `<button type="button" class="kegiatan-gallery-item text-start" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(item.judul || "Foto kegiatan")}, ${jsString_(fid)}, ${idx + 1})'>
+                        <img src="${escapeHtml(initial)}" data-drive-src="${escapeHtml(thumb)}" data-id-kegiatan="${escapeHtml(id)}" data-file-id="${escapeHtml(fid)}" data-foto-index="${idx + 1}" class="js-kegiatan-lazy-thumb" loading="lazy" onerror="handleThumbImgError_(this)">
+                        <div class="small text-muted mt-1 text-truncate">${escapeHtml(f.filename || ('Foto ' + (idx + 1)))}</div>
+                    </button>`;
+                }).join('')}</div>
+            </div>`;
+        }
+
+        function fotoButtonHtml_(item) {
+            const fotos = getFotoItems_(item);
+            if (!fotos.length) return '';
+            const first = fotos[0] || {};
+            const id = item.id_kegiatan || item.id || '';
+            const fileId = first.file_id || extractDriveFileId_(first.url || first.thumbnail_url || '');
+            const thumb = first.thumbnail_url || item.thumbnail_foto || item.foto_thumbnail_url || item.thumbnail_url || '';
+            const foto = first.url || item.url_foto || item.foto_url || '';
+            const label = fotos.length > 1 ? `Foto (${fotos.length})` : 'Foto';
+            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(item.judul || "Foto kegiatan")}, ${jsString_(fileId)}, 1)' class="badge bg-info border-0 text-decoration-none me-1"><i class="bi bi-image"></i> ${label}</button>`;
+        }
+
+        function thumbnailKegiatanHtml_(item) {
+            const fotos = getFotoItems_(item);
+            if (!fotos.length) return '<div class="kegiatan-thumb-placeholder me-3 mb-2"><i class="bi bi-image"></i></div>';
+            const first = fotos[0] || {};
+            const fileId = first.file_id || extractDriveFileId_(first.url || first.thumbnail_url || '');
+            const thumb = first.thumbnail_url || item.thumbnail_foto || item.foto_thumbnail_url || item.thumbnail_url || '';
+            const foto = first.url || item.url_foto || item.foto_url || '';
+            const id = item.id_kegiatan || item.id || '';
+            const src = driveThumbnailUrl_(thumb || foto || fileId, 320);
+            const title = item.judul || 'Foto kegiatan';
+            const cached = window.__epkbKegiatanPhotoThumbCache[getPhotoCacheKey_(id, 'thumbnail', fileId, 1)];
+            const initial = cached && cached.data_url ? cached.data_url : EPKB_THUMB_PLACEHOLDER;
+            const more = fotos.length > 1 ? `<span class="position-absolute bottom-0 end-0 badge bg-primary rounded-pill">+${fotos.length - 1}</span>` : '';
+            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)}, ${jsString_(fileId)}, 1)' class="kegiatan-thumb-link me-3 mb-2 position-relative" title="Preview foto kegiatan">
+                <img src="${escapeHtml(initial)}" data-drive-src="${escapeHtml(src)}" data-id-kegiatan="${escapeHtml(id)}" data-file-id="${escapeHtml(fileId)}" data-foto-index="1" alt="Foto kegiatan" class="kegiatan-thumb js-kegiatan-lazy-thumb" loading="lazy" onerror="handleThumbImgError_(this)">
+                ${more}
+            </button>`;
+        }
+
+        function initLazyKegiatanThumbs_() {
+            const imgs = Array.from(document.querySelectorAll('.js-kegiatan-lazy-thumb'));
+            imgs.forEach(img => {
+                if (img.dataset.lazyBound === '1') return;
+                img.dataset.lazyBound = '1';
+                const driveSrc = img.dataset.driveSrc || '';
+                if (driveSrc && driveSrc !== EPKB_THUMB_PLACEHOLDER) img.src = driveSrc;
+            });
+        }
+
+        function handleThumbImgError_(img) {
+            if (!img) return;
+            img.onerror = null;
+            img.src = EPKB_THUMB_PLACEHOLDER;
+        }
+
+        async function bukaPreviewFotoKegiatan_(idKegiatan, fotoUrl, thumbUrl, title, fileId, fotoIndex) {
+            const overlay = document.getElementById('attachmentPreviewOverlay');
+            const img = document.getElementById('attachmentPreviewImg');
+            const ttl = document.getElementById('attachmentPreviewTitle');
+            const meta = document.getElementById('attachmentPreviewMeta');
+            if (!overlay || !img) return;
+            overlay.classList.remove('hidden');
+            ttl.innerText = title || 'Preview Foto';
+            meta.innerText = 'Memuat foto...';
+            const directSrc = driveThumbnailUrl_(fotoUrl || thumbUrl || fileId, 1200);
+            img.src = directSrc;
+            const cacheKey = getPhotoCacheKey_(idKegiatan, 'full', fileId, fotoIndex || 1);
+            if (window.__epkbKegiatanPhotoDataCache[cacheKey]) {
+                img.src = window.__epkbKegiatanPhotoDataCache[cacheKey];
+                meta.innerText = 'Foto dimuat dari cache lokal.';
+                return;
+            }
+            const session = ambilSession();
+            if (!session || !session.token || !idKegiatan) {
+                meta.innerText = fileId ? 'Foto dibuka dari thumbnail Drive.' : '';
+                return;
+            }
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'getKegiatanPhoto');
+                p.append('token', session.token);
+                p.append('id_kegiatan', idKegiatan);
+                p.append('file_id', fileId || '');
+                p.append('foto_index', String(fotoIndex || 1));
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                const r = await fetch(SCRIPT_URL, { method:'POST', body:p });
+                const d = await r.json();
+                const dataUrl = d.data_url || d.photo_data_url || d.result?.data_url || '';
+                if ((d.status === 'sukses' || d.status === 'OK') && dataUrl) {
+                    window.__epkbKegiatanPhotoDataCache[cacheKey] = dataUrl;
+                    img.src = dataUrl;
+                    meta.innerText = 'Foto dimuat dari backend.';
+                } else {
+                    meta.innerText = 'Foto ditampilkan dari thumbnail/link Drive.';
+                }
+            } catch(e) {
+                meta.innerText = 'Foto ditampilkan dari thumbnail/link Drive.';
+            }
+        }
+
+        function tutupPreviewFotoKegiatan_() {
+            const overlay = document.getElementById('attachmentPreviewOverlay');
+            const img = document.getElementById('attachmentPreviewImg');
+            if (overlay) overlay.classList.add('hidden');
+            if (img) img.src = '';
+        }
+
         function aturJenis() {
             const topik = document.getElementById('tg-topik').value;
             const box = document.getElementById('box-jenis');
@@ -1618,7 +2110,7 @@ ${label}`)) return;
             else {
                 sel.classList.remove('hidden'); txtLain.classList.add('hidden');
                 let h = '<option value="">-- Pilih Jenis --</option>';
-                opsiJenis[topik].forEach(j => h += `<option value="${j}">${j}</option>`);
+                (opsiJenis[topik] || []).forEach(j => h += `<option value="${escapeHtml(j)}">${escapeHtml(j)}</option>`);
                 sel.innerHTML = h;
             }
         }
@@ -1627,94 +2119,577 @@ ${label}`)) return;
             document.getElementById('box-tabel-kb').classList.toggle('hidden', document.getElementById('tg-jenis').value !== 'Pelayanan KB');
         }
 
+        function aturScopeLokasiKegiatan_() {
+            const scope = document.getElementById('tg-lokasi-scope')?.value || 'DALAM_BINAAN';
+            const desaBlock = document.getElementById('tg-desa-binaan-block');
+            const luarBlock = document.getElementById('tg-luar-binaan-block');
+            if (desaBlock) desaBlock.classList.toggle('hidden', scope !== 'DALAM_BINAAN');
+            if (luarBlock) luarBlock.classList.toggle('hidden', scope !== 'LUAR_BINAAN');
+            const desa = document.getElementById('tg-desa');
+            if (desa) desa.required = scope === 'DALAM_BINAAN';
+        }
+
+        function updateSelectedFilesInfo_() {
+            const fotoInput = document.getElementById('tg-foto');
+            const dokInput = document.getElementById('tg-dokumen');
+            const fotoInfo = document.getElementById('tg-foto-info');
+            const dokInfo = document.getElementById('tg-dokumen-info');
+            if (fotoInfo && fotoInput) {
+                const files = Array.from(fotoInput.files || []);
+                fotoInfo.innerText = files.length ? `${files.length} foto dipilih (${files.map(f => formatBytes_(f.size)).join(', ')})` : '';
+            }
+            if (dokInfo && dokInput) {
+                const files = Array.from(dokInput.files || []);
+                dokInfo.innerText = files.length ? `${files.length} dokumen dipilih (${files.map(f => formatBytes_(f.size)).join(', ')})` : '';
+            }
+        }
+
+        function bindLaporTugasFileInputs_() {
+            ['tg-foto','tg-dokumen'].forEach(id => {
+                const input = document.getElementById(id);
+                if (!input || input.dataset.boundInfo === '1') return;
+                input.dataset.boundInfo = '1';
+                input.addEventListener('change', updateSelectedFilesInfo_);
+            });
+        }
+
         async function siapkanLaporTugas() {
-            const user = JSON.parse(localStorage.getItem('userPKB'));
+            const user = JSON.parse(localStorage.getItem('userPKB') || '{}');
             bukaHalaman('lapor-tugas-page');
+            bindLaporTugasFileInputs_();
+            aturScopeLokasiKegiatan_();
+            const tgl = document.getElementById('tg-tanggal');
+            if (tgl && !tgl.value) tgl.value = tanggalHariIniClient_();
             const selDesa = document.getElementById('tg-desa');
             selDesa.innerHTML = '<option value="">Memuat binaan...</option>';
-            
-            fetch(`${SCRIPT_URL}?action=get_binaan&id_user=${encodeURIComponent(user.id_user || user.nip || '')}`).then(res => res.json()).then(d => {
-                if(d.status === "sukses" && d.binaan.length > 0) {
+            try {
+                const session = ambilSession();
+                const p = new URLSearchParams();
+                p.append('action', 'get_binaan');
+                if (session && session.token) p.append('token', session.token);
+                p.append('id_user', user.id_user || '');
+                p.append('nip', user.nip || user.id_nip || '');
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                const binaan = d.binaan || d.data || [];
+                if((d.status === "sukses" || d.status === "OK") && binaan.length > 0) {
                     let h = '<option value="">-- Pilih Desa Binaan --</option>';
-                    d.binaan.forEach(b => h += `<option value="${b.id}" data-nama="${b.nama}">${b.nama} (${b.kec})</option>`);
+                    const seen = {};
+                    binaan.forEach(b => {
+                        const id = filterText(b.id || b.id_wilayah || b.id_desa || b.scope_code || b.kode_desa_kelurahan || b.nama);
+                        const nama = filterText(b.nama || b.nama_desa_kelurahan || b.desa_kelurahan || b.nama_desa || b.desa);
+                        const kec = filterText(b.kec || b.nama_kecamatan || b.kecamatan);
+                        const key = id + '|' + nama + '|' + kec;
+                        if (!id || seen[key]) return;
+                        seen[key] = true;
+                        h += `<option value="${escapeHtml(id)}" data-nama="${escapeHtml(nama)}" data-kec="${escapeHtml(kec)}">${escapeHtml(nama)}${kec ? ' (' + escapeHtml(kec) + ')' : ''}</option>`;
+                    });
                     selDesa.innerHTML = h;
-                } else { selDesa.innerHTML = '<option value="">(Kosong) Buka Edit Profil lalu Simpan!</option>'; }
-            });
-            muatRiwayat(user.nip);
+                } else {
+                    selDesa.innerHTML = '<option value="">(Kosong) Buka Edit Profil lalu Simpan!</option>';
+                }
+            } catch(e) {
+                selDesa.innerHTML = '<option value="">Gagal memuat binaan</option>';
+            }
+            muatRiwayat();
         }
 
-        function muatRiwayat(nip) {
-            const div = document.getElementById('list-kegiatan');
-            div.innerHTML = '<div class="text-center text-muted small py-4">Memuat riwayat...</div>';
-            fetch(`${SCRIPT_URL}?action=get_kegiatan&nip=${nip}`).then(res => res.json()).then(d => {
-                if(d.status === "sukses" && d.data.length > 0) {
-                    div.innerHTML = d.data.map(k => `
-                        <div class="card border-0 shadow-sm p-3 mb-3" style="border-left: 4px solid var(--primary-color);">
-                            <div class="fw-bold small text-primary">${k.topik}</div>
-                            <div class="fw-bold">${k.judul}</div>
-                            <div class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> ${k.desa} | <i class="bi bi-calendar"></i> ${k.waktu.split('T')[0]}</div>
-                            <div>
-                                ${k.url_notulen !== "-" ? `<a href="${k.url_notulen}" target="_blank" class="badge bg-success text-decoration-none me-1"><i class="bi bi-file-earmark-word"></i> Notulen</a>` : ""}
-                                ${k.url_foto !== "-" ? `<a href="${k.url_foto}" target="_blank" class="badge bg-info text-decoration-none"><i class="bi bi-image"></i> Foto</a>` : ""}
-                            </div>
-                        </div>
-                    `).join('');
-                } else { div.innerHTML = '<div class="text-center text-muted small py-4">Belum ada kegiatan yang dilaporkan.</div>'; }
+        function getSelectedDesaBinaanLabel_() {
+            const el = document.getElementById('tg-desa');
+            if (!el || !el.value) return { id:'', nama:'', kec:'' };
+            const opt = el.options[el.selectedIndex];
+            return {
+                id: el.value,
+                nama: opt ? (opt.getAttribute('data-nama') || opt.textContent || '') : '',
+                kec: opt ? (opt.getAttribute('data-kec') || '') : ''
+            };
+        }
+
+        function fileToDataUrl_(file) {
+            return new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = e => resolve(e.target.result);
+                r.onerror = reject;
+                r.readAsDataURL(file);
             });
         }
 
-        const readF = (file) => new Promise(res => { if(!file) return res(null); const r = new FileReader(); r.onload = (e) => res({ n: file.name, m: file.type, d: e.target.result.split(',')[1] }); r.readAsDataURL(file); });
+        async function resizeImageToUpload_(file) {
+            const rawDataUrl = await fileToDataUrl_(file);
+            if (!file.type || !file.type.startsWith('image/')) {
+                return { n:file.name, m:file.type || 'application/octet-stream', d:rawDataUrl.split(',')[1], size:file.size, original_size:file.size, compressed:false };
+            }
+            const img = await new Promise((resolve, reject) => {
+                const im = new Image();
+                im.onload = () => resolve(im);
+                im.onerror = reject;
+                im.src = rawDataUrl;
+            });
+            const max = EPKB_ACTIVITY_ATTACHMENT_LIMITS.maxDimension;
+            let w = img.width, h = img.height;
+            if (Math.max(w, h) > max) {
+                if (w >= h) { h = Math.round(h * max / w); w = max; }
+                else { w = Math.round(w * max / h); h = max; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            const mime = 'image/jpeg';
+            const dataUrl = canvas.toDataURL(mime, EPKB_ACTIVITY_ATTACHMENT_LIMITS.imageQuality);
+            const base64 = dataUrl.split(',')[1];
+            const approx = Math.round(base64.length * 0.75);
+            const baseName = filterText(file.name).replace(/\.[^.]+$/, '') || 'foto';
+            return { n: baseName + '.jpg', m:mime, d:base64, size:approx, original_size:file.size, compressed:true, width:w, height:h };
+        }
+
+        async function readMultipleFilesForUpload_(fileList, kind) {
+            const files = Array.from(fileList || []);
+            const isFoto = kind === 'foto';
+            const maxCount = isFoto ? EPKB_ACTIVITY_ATTACHMENT_LIMITS.maxFoto : EPKB_ACTIVITY_ATTACHMENT_LIMITS.maxDokumen;
+            const maxBytes = isFoto ? EPKB_ACTIVITY_ATTACHMENT_LIMITS.fotoRawMax : EPKB_ACTIVITY_ATTACHMENT_LIMITS.dokumenMaxBytes;
+            if (files.length > maxCount) throw new Error(`Maksimal ${maxCount} ${isFoto ? 'foto' : 'dokumen'} per kegiatan.`);
+            const out = [];
+            for (const file of files) {
+                if (file.size > maxBytes) throw new Error(`${file.name} melebihi batas ${formatBytes_(maxBytes)}.`);
+                if (isFoto) out.push(await resizeImageToUpload_(file));
+                else {
+                    const dataUrl = await fileToDataUrl_(file);
+                    out.push({ n:file.name, m:file.type || 'application/octet-stream', d:dataUrl.split(',')[1], size:file.size, original_size:file.size, compressed:false });
+                }
+            }
+            return out;
+        }
+
+        function getDataKbPayload_() {
+            if(document.getElementById('tg-jenis').value !== 'Pelayanan KB') return "-";
+            const gV = (id) => document.getElementById(id).value || "0";
+            return `IUD(B:${gV('kb-iud-b')},U:${gV('kb-iud-u')},G:${gV('kb-iud-g')}); IMP(B:${gV('kb-imp-b')},U:${gV('kb-imp-u')},G:${gV('kb-imp-g')}); MOW(B:${gV('kb-mow-b')},U:${gV('kb-mow-u')},G:${gV('kb-mow-g')}); MOP(B:${gV('kb-mop-b')},U:${gV('kb-mop-u')},G:${gV('kb-mop-g')})`;
+        }
 
         async function kirimLaporan() {
-            const user = JSON.parse(localStorage.getItem('userPKB'));
+            const user = JSON.parse(localStorage.getItem('userPKB') || '{}');
+            const session = ambilSession();
             const btn = document.getElementById('btnKirimTugas');
+            const scope = document.getElementById('tg-lokasi-scope')?.value || 'DALAM_BINAAN';
             const dSel = document.getElementById('tg-desa');
-            if(!dSel.value || !document.getElementById('tg-judul').value) return alert("Pilih Desa & Judul!");
+            const desaBinaan = getSelectedDesaBinaanLabel_();
+            const judul = document.getElementById('tg-judul').value.trim();
+            if(!judul) return alert("Judul kegiatan wajib diisi.");
+            if(scope === 'DALAM_BINAAN' && (!dSel || !dSel.value)) return alert("Pilih Desa Binaan.");
+            if(scope === 'LUAR_BINAAN' && !document.getElementById('tg-nama-lokasi-luar').value.trim()) return alert("Isi nama lokasi/instansi luar binaan.");
 
-            btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
-            
-            let dataKb = "-";
-            if(document.getElementById('tg-jenis').value === 'Pelayanan KB') {
-                const gV = (id) => document.getElementById(id).value || "0";
-                dataKb = `IUD(B:${gV('kb-iud-b')},U:${gV('kb-iud-u')},G:${gV('kb-iud-g')}); IMP(B:${gV('kb-imp-b')},U:${gV('kb-imp-u')},G:${gV('kb-imp-g')}); MOW(B:${gV('kb-mow-b')},U:${gV('kb-mow-u')},G:${gV('kb-mow-g')}); MOP(B:${gV('kb-mop-b')},U:${gV('kb-mop-u')},G:${gV('kb-mop-g')})`;
-            }
-
-            const topik = document.getElementById('tg-topik').value;
-            const jenis = (topik === "LAINNYA") ? document.getElementById('tg-jenis-lain').value : document.getElementById('tg-jenis').value;
-            const foto = await readF(document.getElementById('tg-foto').files[0]);
-            const dok = await readF(document.getElementById('tg-dokumen').files[0]);
-
-            const p = new URLSearchParams();
-            p.append('action', 'lapor_tugas'); p.append('nip', user.nip); p.append('nama_pkb', user.nama_asli);
-            p.append('id_desa', dSel.value); p.append('nama_desa', dSel.options[dSel.selectedIndex].getAttribute('data-nama'));
-            p.append('lokasi', document.getElementById('tg-lokasi').value || "-"); p.append('tanggal', document.getElementById('tg-tanggal').value || "-");
-            p.append('waktu_mulai', document.getElementById('tg-mulai').value || "-"); p.append('waktu_selesai', document.getElementById('tg-selesai').value || "-");
-            p.append('peserta', document.getElementById('tg-peserta').value || "-"); p.append('jml_hadir', document.getElementById('tg-jml').value || "0");
-            p.append('judul', document.getElementById('tg-judul').value); p.append('topik', topik); p.append('jenis', jenis);
-            p.append('deskripsi', document.getElementById('tg-deskripsi').value || "-"); p.append('data_kb', dataKb);
-            if(foto) { p.append('fotoName', foto.n); p.append('fotoMime', foto.m); p.append('fotoData', foto.d); }
-            if(dok) { p.append('dokName', dok.n); p.append('dokMime', dok.m); p.append('dokData', dok.d); }
-
+            btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Memproses lampiran...';
             try {
+                const topik = document.getElementById('tg-topik').value;
+                const jenis = (topik === "LAINNYA") ? document.getElementById('tg-jenis-lain').value : document.getElementById('tg-jenis').value;
+                const fotoFiles = await readMultipleFilesForUpload_(document.getElementById('tg-foto').files, 'foto');
+                const dokFiles = await readMultipleFilesForUpload_(document.getElementById('tg-dokumen').files, 'dokumen');
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
+
+                const p = new URLSearchParams();
+                p.append('action', 'lapor_tugas');
+                if (session && session.token) p.append('token', session.token);
+                p.append('client_submit_id', buatClientSubmitId_());
+                p.append('id_user', user.id_user || '');
+                p.append('nip', user.nip || user.id_nip || '');
+                p.append('nama_pkb', user.nama_asli || user.nama_user || '');
+                p.append('id_desa', scope === 'DALAM_BINAAN' ? desaBinaan.id : 'LUAR_BINAAN');
+                p.append('nama_desa', scope === 'DALAM_BINAAN' ? desaBinaan.nama : (document.getElementById('tg-nama-lokasi-luar').value || 'LUAR BINAAN'));
+                p.append('lokasi_scope', scope);
+                p.append('level_lokasi', document.getElementById('tg-level-lokasi')?.value || '');
+                p.append('nama_lokasi_luar', document.getElementById('tg-nama-lokasi-luar')?.value || '');
+                p.append('keterangan_luar', document.getElementById('tg-keterangan-luar')?.value || '');
+                p.append('lokasi', document.getElementById('tg-lokasi').value || "-");
+                p.append('tanggal', document.getElementById('tg-tanggal').value || "-");
+                p.append('waktu_mulai', document.getElementById('tg-mulai').value || "-");
+                p.append('waktu_selesai', document.getElementById('tg-selesai').value || "-");
+                p.append('peserta', document.getElementById('tg-peserta').value || "-");
+                p.append('jml_hadir', document.getElementById('tg-jml').value || "0");
+                p.append('judul', judul);
+                p.append('topik', topik);
+                p.append('jenis', jenis);
+                p.append('deskripsi', document.getElementById('tg-deskripsi').value || "-");
+                p.append('data_kb', getDataKbPayload_());
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+
+                if (fotoFiles.length) p.append('foto_files_json', JSON.stringify(fotoFiles));
+                if (dokFiles.length) p.append('dokumen_files_json', JSON.stringify(dokFiles));
+                if (fotoFiles[0]) { p.append('fotoName', fotoFiles[0].n); p.append('fotoMime', fotoFiles[0].m); p.append('fotoData', fotoFiles[0].d); }
+                if (dokFiles[0]) { p.append('dokName', dokFiles[0].n); p.append('dokMime', dokFiles[0].m); p.append('dokData', dokFiles[0].d); }
+
                 const r = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                 const res = await r.json();
-                if(res.status === "sukses") {
+                if(res.status === "sukses" || res.status === "OK") {
                     if(topik === "PERTEMUAN" && confirm("Kegiatan Disimpan!\nBuat NOTULEN otomatis di Google Drive?")) {
                         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Membuat Notulen...';
-                        p.set('action', 'buat_notulen'); p.append('row_index', res.row_index);
+                        p.set('action', 'buat_notulen'); p.append('row_index', res.row_index || res.row || '');
                         const resN = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                         const dN = await resN.json();
-                        if(dN.status === "sukses") alert("Notulen berhasil dibuat di Drive Anda!");
-                        else alert("Gagal membuat notulen: " + dN.pesan);
-                    } else { alert("Kegiatan berhasil tersimpan!"); }
-                    document.getElementById('formTugas').reset(); 
-                    document.getElementById('box-jenis').classList.add('hidden'); document.getElementById('box-tabel-kb').classList.add('hidden');
+                        if(dN.status === "sukses" || dN.status === "OK") alert("Notulen berhasil dibuat di Drive Anda!");
+                        else alert("Gagal membuat notulen: " + (dN.pesan || dN.code || ''));
+                    } else {
+                        alert("Kegiatan berhasil tersimpan!");
+                    }
+                    document.getElementById('formTugas').reset();
+                    document.getElementById('box-jenis').classList.add('hidden');
+                    document.getElementById('box-tabel-kb').classList.add('hidden');
+                    updateSelectedFilesInfo_();
                     siapkanLaporTugas();
-                } else { alert("Gagal: " + res.pesan); }
-            } catch(err) { alert("Kesalahan koneksi."); } finally { btn.disabled = false; btn.innerText = "SIMPAN KEGIATAN"; }
+                } else {
+                    alert("Gagal: " + (res.pesan || res.message || res.code || 'UNKNOWN'));
+                }
+            } catch(err) {
+                alert(err.message || "Kesalahan koneksi.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "SIMPAN KEGIATAN";
+            }
         }
 
-        function logout() {
+        async function ambilKegiatanPkb_(limit = 75, filters = {}) {
+            const session = ambilSession();
+            if (!session || !session.token) throw new Error('Session tidak ditemukan. Silakan login ulang.');
+            const p = new URLSearchParams();
+            p.append('action', 'get_kegiatan');
+            p.append('token', session.token);
+            p.append('limit', String(limit || 75));
+            p.append('device_id', getDeviceId());
+            p.append('app_version', EPKB_APP_VERSION);
+            p.append('bulan', filters.bulan || '');
+            p.append('tahun', filters.tahun || '');
+            p.append('topik', filters.topik || '');
+            p.append('scope', filters.scope || '');
+            const r = await fetch(SCRIPT_URL, { method:'POST', body:p });
+            const d = await r.json();
+            if (!(d.status === 'sukses' || d.status === 'OK')) throw new Error(d.pesan || d.message || d.code || 'Gagal memuat kegiatan');
+            const data = d.data || d.records || d.kegiatan || [];
+            data.forEach(x => {
+                const id = x.id_kegiatan || x.id || x.row_index || x.row_number;
+                if (id) window.__epkbKegiatanCache[id] = x;
+            });
+            return { data, raw:d };
+        }
+
+        function formatTanggalKegiatan_(v) {
+            const s = filterText(v);
+            if (!s || s === '-') return '-';
+            if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+                const [y,m,d] = s.slice(0,10).split('-');
+                return `${d}/${m}/${y}`;
+            }
+            return s.split('T')[0] || s;
+        }
+
+        function getTanggalSortable_(item) {
+            return filterText(item.tanggal_kegiatan || item.tanggal || item.waktu || item.created_at);
+        }
+
+        function lokasiScopeLabel_(scope) {
+            const s = filterText(scope).toUpperCase();
+            if (s === 'LUAR_BINAAN') return 'Di Luar Wilayah Binaan';
+            if (s === 'DALAM_BINAAN') return 'Dalam Wilayah Binaan';
+            return s || '-';
+        }
+
+        function renderKegiatanCardHtml_(k, mode) {
+            const id = k.id_kegiatan || k.id || k.row_index || k.row_number || '';
+            const title = filterText(k.judul || k.judul_kegiatan || '(Tanpa judul)');
+            const topik = filterText(k.topik || k.jenis_kegiatan || '-');
+            const jenis = filterText(k.jenis || k.sub_jenis_kegiatan || '');
+            const scope = filterText(k.lokasi_scope || k.scope_lokasi || k.scope || 'DALAM_BINAAN');
+            const desa = filterText(k.desa || k.nama_desa || k.nama_desa_kelurahan || k.nama_lokasi_luar || '-');
+            const lokasi = filterText(k.lokasi || k.lokasi_kegiatan || '-');
+            const tanggal = formatTanggalKegiatan_(k.tanggal_kegiatan || k.tanggal || k.waktu || k.created_at);
+            const peserta = filterText(k.jml_hadir || k.jumlah_peserta || k.peserta_hadir || '0');
+            const actions = mode === 'dashboard' ? '' : `<div class="kegiatan-actions mt-2">
+                <button type="button" onclick='bukaDetailKegiatanById_(${jsString_(id)})' class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-eye"></i> Detail</button>
+                <button type="button" onclick='bukaEditKegiatanById_(${jsString_(id)})' class="btn btn-sm btn-outline-warning me-1"><i class="bi bi-pencil"></i> Edit</button>
+                <button type="button" onclick='hapusKegiatanById_(${jsString_(id)})' class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Hapus</button>
+            </div>`;
+            return `<div class="card border-0 shadow-sm p-3 mb-3 riwayat-item">
+                <div class="d-flex align-items-start">
+                    ${thumbnailKegiatanHtml_(k)}
+                    <div class="flex-grow-1">
+                        <button type="button" class="kegiatan-title-btn" onclick='bukaDetailKegiatanById_(${jsString_(id)})'>${escapeHtml(title)}</button>
+                        <div class="small text-primary fw-bold mt-1">${escapeHtml(topik)}${jenis ? ' • ' + escapeHtml(jenis) : ''}${lampiranCountHtml_(k)}</div>
+                        <div class="small text-muted mt-1"><i class="bi bi-geo-alt"></i> ${escapeHtml(desa)} | ${escapeHtml(lokasi)}</div>
+                        <div class="small text-muted"><i class="bi bi-calendar"></i> ${escapeHtml(tanggal)} | <i class="bi bi-people"></i> ${escapeHtml(peserta)} peserta | ${escapeHtml(lokasiScopeLabel_(scope))}</div>
+                        <div class="mt-2">${fotoButtonHtml_(k)}${dokumenButtonsHtml_(k)}</div>
+                        ${actions}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        async function muatRiwayat() {
+            const div = document.getElementById('list-kegiatan');
+            if (!div) return;
+            div.innerHTML = '<div class="text-center text-muted small py-4"><span class="spinner-border spinner-border-sm"></span> Memuat riwayat...</div>';
+            try {
+                const hasil = await ambilKegiatanPkb_(5, {});
+                if(hasil.data && hasil.data.length > 0) {
+                    div.innerHTML = hasil.data.map(k => renderKegiatanCardHtml_(k, 'dashboard')).join('') +
+                        '<div class="text-center mt-3"><button onclick="bukaRiwayatTugasSaya()" class="btn btn-outline-primary btn-sm fw-bold"><i class="bi bi-list-ul"></i> Lihat Semua Riwayat</button></div>';
+                    setTimeout(initLazyKegiatanThumbs_, 0);
+                } else {
+                    div.innerHTML = '<div class="text-center text-muted small py-4">Belum ada kegiatan yang dilaporkan.</div>';
+                }
+            } catch(e) {
+                div.innerHTML = `<div class="alert alert-warning small">Gagal memuat riwayat: ${escapeHtml(e.message || e)}</div>`;
+            }
+        }
+
+        function bukaRiwayatTugasSaya() {
+            bukaHalaman('riwayat-tugas-page');
+            siapkanFilterRiwayatOptions_();
+            muatRiwayatTugasSaya();
+        }
+
+        function siapkanFilterRiwayatOptions_() {
+            const tahunEl = document.getElementById('filterRiwayatTahun');
+            if (tahunEl && !tahunEl.dataset.ready) {
+                const now = new Date().getFullYear();
+                let html = '<option value="">Semua Tahun</option>';
+                for (let y = now; y >= now - 5; y--) html += `<option value="${y}">${y}</option>`;
+                tahunEl.innerHTML = html;
+                tahunEl.dataset.ready = '1';
+            }
+        }
+
+        function getRiwayatFilterParams_() {
+            return {
+                bulan: (document.getElementById('filterRiwayatBulan')?.value || '').trim(),
+                tahun: (document.getElementById('filterRiwayatTahun')?.value || '').trim(),
+                topik: (document.getElementById('filterRiwayatTopik')?.value || '').trim(),
+                scope: (document.getElementById('filterRiwayatScope')?.value || '').trim()
+            };
+        }
+
+        function labelFilterBulanTahun_(filters) {
+            filters = filters || {};
+            const b = filters.bulan ? (EPKB_BULAN_LABEL[filters.bulan] || filters.bulan) : 'Semua bulan';
+            const t = filters.tahun || 'Semua tahun';
+            return `${b} / ${t}`;
+        }
+
+        function resetFilterRiwayatTugas_() {
+            ['filterRiwayatBulan','filterRiwayatTahun','filterRiwayatTopik','filterRiwayatScope'].forEach(id => {
+                const el = document.getElementById(id); if (el) el.value = '';
+            });
+            muatRiwayatTugasSaya();
+        }
+
+        async function muatRiwayatTugasSaya() {
+            const list = document.getElementById('riwayatTugasList');
+            const summary = document.getElementById('riwayatTugasSummary');
+            if (!list) return;
+            const filters = getRiwayatFilterParams_();
+            list.innerHTML = '<div class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm"></span> Memuat riwayat tugas...</div>';
+            if (summary) summary.innerHTML = '';
+            try {
+                const hasil = await ambilKegiatanPkb_(200, filters);
+                const rows = hasil.data || [];
+                window.__epkbRekapRows = rows;
+                if (summary) summary.innerHTML = buildRiwayatSummaryClient_(rows, filters);
+                if (!rows.length) {
+                    list.innerHTML = '<div class="card border-0 shadow-sm p-4 text-center text-muted rounded-4">Belum ada kegiatan sesuai filter.</div>';
+                    return;
+                }
+                list.innerHTML = rows.map(k => renderKegiatanCardHtml_(k, 'riwayat')).join('');
+                setTimeout(initLazyKegiatanThumbs_, 0);
+            } catch(e) {
+                list.innerHTML = `<div class="alert alert-warning">Gagal memuat riwayat: ${escapeHtml(e.message || e)}</div>`;
+            }
+        }
+
+        function buildRiwayatSummaryClient_(rows, filters) {
+            const total = rows.length;
+            const peserta = rows.reduce((a,r) => a + Number(r.jml_hadir || r.jumlah_peserta || 0), 0);
+            const foto = rows.reduce((a,r) => a + getFotoItems_(r).length, 0);
+            const dok = rows.reduce((a,r) => a + getDokumenItems_(r).length, 0);
+            const luar = rows.filter(r => filterText(r.lokasi_scope || r.scope).toUpperCase() === 'LUAR_BINAAN').length;
+            return `<div class="card border-0 shadow-sm rounded-4 p-3">
+                <div class="small text-muted mb-2">Filter: ${escapeHtml(labelFilterBulanTahun_(filters))}</div>
+                <div class="row g-2">
+                    ${summaryMiniHtml_('Kegiatan', total)}
+                    ${summaryMiniHtml_('Peserta', peserta)}
+                    ${summaryMiniHtml_('Luar Binaan', luar)}
+                    ${summaryMiniHtml_('Foto', foto)}
+                    ${summaryMiniHtml_('Dokumen', dok)}
+                </div>
+            </div>`;
+        }
+
+        function summaryMiniHtml_(label, value) {
+            return `<div class="col-6 col-md"><div class="summary-mini"><div class="label">${escapeHtml(label)}</div><div class="value">${escapeHtml(value)}</div></div></div>`;
+        }
+
+        function bukaDetailKegiatanById_(id) {
+            const item = window.__epkbKegiatanCache[id];
+            if (!item) return alert('Data kegiatan tidak ditemukan di cache. Muat ulang riwayat.');
+            const overlay = document.getElementById('kegiatanDetailOverlay');
+            const box = document.getElementById('kegiatanDetailContent');
+            if (!overlay || !box) return;
+            box.innerHTML = renderDetailKegiatanHtml_(item);
+            overlay.classList.remove('hidden');
+            setTimeout(initLazyKegiatanThumbs_, 0);
+        }
+
+        function renderDetailKegiatanHtml_(k) {
+            return `<div>
+                <h5 class="fw-bold">${escapeHtml(k.judul || k.judul_kegiatan || '-')}</h5>
+                <div class="mb-2">${lampiranCountHtml_(k)}</div>
+                ${infoRowHtml_('Topik', (k.topik || k.jenis_kegiatan || '-') + (k.jenis || k.sub_jenis_kegiatan ? ' / ' + (k.jenis || k.sub_jenis_kegiatan) : ''))}
+                ${infoRowHtml_('Tanggal', formatTanggalKegiatan_(k.tanggal_kegiatan || k.tanggal || k.waktu || k.created_at))}
+                ${infoRowHtml_('Waktu', `${filterText(k.waktu_mulai || '-')} - ${filterText(k.waktu_selesai || '-')}`)}
+                ${infoRowHtml_('Lokasi', `${filterText(k.desa || k.nama_desa_kelurahan || k.nama_lokasi_luar || '-')} / ${filterText(k.lokasi || k.lokasi_kegiatan || '-')}`)}
+                ${infoRowHtml_('Scope', lokasiScopeLabel_(k.lokasi_scope || k.scope))}
+                ${infoRowHtml_('Peserta', `${filterText(k.peserta || k.sasaran_kegiatan || '-')} (${filterText(k.jml_hadir || k.jumlah_peserta || 0)} orang)`)}
+                ${infoRowHtml_('Deskripsi', k.deskripsi || k.uraian_kegiatan || '-')}
+                <div class="mt-3">${dokumenButtonsHtml_(k, 'btn btn-sm btn-outline-success text-decoration-none')}</div>
+                ${galleryKegiatanHtml_(k)}
+            </div>`;
+        }
+
+        function infoRowHtml_(label, value) {
+            return `<div class="info-row"><span class="info-label">${escapeHtml(label)}:</span><span class="info-value">${escapeHtml(value)}</span></div>`;
+        }
+
+        function tutupDetailKegiatan_() {
+            const overlay = document.getElementById('kegiatanDetailOverlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+
+        function bukaEditKegiatanById_(id) {
+            const item = window.__epkbKegiatanCache[id];
+            if (!item) return alert('Data kegiatan tidak ditemukan di cache. Muat ulang riwayat.');
+            document.getElementById('edit-kegiatan-id').value = id;
+            document.getElementById('edit-kegiatan-judul').value = filterText(item.judul || item.judul_kegiatan);
+            document.getElementById('edit-kegiatan-peserta').value = filterText(item.jml_hadir || item.jumlah_peserta || 0);
+            document.getElementById('edit-kegiatan-deskripsi').value = filterText(item.deskripsi || item.uraian_kegiatan);
+            document.getElementById('kegiatanEditOverlay').classList.remove('hidden');
+        }
+
+        function tutupEditKegiatan_() {
+            const overlay = document.getElementById('kegiatanEditOverlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+
+        async function simpanEditKegiatan_() {
+            const session = ambilSession();
+            if (!session || !session.token) return alert('Session tidak ditemukan.');
+            const btn = document.getElementById('btnSimpanEditKegiatan');
+            btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'updateKegiatan');
+                p.append('token', session.token);
+                p.append('id_kegiatan', document.getElementById('edit-kegiatan-id').value);
+                p.append('judul', document.getElementById('edit-kegiatan-judul').value);
+                p.append('jml_hadir', document.getElementById('edit-kegiatan-peserta').value);
+                p.append('deskripsi', document.getElementById('edit-kegiatan-deskripsi').value);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                const r = await fetch(SCRIPT_URL, { method:'POST', body:p });
+                const d = await r.json();
+                if (d.status === 'sukses' || d.status === 'OK') {
+                    alert('Kegiatan berhasil diperbarui.');
+                    tutupEditKegiatan_();
+                    muatRiwayatTugasSaya();
+                } else alert(d.pesan || d.message || d.code || 'Gagal update kegiatan.');
+            } catch(e) {
+                alert('Koneksi terputus saat update kegiatan.');
+            } finally {
+                btn.disabled = false; btn.innerText = 'SIMPAN EDIT';
+            }
+        }
+
+        async function hapusKegiatanById_(id) {
+            if (!confirm('Hapus kegiatan ini dari daftar aktif?')) return;
+            const session = ambilSession();
+            if (!session || !session.token) return alert('Session tidak ditemukan.');
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'deleteKegiatan');
+                p.append('token', session.token);
+                p.append('id_kegiatan', id);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                const r = await fetch(SCRIPT_URL, { method:'POST', body:p });
+                const d = await r.json();
+                if (d.status === 'sukses' || d.status === 'OK') {
+                    alert('Kegiatan berhasil dihapus.');
+                    muatRiwayatTugasSaya();
+                } else alert(d.pesan || d.message || d.code || 'Gagal hapus kegiatan.');
+            } catch(e) {
+                alert('Koneksi terputus saat hapus kegiatan.');
+            }
+        }
+
+        function bukaRekapKegiatanPkb_() {
+            bukaHalaman('rekap-kegiatan-page');
+            muatRekapKegiatanPkb_();
+        }
+
+        function muatRekapKegiatanPkb_() {
+            const box = document.getElementById('rekapKegiatanContent');
+            const rows = window.__epkbRekapRows || [];
+            const filters = getRiwayatFilterParams_();
+            const rekap = buildRekapRows_(rows);
+            document.getElementById('rekapKegiatanSubtitle').innerText = 'Filter: ' + labelFilterBulanTahun_(filters);
+            if (!rows.length) {
+                box.innerHTML = '<div class="alert alert-light border">Belum ada data rekap. Muat riwayat terlebih dahulu.</div>';
+                return;
+            }
+            box.innerHTML = `<div class="card border-0 shadow-sm rounded-4 p-3 mb-3">${buildRiwayatSummaryClient_(rows, filters)}</div>
+                <div class="rekap-table-wrap bg-white">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead class="table-light"><tr><th>Topik</th><th class="text-end">Kegiatan</th><th class="text-end">Peserta</th><th class="text-end">Foto</th><th class="text-end">Dokumen</th></tr></thead>
+                        <tbody>${rekap.map(r => `<tr><td>${escapeHtml(r.topik)}</td><td class="text-end">${r.kegiatan}</td><td class="text-end">${r.peserta}</td><td class="text-end">${r.foto}</td><td class="text-end">${r.dokumen}</td></tr>`).join('')}</tbody>
+                    </table>
+                </div>`;
+        }
+
+        function buildRekapRows_(rows) {
+            const map = {};
+            rows.forEach(r => {
+                const topik = filterText(r.topik || r.jenis_kegiatan || 'LAINNYA') || 'LAINNYA';
+                if (!map[topik]) map[topik] = { topik, kegiatan:0, peserta:0, foto:0, dokumen:0 };
+                map[topik].kegiatan += 1;
+                map[topik].peserta += Number(r.jml_hadir || r.jumlah_peserta || 0);
+                map[topik].foto += getFotoItems_(r).length;
+                map[topik].dokumen += getDokumenItems_(r).length;
+            });
+            return Object.values(map).sort((a,b) => a.topik.localeCompare(b.topik));
+        }
+
+        function escapeCsv_(v) {
+            const s = filterText(v).replace(/"/g, '""');
+            return `"${s}"`;
+        }
+
+        function exportRekapKegiatanCsv_() {
+            const rows = buildRekapRows_(window.__epkbRekapRows || []);
+            if (!rows.length) return alert('Tidak ada data untuk diekspor.');
+            const lines = [['Topik','Kegiatan','Peserta','Foto','Dokumen'].map(escapeCsv_).join(',')];
+            rows.forEach(r => lines.push([r.topik,r.kegiatan,r.peserta,r.foto,r.dokumen].map(escapeCsv_).join(',')));
+            const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'rekap_kegiatan_pkb.csv'; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function cetakRekapKegiatanPkb_() {
+            window.print();
+        }
+
+                function logout() {
             const session = ambilSession();
             try {
                 if (session && session.token) {
