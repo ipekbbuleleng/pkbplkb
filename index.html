@@ -735,7 +735,7 @@
             }, 800);
         };
 
-        async async function refreshData(isAutoRefresh = false) {
+        async function refreshData(isAutoRefresh = false) {
             setRefreshButtonsBusy_(true);
             try {
                 const dataProfil = await validasiSession();
