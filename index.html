@@ -93,6 +93,11 @@
         .kegiatan-thumb-link { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; padding:0; border:0; background:#f8fafc; border-radius:12px; min-width:96px; min-height:72px; }
         .kegiatan-thumb { width:96px; height:72px; object-fit:cover; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 2px 6px rgba(0,0,0,.08); }
         .kegiatan-thumb-placeholder { width:96px; height:72px; border-radius:12px; border:1px dashed #cbd5e1; display:flex; align-items:center; justify-content:center; color:#64748b; background:#f8fafc; font-size:1.4rem; }
+        .kegiatan-thumb.is-hidden, .kegiatan-thumb-link.is-hidden, .kegiatan-gallery-item.is-hidden { display:none !important; }
+        .kegiatan-thumb-link.is-loading .kegiatan-thumb { opacity:.38; filter:blur(.2px); }
+        .kegiatan-thumb-link:not(.is-loading) .kegiatan-thumb { opacity:1; }
+        .attachment-preview-img.is-empty { display:none; }
+        .attachment-preview-img.is-ready { display:block; }
         .kegiatan-title-btn { border:0; background:transparent; padding:0; color:#111827; font-weight:800; text-align:left; }
         .kegiatan-title-btn:hover { color:#0d6efd; text-decoration:underline; }
         .kegiatan-actions .btn { padding:2px 7px; }
@@ -639,7 +644,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.2.8-GOVERNANCE-SHELL-V1-R2-R1";
+        const EPKB_APP_VERSION = "0.2.8-GOVERNANCE-SHELL-V1-R2-R2";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -1878,12 +1883,12 @@ ${label}`)) return;
 
         function driveThumbnailUrl_(ref, size = 320) {
             const s = filterText(ref);
-            if (!s) return EPKB_THUMB_PLACEHOLDER;
+            if (!s) return '';
             if (s.startsWith('data:')) return s;
             const id = extractDriveFileId_(s);
             if (id) return `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w${size}`;
             if (/^https?:\/\//i.test(s)) return s;
-            return EPKB_THUMB_PLACEHOLDER;
+            return '';
         }
 
         function getPhotoCacheKey_(idKegiatan, kind, fileId, index) {
@@ -1959,6 +1964,41 @@ ${label}`)) return;
         function getFotoItems_(item) { return normalisasiAttachmentList_(item, 'FOTO'); }
         function getDokumenItems_(item) { return normalisasiAttachmentList_(item, 'DOKUMEN'); }
 
+        function firstNonEmptyValue_() {
+            for (let i = 0; i < arguments.length; i++) {
+                const v = arguments[i];
+                if (v === 0 || v === '0') return v;
+                if (v !== undefined && v !== null && filterText(v) !== '') return v;
+            }
+            return '';
+        }
+
+        function normalNumberValue_(v) {
+            const raw = firstNonEmptyValue_(v, '0');
+            const n = Number(String(raw).replace(',', '.'));
+            return Number.isFinite(n) && n >= 0 ? n : 0;
+        }
+
+        function jumlahPesertaKegiatan_(item) {
+            item = item || {};
+            return normalNumberValue_(firstNonEmptyValue_(
+                item.jumlah_peserta_hadir,
+                item.jumlahPesertaHadir,
+                item.jml_hadir,
+                item.jumlah_peserta,
+                item.peserta_hadir,
+                item.peserta_count,
+                item.jumlahPeserta,
+                0
+            ));
+        }
+
+        function jumlahPesertaLabel_(item) {
+            const n = jumlahPesertaKegiatan_(item);
+            return String(n);
+        }
+
+
         function lampiranCountHtml_(item) {
             const f = Number(item.foto_count || getFotoItems_(item).length || 0);
             const d = Number(item.dokumen_count || getDokumenItems_(item).length || 0);
@@ -1980,7 +2020,7 @@ ${label}`)) return;
 
         function galleryKegiatanHtml_(item) {
             const fotos = getFotoItems_(item);
-            if (!fotos.length) return '<div class="small text-muted">Tidak ada foto kegiatan.</div>';
+            if (!fotos.length) return '';
             const id = item.id_kegiatan || item.id || '';
             return `<div class="mt-3">
                 <div class="small fw-bold text-muted mb-1"><i class="bi bi-images"></i> Galeri Foto (${fotos.length})</div>
@@ -1990,9 +2030,10 @@ ${label}`)) return;
                     const foto = f.url || (fid ? `https://drive.google.com/file/d/${fid}/view` : '');
                     const cacheKey = getPhotoCacheKey_(id, 'thumbnail', fid, idx + 1);
                     const cached = window.__epkbKegiatanPhotoThumbCache[cacheKey];
-                    const initial = cached && cached.data_url ? cached.data_url : EPKB_THUMB_PLACEHOLDER;
-                    return `<button type="button" class="kegiatan-gallery-item text-start" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(item.judul || "Foto kegiatan")}, ${jsString_(fid)}, ${idx + 1})'>
-                        <img src="${escapeHtml(initial)}" data-drive-src="${escapeHtml(thumb)}" data-id-kegiatan="${escapeHtml(id)}" data-file-id="${escapeHtml(fid)}" data-foto-index="${idx + 1}" class="js-kegiatan-lazy-thumb" loading="lazy" onerror="handleThumbImgError_(this)">
+                    const initial = (cached && cached.data_url) ? cached.data_url : thumb;
+                    const imgAttrs = initial ? `src="${escapeHtml(initial)}"` : '';
+                    return `<button type="button" class="kegiatan-gallery-item text-start${initial ? '' : ' is-hidden'}" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(item.judul || "Foto kegiatan")}, ${jsString_(fid)}, ${idx + 1})'>
+                        <img ${imgAttrs} data-drive-src="${escapeHtml(thumb)}" data-id-kegiatan="${escapeHtml(id)}" data-file-id="${escapeHtml(fid)}" data-foto-index="${idx + 1}" class="js-kegiatan-lazy-thumb" loading="lazy" onerror="handleThumbImgError_(this)">
                         <div class="small text-muted mt-1 text-truncate">${escapeHtml(f.filename || ('Foto ' + (idx + 1)))}</div>
                     </button>`;
                 }).join('')}</div>
@@ -2013,7 +2054,7 @@ ${label}`)) return;
 
         function thumbnailKegiatanHtml_(item) {
             const fotos = getFotoItems_(item);
-            if (!fotos.length) return '<div class="kegiatan-thumb-placeholder me-3 mb-2"><i class="bi bi-image"></i></div>';
+            if (!fotos.length) return '';
             const first = fotos[0] || {};
             const fileId = first.file_id || extractDriveFileId_(first.url || first.thumbnail_url || '');
             const thumb = first.thumbnail_url || item.thumbnail_foto || item.foto_thumbnail_url || item.thumbnail_url || '';
@@ -2022,10 +2063,11 @@ ${label}`)) return;
             const src = driveThumbnailUrl_(thumb || foto || fileId, 320);
             const title = item.judul || 'Foto kegiatan';
             const cached = window.__epkbKegiatanPhotoThumbCache[getPhotoCacheKey_(id, 'thumbnail', fileId, 1)];
-            const initial = cached && cached.data_url ? cached.data_url : EPKB_THUMB_PLACEHOLDER;
+            const initial = cached && cached.data_url ? cached.data_url : src;
             const more = fotos.length > 1 ? `<span class="position-absolute bottom-0 end-0 badge bg-primary rounded-pill">+${fotos.length - 1}</span>` : '';
-            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)}, ${jsString_(fileId)}, 1)' class="kegiatan-thumb-link me-3 mb-2 position-relative" title="Preview foto kegiatan">
-                <img src="${escapeHtml(initial)}" data-drive-src="${escapeHtml(src)}" data-id-kegiatan="${escapeHtml(id)}" data-file-id="${escapeHtml(fileId)}" data-foto-index="1" alt="Foto kegiatan" class="kegiatan-thumb js-kegiatan-lazy-thumb" loading="lazy" onerror="handleThumbImgError_(this)">
+            if (!initial && !fileId) return '';
+            return `<button type="button" onclick='bukaPreviewFotoKegiatan_(${jsString_(id)}, ${jsString_(foto)}, ${jsString_(thumb)}, ${jsString_(title)}, ${jsString_(fileId)}, 1)' class="kegiatan-thumb-link me-3 mb-2 position-relative${initial ? '' : ' is-loading'}" title="Preview foto kegiatan">
+                <img ${initial ? `src="${escapeHtml(initial)}"` : ''} data-drive-src="${escapeHtml(src)}" data-id-kegiatan="${escapeHtml(id)}" data-file-id="${escapeHtml(fileId)}" data-foto-index="1" alt="Foto kegiatan" class="kegiatan-thumb js-kegiatan-lazy-thumb" loading="lazy" onerror="handleThumbImgError_(this)">
                 ${more}
             </button>`;
         }
@@ -2036,14 +2078,66 @@ ${label}`)) return;
                 if (img.dataset.lazyBound === '1') return;
                 img.dataset.lazyBound = '1';
                 const driveSrc = img.dataset.driveSrc || '';
-                if (driveSrc && driveSrc !== EPKB_THUMB_PLACEHOLDER) img.src = driveSrc;
+                if (!img.getAttribute('src') && driveSrc) img.src = driveSrc;
+                if (!img.getAttribute('src')) loadKegiatanThumbViaProxy_(img);
             });
+        }
+
+        async function loadKegiatanThumbViaProxy_(img) {
+            if (!img || img.dataset.proxyLoading === '1') return;
+            const id = img.dataset.idKegiatan || '';
+            const fid = img.dataset.fileId || '';
+            const idx = Number(img.dataset.fotoIndex || 1);
+            if (!id) return hideBrokenThumb_(img);
+            const cacheKey = getPhotoCacheKey_(id, 'thumbnail', fid, idx);
+            const cached = window.__epkbKegiatanPhotoThumbCache[cacheKey];
+            if (cached && cached.data_url) {
+                img.src = cached.data_url;
+                img.closest('.kegiatan-thumb-link,.kegiatan-gallery-item')?.classList.remove('is-loading','is-hidden');
+                return;
+            }
+            const session = ambilSession();
+            if (!session || !session.token) return hideBrokenThumb_(img);
+            img.dataset.proxyLoading = '1';
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'getKegiatanPhoto');
+                p.append('token', session.token);
+                p.append('id_kegiatan', id);
+                p.append('file_id', fid || '');
+                p.append('foto_index', String(idx));
+                p.append('mode', 'thumbnail');
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                const r = await fetch(SCRIPT_URL, { method:'POST', body:p });
+                const d = await r.json();
+                const dataUrl = d.data_url || d.photo_data_url || d.result?.data_url || '';
+                if ((d.status === 'sukses' || d.status === 'OK') && dataUrl) {
+                    window.__epkbKegiatanPhotoThumbCache[cacheKey] = { data_url: dataUrl, ts: Date.now() };
+                    img.src = dataUrl;
+                    img.closest('.kegiatan-thumb-link,.kegiatan-gallery-item')?.classList.remove('is-loading','is-hidden');
+                    return;
+                }
+            } catch(e) {
+                console.warn('[E-PKB] thumbnail proxy gagal:', e);
+            } finally {
+                img.dataset.proxyLoading = '0';
+            }
+            hideBrokenThumb_(img);
+        }
+
+        function hideBrokenThumb_(img) {
+            if (!img) return;
+            img.onerror = null;
+            const wrap = img.closest('.kegiatan-thumb-link,.kegiatan-gallery-item');
+            if (wrap) wrap.classList.add('is-hidden');
+            img.removeAttribute('src');
         }
 
         function handleThumbImgError_(img) {
             if (!img) return;
             img.onerror = null;
-            img.src = EPKB_THUMB_PLACEHOLDER;
+            loadKegiatanThumbViaProxy_(img);
         }
 
         async function bukaPreviewFotoKegiatan_(idKegiatan, fotoUrl, thumbUrl, title, fileId, fotoIndex) {
@@ -2053,50 +2147,76 @@ ${label}`)) return;
             const meta = document.getElementById('attachmentPreviewMeta');
             if (!overlay || !img) return;
             overlay.classList.remove('hidden');
-            ttl.innerText = title || 'Preview Foto';
-            meta.innerText = 'Memuat foto...';
-            const directSrc = driveThumbnailUrl_(fotoUrl || thumbUrl || fileId, 1200);
-            img.src = directSrc;
-            const cacheKey = getPhotoCacheKey_(idKegiatan, 'full', fileId, fotoIndex || 1);
+            if (ttl) ttl.innerText = title || 'Preview Foto';
+            if (meta) meta.innerText = 'Memuat foto...';
+            img.classList.add('is-empty');
+            img.classList.remove('is-ready');
+            img.removeAttribute('src');
+
+            const idx = fotoIndex || 1;
+            const cacheKey = getPhotoCacheKey_(idKegiatan, 'full', fileId, idx);
             if (window.__epkbKegiatanPhotoDataCache[cacheKey]) {
                 img.src = window.__epkbKegiatanPhotoDataCache[cacheKey];
-                meta.innerText = 'Foto dimuat dari cache lokal.';
+                img.classList.remove('is-empty');
+                img.classList.add('is-ready');
+                if (meta) meta.innerText = 'Foto dimuat dari cache lokal.';
                 return;
             }
+
+            const directSrc = driveThumbnailUrl_(fotoUrl || thumbUrl || fileId, 1200);
             const session = ambilSession();
-            if (!session || !session.token || !idKegiatan) {
-                meta.innerText = fileId ? 'Foto dibuka dari thumbnail Drive.' : '';
+            let rendered = false;
+            if (session && session.token && idKegiatan) {
+                try {
+                    const p = new URLSearchParams();
+                    p.append('action', 'getKegiatanPhoto');
+                    p.append('token', session.token);
+                    p.append('id_kegiatan', idKegiatan);
+                    p.append('file_id', fileId || '');
+                    p.append('foto_index', String(idx));
+                    p.append('mode', 'preview');
+                    p.append('device_id', getDeviceId());
+                    p.append('app_version', EPKB_APP_VERSION);
+                    const r = await fetch(SCRIPT_URL, { method:'POST', body:p });
+                    const d = await r.json();
+                    const dataUrl = d.data_url || d.photo_data_url || d.result?.data_url || '';
+                    if ((d.status === 'sukses' || d.status === 'OK') && dataUrl) {
+                        window.__epkbKegiatanPhotoDataCache[cacheKey] = dataUrl;
+                        img.src = dataUrl;
+                        img.classList.remove('is-empty');
+                        img.classList.add('is-ready');
+                        if (meta) meta.innerText = 'Foto dimuat dari backend.';
+                        rendered = true;
+                    }
+                } catch(e) {
+                    console.warn('[E-PKB] preview proxy gagal:', e);
+                }
+            }
+            if (!rendered && directSrc) {
+                img.onerror = function() {
+                    img.onerror = null;
+                    img.removeAttribute('src');
+                    img.classList.add('is-empty');
+                    img.classList.remove('is-ready');
+                    if (meta) meta.innerText = 'Foto tidak dapat ditampilkan langsung. Gunakan tombol dokumen/foto Drive bila tersedia.';
+                };
+                img.onload = function() {
+                    img.onload = null;
+                    img.classList.remove('is-empty');
+                    img.classList.add('is-ready');
+                };
+                img.src = directSrc;
+                if (meta) meta.innerText = 'Foto ditampilkan dari thumbnail/link Drive.';
                 return;
             }
-            try {
-                const p = new URLSearchParams();
-                p.append('action', 'getKegiatanPhoto');
-                p.append('token', session.token);
-                p.append('id_kegiatan', idKegiatan);
-                p.append('file_id', fileId || '');
-                p.append('foto_index', String(fotoIndex || 1));
-                p.append('device_id', getDeviceId());
-                p.append('app_version', EPKB_APP_VERSION);
-                const r = await fetch(SCRIPT_URL, { method:'POST', body:p });
-                const d = await r.json();
-                const dataUrl = d.data_url || d.photo_data_url || d.result?.data_url || '';
-                if ((d.status === 'sukses' || d.status === 'OK') && dataUrl) {
-                    window.__epkbKegiatanPhotoDataCache[cacheKey] = dataUrl;
-                    img.src = dataUrl;
-                    meta.innerText = 'Foto dimuat dari backend.';
-                } else {
-                    meta.innerText = 'Foto ditampilkan dari thumbnail/link Drive.';
-                }
-            } catch(e) {
-                meta.innerText = 'Foto ditampilkan dari thumbnail/link Drive.';
-            }
+            if (!rendered && meta) meta.innerText = 'Foto tidak tersedia untuk preview.';
         }
 
         function tutupPreviewFotoKegiatan_() {
             const overlay = document.getElementById('attachmentPreviewOverlay');
             const img = document.getElementById('attachmentPreviewImg');
             if (overlay) overlay.classList.add('hidden');
-            if (img) img.src = '';
+            if (img) { img.src = ''; img.classList.add('is-empty'); img.classList.remove('is-ready'); }
         }
 
         function aturJenis() {
@@ -2308,7 +2428,9 @@ ${label}`)) return;
                 p.append('waktu_mulai', document.getElementById('tg-mulai').value || "-");
                 p.append('waktu_selesai', document.getElementById('tg-selesai').value || "-");
                 p.append('peserta', document.getElementById('tg-peserta').value || "-");
-                p.append('jml_hadir', document.getElementById('tg-jml').value || "0");
+                const jumlahPesertaHadir = document.getElementById('tg-jml').value || "0";
+                p.append('jml_hadir', jumlahPesertaHadir);
+                p.append('jumlah_peserta_hadir', jumlahPesertaHadir);
                 p.append('judul', judul);
                 p.append('topik', topik);
                 p.append('jenis', jenis);
@@ -2406,7 +2528,7 @@ ${label}`)) return;
             const desa = filterText(k.desa || k.nama_desa || k.nama_desa_kelurahan || k.nama_lokasi_luar || '-');
             const lokasi = filterText(k.lokasi || k.lokasi_kegiatan || '-');
             const tanggal = formatTanggalKegiatan_(k.tanggal_kegiatan || k.tanggal || k.waktu || k.created_at);
-            const peserta = filterText(k.jml_hadir || k.jumlah_peserta || k.peserta_hadir || '0');
+            const peserta = jumlahPesertaLabel_(k);
             const actions = mode === 'dashboard' ? '' : `<div class="kegiatan-actions mt-2">
                 <button type="button" onclick='bukaDetailKegiatanById_(${jsString_(id)})' class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-eye"></i> Detail</button>
                 <button type="button" onclick='bukaEditKegiatanById_(${jsString_(id)})' class="btn btn-sm btn-outline-warning me-1"><i class="bi bi-pencil"></i> Edit</button>
@@ -2510,7 +2632,7 @@ ${label}`)) return;
 
         function buildRiwayatSummaryClient_(rows, filters) {
             const total = rows.length;
-            const peserta = rows.reduce((a,r) => a + Number(r.jml_hadir || r.jumlah_peserta || 0), 0);
+            const peserta = rows.reduce((a,r) => a + jumlahPesertaKegiatan_(r), 0);
             const foto = rows.reduce((a,r) => a + getFotoItems_(r).length, 0);
             const dok = rows.reduce((a,r) => a + getDokumenItems_(r).length, 0);
             const luar = rows.filter(r => filterText(r.lokasi_scope || r.scope).toUpperCase() === 'LUAR_BINAAN').length;
@@ -2550,7 +2672,7 @@ ${label}`)) return;
                 ${infoRowHtml_('Waktu', `${filterText(k.waktu_mulai || '-')} - ${filterText(k.waktu_selesai || '-')}`)}
                 ${infoRowHtml_('Lokasi', `${filterText(k.desa || k.nama_desa_kelurahan || k.nama_lokasi_luar || '-')} / ${filterText(k.lokasi || k.lokasi_kegiatan || '-')}`)}
                 ${infoRowHtml_('Scope', lokasiScopeLabel_(k.lokasi_scope || k.scope))}
-                ${infoRowHtml_('Peserta', `${filterText(k.peserta || k.sasaran_kegiatan || '-')} (${filterText(k.jml_hadir || k.jumlah_peserta || 0)} orang)`)}
+                ${infoRowHtml_('Peserta', `${filterText(k.peserta || k.sasaran_kegiatan || '-')} (${jumlahPesertaLabel_(k)} orang)`)}
                 ${infoRowHtml_('Deskripsi', k.deskripsi || k.uraian_kegiatan || '-')}
                 <div class="mt-3">${dokumenButtonsHtml_(k, 'btn btn-sm btn-outline-success text-decoration-none')}</div>
                 ${galleryKegiatanHtml_(k)}
@@ -2571,7 +2693,7 @@ ${label}`)) return;
             if (!item) return alert('Data kegiatan tidak ditemukan di cache. Muat ulang riwayat.');
             document.getElementById('edit-kegiatan-id').value = id;
             document.getElementById('edit-kegiatan-judul').value = filterText(item.judul || item.judul_kegiatan);
-            document.getElementById('edit-kegiatan-peserta').value = filterText(item.jml_hadir || item.jumlah_peserta || 0);
+            document.getElementById('edit-kegiatan-peserta').value = jumlahPesertaLabel_(item);
             document.getElementById('edit-kegiatan-deskripsi').value = filterText(item.deskripsi || item.uraian_kegiatan);
             document.getElementById('kegiatanEditOverlay').classList.remove('hidden');
         }
@@ -2592,7 +2714,9 @@ ${label}`)) return;
                 p.append('token', session.token);
                 p.append('id_kegiatan', document.getElementById('edit-kegiatan-id').value);
                 p.append('judul', document.getElementById('edit-kegiatan-judul').value);
-                p.append('jml_hadir', document.getElementById('edit-kegiatan-peserta').value);
+                const jumlahPesertaHadir = document.getElementById('edit-kegiatan-peserta').value || '0';
+                p.append('jml_hadir', jumlahPesertaHadir);
+                p.append('jumlah_peserta_hadir', jumlahPesertaHadir);
                 p.append('deskripsi', document.getElementById('edit-kegiatan-deskripsi').value);
                 p.append('device_id', getDeviceId());
                 p.append('app_version', EPKB_APP_VERSION);
@@ -2662,7 +2786,7 @@ ${label}`)) return;
                 const topik = filterText(r.topik || r.jenis_kegiatan || 'LAINNYA') || 'LAINNYA';
                 if (!map[topik]) map[topik] = { topik, kegiatan:0, peserta:0, foto:0, dokumen:0 };
                 map[topik].kegiatan += 1;
-                map[topik].peserta += Number(r.jml_hadir || r.jumlah_peserta || 0);
+                map[topik].peserta += jumlahPesertaKegiatan_(r);
                 map[topik].foto += getFotoItems_(r).length;
                 map[topik].dokumen += getDokumenItems_(r).length;
             });
