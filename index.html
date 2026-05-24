@@ -8,8 +8,19 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        :root { --primary-color: #007bff; } body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; padding-bottom: 74px; }
-        .hidden { display: none !important; } .card-profile { border-radius: 15px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.08); overflow: hidden; }
+        :root { --primary-color: #0d6efd; --shell-height: 54px; --footer-height: 50px; }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; padding-top: var(--shell-height); padding-bottom: calc(var(--footer-height) + 16px); }
+        .hidden { display: none !important; }
+        .app-shell-header { position: fixed; top: 0; left: 0; right: 0; height: var(--shell-height); z-index: 1060; background: linear-gradient(135deg, #0d6efd, #0648a8); color: #fff; box-shadow: 0 3px 12px rgba(0,0,0,0.16); }
+        .app-shell-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; max-width: 1180px; margin: 0 auto; padding: 0 14px; }
+        .app-shell-title { font-size: 1rem; font-weight: 900; letter-spacing: .02em; white-space: nowrap; }
+        .app-shell-actions { display: flex; align-items: center; gap: 7px; }
+        .app-shell-actions .btn { width: 34px; height: 34px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; color: #fff; border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.08); }
+        .app-shell-actions .btn:hover { background: rgba(255,255,255,.18); color: #fff; }
+        .notification-panel { position: fixed; right: 14px; top: calc(var(--shell-height) + 8px); width: min(360px, calc(100vw - 28px)); z-index: 1070; border: 0; border-radius: 16px; box-shadow: 0 14px 34px rgba(15,23,42,.22); overflow: hidden; }
+        .notification-item { border-bottom: 1px solid #eef2f7; padding: 10px 12px; }
+        .notification-item:last-child { border-bottom: 0; }
+        .card-profile { border-radius: 15px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.08); overflow: hidden; }
         .profile-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid white; background: white; }
         .header-bg { background: linear-gradient(135deg, var(--primary-color), #0056b3); height: 100px; }
         .menu-card { transition: transform 0.2s; cursor: pointer; border-radius: 12px; height: 100%; }
@@ -24,10 +35,10 @@
         .mapping-scope { font-weight: 800; color: #0d6efd; }
         .mapping-warning { background:#fff3cd; border:1px solid #ffecb5; color:#664d03; border-radius:10px; padding:8px 10px; font-size:0.82rem; }
         .status-pill { border-radius: 999px; padding: 4px 10px; font-size: 0.75rem; font-weight: 800; }
-        .dashboard-topbar { position: sticky; top: 0; z-index: 1020; background: rgba(248,249,250,0.96); backdrop-filter: blur(6px); padding: 10px 2px; border-bottom: 1px solid rgba(222,226,230,0.65); }
-        .app-footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1040; background: rgba(255,255,255,0.97); border-top: 1px solid #dee2e6; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); padding: 7px 12px; text-align: center; line-height: 1.15; }
-        .app-footer .copyright { font-size: 0.78rem; font-weight: 700; color: #343a40; }
-        .app-footer .version { font-size: 0.68rem; color: #6c757d; margin-top: 2px; word-break: break-word; }
+        .dashboard-topbar { background: transparent; padding: 4px 0 10px; border-bottom: 0; }
+        .app-footer { position: fixed; left: 0; right: 0; bottom: 0; height: var(--footer-height); z-index: 1040; background: linear-gradient(135deg, #0d6efd, #0648a8); border-top: 1px solid rgba(255,255,255,0.18); box-shadow: 0 -2px 10px rgba(0,0,0,0.10); padding: 7px 12px; text-align: center; line-height: 1.15; color: #fff; }
+        .app-footer .copyright { font-size: 0.78rem; font-weight: 800; color: #fff; }
+        .app-footer .version { font-size: 0.68rem; color: rgba(255,255,255,0.82); margin-top: 2px; word-break: break-word; }
     </style>
 </head>
 <body>
@@ -57,6 +68,25 @@
         <img id="splash-logo" src="IPeKB26-PWA.png" alt="Logo IPKB Buleleng" style="width:150px;">
         <div class="spinner-border text-primary mt-3" role="status"></div>
         <h5 class="mt-3 text-secondary text-center">E-PKB Buleleng<br><small>Menyiapkan Data...</small></h5>
+    </div>
+
+    <header id="appShellHeader" class="app-shell-header hidden">
+        <div class="app-shell-inner">
+            <div class="app-shell-title">E-PKB</div>
+            <div class="app-shell-actions">
+                <button type="button" id="btnShellNotification" onclick="toggleNotifikasi()" class="btn" title="Notifikasi" aria-label="Notifikasi"><i class="bi bi-bell-fill"></i></button>
+                <button type="button" id="btnShellRefresh" data-refresh-btn="1" onclick="refreshData()" class="btn" title="Perbarui data" aria-label="Perbarui data"><i class="bi bi-arrow-clockwise"></i></button>
+                <button type="button" onclick="logout()" class="btn" title="Keluar" aria-label="Keluar"><i class="bi bi-box-arrow-right"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <div id="notificationPanel" class="card notification-panel hidden">
+        <div class="d-flex justify-content-between align-items-center px-3 py-2 bg-light border-bottom">
+            <div class="fw-bold small"><i class="bi bi-bell-fill text-primary me-1"></i> Notifikasi</div>
+            <button type="button" class="btn btn-sm btn-light" onclick="toggleNotifikasi(false)" title="Tutup"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div id="notificationList"><div class="notification-item small text-muted">Belum ada notifikasi.</div></div>
     </div>
 
     <div id="login-page" class="container mt-5 hidden">
@@ -127,12 +157,9 @@
     <input type="file" id="inputFoto" accept="image/jpeg,image/png,image/webp" class="hidden">
 
     <div id="dashboard-page" class="container mt-4 mb-5 hidden">
-        <div class="d-flex justify-content-between align-items-center mb-3 dashboard-topbar">
+        <div class="mb-3 dashboard-topbar">
             <h4 class="fw-bold m-0" id="dashboard-title">Beranda</h4>
-            <div>
-                <button onclick="refreshData()" id="btnRefresh" class="btn btn-sm btn-outline-primary fw-bold me-2 shadow-sm"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
-                <button onclick="logout()" class="btn btn-sm btn-outline-danger fw-bold shadow-sm">Keluar</button>
-            </div>
+            <div class="small text-muted">Gunakan ikon pada header untuk notifikasi, refresh, dan keluar.</div>
         </div>
         <div class="card card-profile mb-4" id="dashboardProfileCard">
             <div class="header-bg"></div>
@@ -170,15 +197,15 @@
             <div class="d-flex align-items-center">
                 <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
                 <div>
-                    <h4 class="fw-bold m-0" id="mappingVerifyTitle">Verifikasi Mapping Binaan</h4>
-                    <div class="small text-muted" id="mappingVerifySubtitle">Setujui atau tolak usulan wilayah binaan dari update profil.</div>
+                    <h4 class="fw-bold m-0" id="mappingVerifyTitle">Monitoring Wilayah Binaan</h4>
+                    <div class="small text-muted" id="mappingVerifySubtitle">Pantau status wilayah binaan dan usulan perubahan. Sistem menjaga satu wilayah tidak aktif untuk lebih dari satu PKB.</div>
                 </div>
             </div>
             <button onclick="muatPendingMappingBinaan()" id="btnRefreshMapping" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
         </div>
         <div id="mappingScopeNote" class="alert alert-light border small rounded-4 shadow-sm mb-3">Memuat status kewenangan admin...</div>
         <div class="row g-3 mb-3">
-            <div class="col-md-4"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">PENDING</div><div class="h4 fw-bold mb-0" id="mapPendingCount">0</div></div></div>
+            <div class="col-md-4"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Usulan/Perubahan</div><div class="h4 fw-bold mb-0" id="mapPendingCount">0</div></div></div>
             <div class="col-md-4"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Ditemukan</div><div class="h4 fw-bold mb-0" id="mapReturnedCount">0</div></div></div>
             <div class="col-md-4"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Status</div><div class="h6 fw-bold mb-0" id="mapLoadStatus">-</div></div></div>
         </div>
@@ -371,7 +398,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.1.8-UI-ACCOUNT-PROFILE-POLISH-V1-R1";
+        const EPKB_APP_VERSION = "0.2.8-GOVERNANCE-SHELL-V1";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -678,7 +705,12 @@
             ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page', 'verifikasi-binaan-page', 'superadmin-monitor-page'].forEach(pg => {
                 const el = document.getElementById(pg); if(el) el.classList.add('hidden');
             });
-            document.getElementById(id).classList.remove('hidden');
+            const target = document.getElementById(id);
+            if (target) target.classList.remove('hidden');
+            const shell = document.getElementById('appShellHeader');
+            const showShell = !['login-page', 'change-password-page'].includes(id);
+            if (shell) shell.classList.toggle('hidden', !showShell);
+            if (!showShell) toggleNotifikasi(false);
             window.scrollTo(0,0);
         }
 
@@ -703,15 +735,15 @@
             }, 800);
         };
 
-        async function refreshData(isAutoRefresh = false) {
-            const btn = document.getElementById('btnRefresh');
-            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Refreshing...'; }
+        async async function refreshData(isAutoRefresh = false) {
+            setRefreshButtonsBusy_(true);
             try {
                 const dataProfil = await validasiSession();
                 if (dataProfil) {
                     if (dataProfil.wajib_ganti_password === true) tampilkanHalamanGantiPassword(dataProfil);
                     else tampilkanDashboard(dataProfil);
-                    if(!isAutoRefresh) alert("Data session berhasil diperbarui!");
+                    if(!isAutoRefresh) tampilkanToastRingan_('Data session berhasil diperbarui.');
+                    muatNotifikasi(true).catch(()=>{});
                 } else {
                     alert("Session berakhir. Silakan login ulang.");
                     localStorage.removeItem('epkb_session');
@@ -722,8 +754,76 @@
                 printLog("Gagal Refresh: " + e, "orange");
                 if(!isAutoRefresh) alert("Gagal terhubung ke server.");
             } finally {
-                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh'; }
+                setRefreshButtonsBusy_(false);
             }
+        }
+
+
+        function setRefreshButtonsBusy_(busy) {
+            document.querySelectorAll('[data-refresh-btn="1"], #btnRefresh').forEach(function(btn) {
+                if (!btn) return;
+                btn.disabled = !!busy;
+                btn.innerHTML = busy ? '<span class="spinner-border spinner-border-sm"></span>' : '<i class="bi bi-arrow-clockwise"></i>';
+            });
+        }
+
+        function tampilkanToastRingan_(msg) {
+            try { console.log('[E-PKB]', msg); } catch(e) {}
+        }
+
+        function toggleNotifikasi(force) {
+            const panel = document.getElementById('notificationPanel');
+            if (!panel) return;
+            const show = (typeof force === 'boolean') ? force : panel.classList.contains('hidden');
+            panel.classList.toggle('hidden', !show);
+            if (show) muatNotifikasi(false).catch(()=>{});
+        }
+
+        async function muatNotifikasi(silent) {
+            const session = ambilSession();
+            const box = document.getElementById('notificationList');
+            if (!box) return;
+            if (!session || !session.token) {
+                box.innerHTML = '<div class="notification-item small text-muted">Login diperlukan untuk membaca notifikasi.</div>';
+                return;
+            }
+            if (!silent) box.innerHTML = '<div class="notification-item small text-muted"><span class="spinner-border spinner-border-sm"></span> Memuat notifikasi...</div>';
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'getMyNotifications');
+                p.append('token', session.token);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status === 'sukses' || d.status === 'OK') renderNotifikasi_(d.notifications || []);
+                else box.innerHTML = `<div class="notification-item small text-warning">${escapeHtml(d.pesan || d.code || 'Notifikasi belum tersedia.')}</div>`;
+            } catch(e) {
+                if (!silent) box.innerHTML = '<div class="notification-item small text-danger">Gagal memuat notifikasi.</div>';
+            }
+        }
+
+        function renderNotifikasi_(items) {
+            const box = document.getElementById('notificationList');
+            if (!box) return;
+            if (!items || !items.length) {
+                box.innerHTML = '<div class="notification-item small text-muted">Belum ada notifikasi baru.</div>';
+                return;
+            }
+            box.innerHTML = items.slice(0, 8).map(function(n) {
+                const tone = filterText(n.tone || n.color || '').toUpperCase();
+                const icon = tone === 'WARNING' || tone === 'YELLOW' ? 'bi-exclamation-triangle-fill text-warning' : (tone === 'DANGER' || tone === 'RED' ? 'bi-shield-exclamation text-danger' : 'bi-info-circle-fill text-primary');
+                return `<div class="notification-item small">
+                    <div class="fw-bold"><i class="bi ${icon} me-1"></i>${escapeHtml(n.title || 'Informasi')}</div>
+                    <div class="text-muted mt-1">${escapeHtml(n.message || '')}</div>
+                    ${n.timestamp ? `<div class="text-secondary mt-1" style="font-size:.72rem;">${escapeHtml(n.timestamp)}</div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function bukaResetPasswordAdmin() {
+            alert('Reset password oleh admin akan dibuat pada paket Admin Account Management. Untuk saat ini, pergantian password mandiri tetap tersedia melalui menu Ganti Password.');
         }
 
         async function prosesLogin() {
@@ -1043,21 +1143,20 @@
                     ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))']
                 ];
             } else if (isOperationalAdminRoleClient(roleAktif)) {
-                const verifLabel = roleAktif === 'ADMIN_PROVINSI' ? 'Monitoring Binaan' : 'Verifikasi Binaan';
                 menus = [
-                    ['bi-shield-check', '#20c997', verifLabel, 'bukaVerifikasiBinaan()'],
+                    ['bi-map-fill', '#20c997', 'Monitoring Wilayah', 'bukaVerifikasiBinaan()'],
                     ['bi-people-fill', '#0d6efd', 'Data PKB', 'alert("Menu Data PKB akan dibuat pada paket administrasi berikutnya.")'],
-                    ['bi-card-checklist', '#6f42c1', 'Audit Usulan', 'bukaVerifikasiBinaan()'],
+                    ['bi-key-fill', '#fd7e14', 'Reset Password', 'bukaResetPasswordAdmin()'],
+                    ['bi-send-check-fill', '#6f42c1', 'Tugas PKB', 'alert("Menu pemberian tugas PKB akan dibuat pada paket tugas admin berikutnya.")'],
                     ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'],
-                    ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))'],
-                    ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")']
+                    ['bi-unlock-fill', '#0dcaf0', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))']
                 ];
             } else {
                 menus = [
                     ['bi-journal-check', '#0d6efd', 'Lapor Tugas', 'siapkanLaporTugas()'],
                     ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'],
                     ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))'],
-                    ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")'],
+                    ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'toggleNotifikasi(true)'],
                     ['bi-file-earmark-text', '#6f42c1', 'Administrasi', 'alert("Menu Administrasi PKB")']
                 ];
             }
@@ -1090,11 +1189,11 @@
         function getMappingScopeNoteClient(role, data) {
             const r = filterText(role).toUpperCase();
             const scope = filterText(data && (data.scope_label || data.scope_code));
-            if (r === 'ADMIN_KECAMATAN') return 'Mode APPROVER: hanya dapat melihat dan memverifikasi usulan di kecamatan sendiri' + (scope ? ' (' + scope + ')' : '') + '.';
-            if (r === 'ADMIN_KABUPATEN') return 'Mode APPROVER: dapat melihat dan memverifikasi seluruh usulan Kabupaten Buleleng.';
-            if (r === 'ADMIN_PROVINSI') return 'Mode MONITORING: dapat melihat usulan untuk supervisi, tetapi approval rutin dilakukan Admin Kecamatan atau Admin Kabupaten.';
+            if (r === 'ADMIN_KECAMATAN') return 'Mode MONITORING: memantau wilayah PKB dalam kecamatan sendiri' + (scope ? ' (' + scope + ')' : '') + '. Perubahan wilayah dilakukan mandiri oleh PKB dan dibatasi validasi anti-duplikasi oleh sistem.';
+            if (r === 'ADMIN_KABUPATEN') return 'Mode MONITORING: memantau wilayah PKB Kabupaten Buleleng. Admin tidak menjadi approval rutin wilayah binaan.';
+            if (r === 'ADMIN_PROVINSI') return 'Mode MONITORING: supervisi lintas wilayah. Approval rutin wilayah binaan tidak digunakan pada governance ini.';
             if (r === 'SUPER_ADMIN') return 'Super Admin hanya blackbox/system monitor dan tidak menjadi approver operasional.';
-            return 'Role ini tidak berwenang mengakses verifikasi mapping binaan.';
+            return 'Role ini tidak berwenang mengakses monitoring wilayah binaan.';
         }
 
         function bukaSuperAdminMonitor() {
@@ -1184,12 +1283,10 @@
             const titleEl = document.getElementById('mappingVerifyTitle');
             const subEl = document.getElementById('mappingVerifySubtitle');
             const noteEl = document.getElementById('mappingScopeNote');
-            if (titleEl) titleEl.innerText = role === 'ADMIN_PROVINSI' ? 'Monitoring Mapping Binaan' : 'Verifikasi Mapping Binaan';
-            if (subEl) subEl.innerText = role === 'ADMIN_PROVINSI' ? 'Pantau usulan wilayah binaan. Approval rutin dilakukan Admin Kecamatan/Kabupaten.' : 'Setujui atau tolak usulan wilayah binaan sesuai scope admin.';
+            if (titleEl) titleEl.innerText = 'Monitoring Wilayah Binaan';
+            if (subEl) subEl.innerText = 'Pantau wilayah binaan PKB. Update wilayah dilakukan mandiri oleh PKB dan dicegah duplikasi aktif oleh sistem.';
             if (noteEl) {
-                const canVerify = (ctx.can_verify !== false) && canApproveMappingClient(role);
-                const cls = canVerify ? 'alert-success' : (role === 'ADMIN_PROVINSI' ? 'alert-info' : 'alert-warning');
-                noteEl.className = 'alert ' + cls + ' border small rounded-4 shadow-sm mb-3';
+                noteEl.className = 'alert alert-info border small rounded-4 shadow-sm mb-3';
                 noteEl.innerText = getMappingScopeNoteClient(role, ctx);
             }
         }
@@ -1203,7 +1300,7 @@
                 bukaHalaman('login-page');
                 return;
             }
-            list.innerHTML = '<div class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm"></span> Memuat PENDING...</div>';
+            list.innerHTML = '<div class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm"></span> Memuat data monitoring...</div>';
             if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Muat'; }
             try {
                 const p = new URLSearchParams();
@@ -1239,26 +1336,21 @@
             const list = document.getElementById('mappingVerifyList');
             const ctx = verifier || mappingVerifierContext || {};
             const role = filterText(ctx.role_akses || ctx.role).toUpperCase();
-            const canVerify = (ctx.can_verify !== false) && canApproveMappingClient(role);
             if (!records.length) {
-                const emptyNote = role === 'ADMIN_PROVINSI' ? 'Tidak ada usulan mapping_binaan PENDING dalam area monitoring.' : 'Tidak ada usulan mapping_binaan PENDING dalam scope admin ini.';
-                list.innerHTML = `<div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">${escapeHtml(emptyNote)}</div>`;
+                list.innerHTML = `<div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">Tidak ada usulan/perubahan wilayah yang perlu ditinjau. Sistem governance aktif menjaga satu wilayah hanya aktif untuk satu PKB.</div>`;
                 return;
             }
             list.innerHTML = records.map(r => {
-                const warn = r.has_active_same_scope ? '<div class="mapping-warning mt-2"><i class="bi bi-exclamation-triangle"></i> Scope ini sudah ACTIVE untuk user ini. Sebaiknya ditolak.</div>' : '';
-                const dup = r.has_pending_duplicate_same_scope ? '<div class="mapping-warning mt-2"><i class="bi bi-files"></i> Ada PENDING duplikat untuk scope yang sama.</div>' : '';
-                const actionHtml = canVerify ? `<div class="d-flex gap-2 mt-3 flex-wrap">
-                        <button class="btn btn-success fw-bold flex-fill" onclick="verifikasiMappingBinaan('${escapeJs(r.id_mapping)}', ${Number(r.row_number)}, 'APPROVE', '${escapeJs(r.nama_pkb)}', '${escapeJs(r.nama_desa_kelurahan)}')"><i class="bi bi-check-circle"></i> Setujui ACTIVE</button>
-                        <button class="btn btn-outline-danger fw-bold flex-fill" onclick="verifikasiMappingBinaan('${escapeJs(r.id_mapping)}', ${Number(r.row_number)}, 'REJECT', '${escapeJs(r.nama_pkb)}', '${escapeJs(r.nama_desa_kelurahan)}')"><i class="bi bi-x-circle"></i> Tolak</button>
-                    </div>` : `<div class="alert alert-info small mt-3 mb-0"><i class="bi bi-info-circle"></i> Mode monitoring/supervisi. Tombol approve/reject tidak tersedia untuk role ini.</div>`;
+                const warn = r.has_active_same_scope ? '<div class="mapping-warning mt-2"><i class="bi bi-exclamation-triangle"></i> Scope ini sudah ACTIVE. Sistem akan menolak aktivasi ganda untuk PKB berbeda.</div>' : '';
+                const dup = r.has_pending_duplicate_same_scope ? '<div class="mapping-warning mt-2"><i class="bi bi-files"></i> Ada catatan PENDING duplikat untuk scope yang sama.</div>' : '';
+                const actionHtml = `<div class="alert alert-info small mt-3 mb-0"><i class="bi bi-eye-fill"></i> Mode monitoring. Tidak ada tombol approve/reject pada governance ini.</div>`;
                 return `<div class="card mapping-card p-3 mb-3">
                     <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
                         <div>
                             <div class="fw-bold">${escapeHtml(r.nama_pkb || '-')}</div>
                             <div class="mapping-meta">${escapeHtml(r.id_user || '-')} | ${escapeHtml(r.id_nip || '-')} | ${escapeHtml(r.role_akses || '-')}</div>
                         </div>
-                        <span class="status-pill bg-warning text-dark">PENDING</span>
+                        <span class="status-pill bg-info text-dark">MONITORING</span>
                     </div>
                     <div class="mt-3 mapping-scope"><i class="bi bi-geo-alt-fill"></i> ${escapeHtml(r.nama_kecamatan || '-')} / ${escapeHtml(r.nama_desa_kelurahan || '-')}</div>
                     <div class="mapping-meta mt-1">scope_code: ${escapeHtml(r.scope_code || '-')} | source: ${escapeHtml(r.source_penetapan || '-')}</div>
@@ -1501,9 +1593,10 @@ ${label}`)) return;
                     simpanSessionLogin({ token: session.token, refresh_token: session.refresh_token, session: session, user: d.user || session.user || {}, dataProfil: profil });
                     tampilkanDashboard(profil);
                     bukaHalaman('detail-profil-page');
-                    const pendingCount = d.mapping_request && d.mapping_request.created_count ? d.mapping_request.created_count : 0;
-                    if (pendingCount > 0) alert('Profil berhasil disimpan. Perubahan wilayah binaan masuk PENDING dan menunggu verifikasi Admin operasional.');
-                    else alert('Profil berhasil disimpan.');
+                    const req = d.mapping_request || {};
+                    const changed = (req.activated_count || 0) + (req.deactivated_count || 0);
+                    if (changed > 0) alert(d.pesan || 'Profil berhasil disimpan. Wilayah binaan aktif diperbarui oleh sistem.');
+                    else alert(d.pesan || 'Profil berhasil disimpan.');
                 } else {
                     printLog("Gagal Simpan Data: " + (d.pesan || d.code), "red");
                     alert(d.pesan || 'Gagal menyimpan profil.');
@@ -1540,7 +1633,7 @@ ${label}`)) return;
             const selDesa = document.getElementById('tg-desa');
             selDesa.innerHTML = '<option value="">Memuat binaan...</option>';
             
-            fetch(`${SCRIPT_URL}?action=get_binaan&nip=${user.nip}`).then(res => res.json()).then(d => {
+            fetch(`${SCRIPT_URL}?action=get_binaan&id_user=${encodeURIComponent(user.id_user || user.nip || '')}`).then(res => res.json()).then(d => {
                 if(d.status === "sukses" && d.binaan.length > 0) {
                     let h = '<option value="">-- Pilih Desa Binaan --</option>';
                     d.binaan.forEach(b => h += `<option value="${b.id}" data-nama="${b.nama}">${b.nama} (${b.kec})</option>`);
