@@ -689,7 +689,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.2.9-REKAP-KEGIATAN-PKB-V1-R1";
+        const EPKB_APP_VERSION = "0.2.9-REKAP-KEGIATAN-PKB-V1-R1-R1";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -2564,14 +2564,63 @@ ${label}`)) return;
             return s || '-';
         }
 
+        function formatTempatKegiatanLabelClient_(k) {
+            k = k || {};
+            const scope = filterText(k.lokasi_scope || k.scope_lokasi || k.scope || '').toUpperCase();
+            const parts = [];
+            const seen = new Set();
+            function add(v) {
+                const s = filterText(v).trim();
+                if (!s || s === '-' || s.toUpperCase() === 'ALL') return;
+                const key = s.toUpperCase().replace(/\s+/g, ' ');
+                if (seen.has(key)) return;
+                seen.add(key);
+                parts.push(s);
+            }
+
+            // Urutan tampilan: Tempat/Detail Lokasi Kegiatan -> Desa -> Kecamatan -> Kabupaten -> Provinsi.
+            add(k.tempat_kegiatan_label || '');
+            if (!parts.length || parts[0].indexOf(' - ') < 0) {
+                parts.length = 0;
+                add(k.tempat_kegiatan || k.lokasi || k.lokasi_kegiatan || '');
+                if (scope === 'LUAR_BINAAN') {
+                    add(k.nama_lokasi_kegiatan || k.nama_lokasi_luar || k.lokasi_luar_binaan || '');
+                    add(k.desa || k.nama_desa || k.nama_desa_kelurahan || '');
+                    add(k.kecamatan || k.nama_kecamatan || '');
+                    add(k.kabupaten || k.nama_kabupaten || '');
+                    add(k.provinsi || k.nama_provinsi || '');
+                } else {
+                    add(k.desa || k.nama_desa || k.nama_desa_kelurahan || '');
+                    add(k.kecamatan || k.nama_kecamatan || '');
+                    add(k.kabupaten || k.nama_kabupaten || 'BULELENG');
+                    add(k.provinsi || k.nama_provinsi || 'BALI');
+                }
+            }
+            return parts.length ? parts.join(' - ') : '-';
+        }
+
+        function compareKegiatanTanggalAsc_(a, b) {
+            const ad = filterText(a.tanggal_kegiatan || a.tanggal || a.waktu || a.created_at).slice(0, 10);
+            const bd = filterText(b.tanggal_kegiatan || b.tanggal || b.waktu || b.created_at).slice(0, 10);
+            if (ad !== bd) return ad.localeCompare(bd);
+            const aj = filterText(a.judul_kegiatan || a.judul || '');
+            const bj = filterText(b.judul_kegiatan || b.judul || '');
+            const byTitle = aj.localeCompare(bj);
+            if (byTitle !== 0) return byTitle;
+            return Number(a.row_number || a.row_index || 0) - Number(b.row_number || b.row_index || 0);
+        }
+
+        function sortKegiatanTanggalAsc_(rows) {
+            return (rows || []).slice().sort(compareKegiatanTanggalAsc_);
+        }
+
         function renderKegiatanCardHtml_(k, mode) {
             const id = k.id_kegiatan || k.id || k.row_index || k.row_number || '';
             const title = filterText(k.judul || k.judul_kegiatan || '(Tanpa judul)');
             const topik = filterText(k.topik || k.jenis_kegiatan || '-');
             const jenis = filterText(k.jenis || k.sub_jenis_kegiatan || '');
             const scope = filterText(k.lokasi_scope || k.scope_lokasi || k.scope || 'DALAM_BINAAN');
-            const desa = filterText(k.desa || k.nama_desa || k.nama_desa_kelurahan || k.nama_lokasi_luar || '-');
-            const lokasi = filterText(k.lokasi || k.lokasi_kegiatan || '-');
+            const tempatLabel = formatTempatKegiatanLabelClient_(k);
             const tanggal = formatTanggalKegiatan_(k.tanggal_kegiatan || k.tanggal || k.waktu || k.created_at);
             const peserta = jumlahPesertaLabel_(k);
             const actions = mode === 'dashboard' ? '' : `<div class="kegiatan-actions mt-2">
@@ -2585,7 +2634,7 @@ ${label}`)) return;
                     <div class="flex-grow-1">
                         <button type="button" class="kegiatan-title-btn" onclick='bukaDetailKegiatanById_(${jsString_(id)})'>${escapeHtml(title)}</button>
                         <div class="small text-primary fw-bold mt-1">${escapeHtml(topik)}${jenis ? ' • ' + escapeHtml(jenis) : ''}${lampiranCountHtml_(k)}</div>
-                        <div class="small text-muted mt-1"><i class="bi bi-geo-alt"></i> ${escapeHtml(desa)} | ${escapeHtml(lokasi)}</div>
+                        <div class="small text-muted mt-1"><i class="bi bi-geo-alt"></i> ${escapeHtml(tempatLabel)}</div>
                         <div class="small text-muted"><i class="bi bi-calendar"></i> ${escapeHtml(tanggal)} | <i class="bi bi-people"></i> ${escapeHtml(peserta)} peserta | ${escapeHtml(lokasiScopeLabel_(scope))}</div>
                         <div class="mt-2">${fotoButtonHtml_(k)}${dokumenButtonsHtml_(k)}</div>
                         ${actions}
@@ -2661,7 +2710,7 @@ ${label}`)) return;
             if (summary) summary.innerHTML = '';
             try {
                 const hasil = await ambilKegiatanPkb_(200, filters);
-                const rows = hasil.data || [];
+                const rows = sortKegiatanTanggalAsc_(hasil.data || []);
                 window.__epkbRekapRows = rows;
                 if (summary) summary.innerHTML = buildRiwayatSummaryClient_(rows, filters);
                 if (!rows.length) {
@@ -2715,8 +2764,8 @@ ${label}`)) return;
                 ${infoRowHtml_('Topik', (k.topik || k.jenis_kegiatan || '-') + (k.jenis || k.sub_jenis_kegiatan ? ' / ' + (k.jenis || k.sub_jenis_kegiatan) : ''))}
                 ${infoRowHtml_('Tanggal', formatTanggalKegiatan_(k.tanggal_kegiatan || k.tanggal || k.waktu || k.created_at))}
                 ${infoRowHtml_('Waktu', `${filterText(k.waktu_mulai || '-')} - ${filterText(k.waktu_selesai || '-')}`)}
-                ${infoRowHtml_('Lokasi', `${filterText(k.desa || k.nama_desa_kelurahan || k.nama_lokasi_luar || '-')} / ${filterText(k.lokasi || k.lokasi_kegiatan || '-')}`)}
-                ${infoRowHtml_('Scope', lokasiScopeLabel_(k.lokasi_scope || k.scope))}
+                ${infoRowHtml_('Tempat Kegiatan', formatTempatKegiatanLabelClient_(k))}
+                ${infoRowHtml_('Lokasi', lokasiScopeLabel_(k.lokasi_scope || k.scope))}
                 ${infoRowHtml_('Peserta', `${filterText(k.peserta || k.sasaran_kegiatan || '-')} (${jumlahPesertaLabel_(k)} orang)`)}
                 ${infoRowHtml_('Deskripsi', k.deskripsi || k.uraian_kegiatan || '-')}
                 <div class="mt-3">${dokumenButtonsHtml_(k, 'btn btn-sm btn-outline-success text-decoration-none')}</div>
@@ -2889,9 +2938,10 @@ ${label}`)) return;
             box.innerHTML = '<div class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm"></span> Memuat rekap kegiatan...</div>';
             try {
                 const data = await ambilRekapKegiatanPkb_(filters);
+                data.rows = sortKegiatanTanggalAsc_(data.rows || []);
                 window.__epkbRekapPayload = data;
-                window.__epkbRekapDetailRows = data.rows || [];
-                window.__epkbRekapRows = data.rows || [];
+                window.__epkbRekapDetailRows = data.rows;
+                window.__epkbRekapRows = data.rows;
 
                 const titleEl = document.getElementById('rekapKegiatanTitle');
                 const subEl = document.getElementById('rekapKegiatanSubtitle');
@@ -2935,7 +2985,7 @@ ${label}`)) return;
                 <div class="card border-0 shadow-sm rounded-4 p-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="fw-bold">Detail Kegiatan</div>
-                        <div class="small text-muted">Tanggal, topik, lokasi, peserta, lampiran, status</div>
+                        <div class="small text-muted">Tanggal, topik, tempat kegiatan, peserta, lampiran, status</div>
                     </div>
                     ${renderRekapDetailTable_(rows)}
                 </div>`;
@@ -2976,8 +3026,8 @@ ${label}`)) return;
                             <th>Judul Kegiatan</th>
                             <th>Topik</th>
                             <th>Jenis/Sub Jenis</th>
-                            <th>Lokasi Kegiatan</th>
-                            <th>Scope/Lokasi</th>
+                            <th>Tempat Kegiatan</th>
+                            <th>Lokasi</th>
                             <th>Peserta Kegiatan</th>
                             <th class="text-end">Hadir</th>
                             <th class="text-end">Foto</th>
@@ -2990,8 +3040,8 @@ ${label}`)) return;
                         <td><button type="button" class="kegiatan-title-btn" onclick='bukaDetailKegiatanFromRekap_(${jsString_(r.id_kegiatan || '')})'>${escapeHtml(r.judul_kegiatan || '-')}</button></td>
                         <td>${escapeHtml(r.topik_kegiatan || '-')}</td>
                         <td>${escapeHtml((r.jenis_kegiatan || '-') + (r.sub_jenis_kegiatan && r.sub_jenis_kegiatan !== r.jenis_kegiatan ? ' / ' + r.sub_jenis_kegiatan : ''))}</td>
-                        <td>${escapeHtml((r.nama_lokasi_kegiatan || r.nama_desa_kelurahan || '-') + ' | ' + (r.lokasi_kegiatan || '-'))}</td>
-                        <td>${escapeHtml(r.scope_label || lokasiScopeLabel_(r.lokasi_scope))}</td>
+                        <td>${escapeHtml(r.tempat_kegiatan_label || formatTempatKegiatanLabelClient_(r))}</td>
+                        <td>${escapeHtml(r.lokasi_label || r.scope_label || lokasiScopeLabel_(r.lokasi_scope))}</td>
                         <td>${escapeHtml(r.peserta_kegiatan || '-')}</td>
                         <td class="text-end">${escapeHtml(r.jumlah_peserta_hadir || 0)}</td>
                         <td class="text-end">${escapeHtml(r.foto_count || 0)}</td>
@@ -3031,7 +3081,7 @@ ${label}`)) return;
         function exportRekapKegiatanCsv_() {
             const rows = window.__epkbRekapDetailRows || [];
             if (!rows.length) return alert('Tidak ada data untuk diekspor.');
-            const headers = ['Tanggal','Judul Kegiatan','Topik Kegiatan','Jenis Kegiatan','Sub Jenis Kegiatan','Lokasi Kegiatan','Scope/Lokasi','Peserta Kegiatan','Jumlah Peserta Hadir','Jumlah Foto','Jumlah Dokumen','Status'];
+            const headers = ['Tanggal','Judul Kegiatan','Topik Kegiatan','Jenis Kegiatan','Sub Jenis Kegiatan','Tempat Kegiatan','Lokasi','Peserta Kegiatan','Jumlah Peserta Hadir','Jumlah Foto','Jumlah Dokumen','Status'];
             const lines = [headers.map(escapeCsv_).join(',')];
             rows.forEach(r => {
                 lines.push([
@@ -3040,8 +3090,8 @@ ${label}`)) return;
                     r.topik_kegiatan || '',
                     r.jenis_kegiatan || '',
                     r.sub_jenis_kegiatan || '',
-                    ((r.nama_lokasi_kegiatan || r.nama_desa_kelurahan || '') + ' | ' + (r.lokasi_kegiatan || '')),
-                    r.scope_label || r.lokasi_scope || '',
+                    r.tempat_kegiatan_label || formatTempatKegiatanLabelClient_(r),
+                    r.lokasi_label || r.scope_label || r.lokasi_scope || '',
                     r.peserta_kegiatan || '',
                     r.jumlah_peserta_hadir || 0,
                     r.foto_count || 0,
@@ -3089,8 +3139,8 @@ ${label}`)) return;
                     ${printCardHtml_('Luar Binaan', summary.kegiatan_luar_binaan || 0)}
                 </div>
                 <table>
-                    <thead><tr><th>Tanggal</th><th>Judul</th><th>Topik</th><th>Jenis/Sub Jenis</th><th>Lokasi</th><th>Scope</th><th>Peserta</th><th>Hadir</th><th>Foto</th><th>Dokumen</th><th>Status</th></tr></thead>
-                    <tbody>${rows.map(r => `<tr><td>${escapeHtml(r.tanggal_label || r.tanggal || '')}</td><td>${escapeHtml(r.judul_kegiatan || '')}</td><td>${escapeHtml(r.topik_kegiatan || '')}</td><td>${escapeHtml((r.jenis_kegiatan || '') + (r.sub_jenis_kegiatan ? ' / ' + r.sub_jenis_kegiatan : ''))}</td><td>${escapeHtml((r.nama_lokasi_kegiatan || r.nama_desa_kelurahan || '') + ' | ' + (r.lokasi_kegiatan || ''))}</td><td>${escapeHtml(r.scope_label || r.lokasi_scope || '')}</td><td>${escapeHtml(r.peserta_kegiatan || '')}</td><td class="right">${escapeHtml(r.jumlah_peserta_hadir || 0)}</td><td class="right">${escapeHtml(r.foto_count || 0)}</td><td class="right">${escapeHtml(r.dokumen_count || 0)}</td><td>${escapeHtml(r.status || '')}</td></tr>`).join('')}</tbody>
+                    <thead><tr><th>Tanggal</th><th>Judul</th><th>Topik</th><th>Jenis/Sub Jenis</th><th>Tempat Kegiatan</th><th>Lokasi</th><th>Peserta</th><th>Hadir</th><th>Foto</th><th>Dokumen</th><th>Status</th></tr></thead>
+                    <tbody>${rows.map(r => `<tr><td>${escapeHtml(r.tanggal_label || r.tanggal || '')}</td><td>${escapeHtml(r.judul_kegiatan || '')}</td><td>${escapeHtml(r.topik_kegiatan || '')}</td><td>${escapeHtml((r.jenis_kegiatan || '') + (r.sub_jenis_kegiatan ? ' / ' + r.sub_jenis_kegiatan : ''))}</td><td>${escapeHtml(r.tempat_kegiatan_label || formatTempatKegiatanLabelClient_(r))}</td><td>${escapeHtml(r.lokasi_label || r.scope_label || r.lokasi_scope || '')}</td><td>${escapeHtml(r.peserta_kegiatan || '')}</td><td class="right">${escapeHtml(r.jumlah_peserta_hadir || 0)}</td><td class="right">${escapeHtml(r.foto_count || 0)}</td><td class="right">${escapeHtml(r.dokumen_count || 0)}</td><td>${escapeHtml(r.status || '')}</td></tr>`).join('')}</tbody>
                 </table></body></html>`;
             const w = window.open('', '_blank');
             if (!w) return alert('Popup cetak diblokir browser. Izinkan popup untuk mencetak rekap.');
