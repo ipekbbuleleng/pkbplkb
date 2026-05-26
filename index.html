@@ -355,7 +355,21 @@
                     <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Email</label><input id="adminCreateEmail" class="form-control form-control-sm" placeholder="Opsional"></div>
                     <div class="col-12"><label class="form-label small fw-bold text-muted mb-1">Catatan</label><input id="adminCreateCatatan" class="form-control form-control-sm" placeholder="Opsional, misalnya dasar pembuatan akun"></div>
                 </div>
-                <div class="alert alert-info small mt-3 mb-2 py-2">Catatan: tambah user membuat akun login di <code>users_login</code>. Untuk PKB/PLKB baru, pastikan mapping wilayah binaan aktif tersedia agar akses operasional berjalan.</div>
+                <div class="row g-2 mt-2">
+                    <div class="col-md-6">
+                        <div class="form-check small">
+                            <input class="form-check-input" type="checkbox" id="adminCreateAutoMapping" checked>
+                            <label class="form-check-label" for="adminCreateAutoMapping"><b>Buat mapping_binaan otomatis</b> bila scope wilayah tersedia dan tidak konflik.</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check small">
+                            <input class="form-check-input" type="checkbox" id="adminCreateSeedProfile" checked>
+                            <label class="form-check-label" for="adminCreateSeedProfile"><b>Buat profil dasar</b> di profil_data untuk user baru.</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-info small mt-3 mb-2 py-2">Catatan: tambah PKB/PLKB baru akan membuat akun di <code>users_login</code>, membuat <code>mapping_binaan ACTIVE</code> otomatis bila kode kecamatan/desa valid, dan menolak wilayah yang sudah ACTIVE pada PKB/PLKB lain.</div>
                 <button type="button" onclick="tambahUserSuperAdmin_()" id="btnAdminCreateUser" class="btn btn-primary btn-sm fw-bold"><i class="bi bi-person-plus-fill"></i> Buat User</button>
             </div>
         </div>
@@ -823,7 +837,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.2.13-ADMIN-USER-SUMMARY-SCOPE-V1";
+        const EPKB_APP_VERSION = "0.2.14-ADMIN-USER-PROVISIONING-V1";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -1446,7 +1460,12 @@
             const username = document.getElementById('adminCreateUsername') ? document.getElementById('adminCreateUsername').value.trim() : '';
             const nama = document.getElementById('adminCreateNama') ? document.getElementById('adminCreateNama').value.trim() : '';
             if (!username || !nama) { alert('Username dan nama user wajib diisi.'); return; }
-            if (!confirm('Buat user baru?\n\nNama: ' + nama + '\nUsername: ' + username + '\nRole: ' + role + '\nPassword sementara: 12345678')) return;
+            const autoMapping = document.getElementById('adminCreateAutoMapping') ? document.getElementById('adminCreateAutoMapping').checked : true;
+            const seedProfile = document.getElementById('adminCreateSeedProfile') ? document.getElementById('adminCreateSeedProfile').checked : true;
+            const kodeKecPreview = document.getElementById('adminCreateKodeKec') ? document.getElementById('adminCreateKodeKec').value.trim() : '';
+            const kodeDesaPreview = document.getElementById('adminCreateKodeDesa') ? document.getElementById('adminCreateKodeDesa').value.trim() : '';
+            const mappingNote = autoMapping ? ('\nAuto mapping: YA' + (kodeDesaPreview ? ' (DESA ' + kodeDesaPreview + ')' : (kodeKecPreview ? ' (KECAMATAN ' + kodeKecPreview + ')' : ''))) : '\nAuto mapping: TIDAK';
+            if (!confirm('Buat user baru?\n\nNama: ' + nama + '\nUsername: ' + username + '\nRole: ' + role + '\nPassword sementara: 12345678' + mappingNote + '\nSeed profil: ' + (seedProfile ? 'YA' : 'TIDAK'))) return;
             const btn = document.getElementById('btnAdminCreateUser');
             if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Membuat...'; }
             try {
@@ -1471,14 +1490,20 @@
                 p.append('no_hp', document.getElementById('adminCreateHp') ? document.getElementById('adminCreateHp').value.trim() : '');
                 p.append('email', document.getElementById('adminCreateEmail') ? document.getElementById('adminCreateEmail').value.trim() : '');
                 p.append('catatan', document.getElementById('adminCreateCatatan') ? document.getElementById('adminCreateCatatan').value.trim() : '');
+                p.append('auto_mapping', (document.getElementById('adminCreateAutoMapping') && document.getElementById('adminCreateAutoMapping').checked) ? 'TRUE' : 'FALSE');
+                p.append('seed_profile', (document.getElementById('adminCreateSeedProfile') && document.getElementById('adminCreateSeedProfile').checked) ? 'TRUE' : 'FALSE');
                 p.append('device_id', getDeviceId());
                 p.append('app_version', EPKB_APP_VERSION);
                 p.append('user_agent', navigator.userAgent || '');
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                 const d = await res.json();
                 if (d.status === 'sukses' || d.success === true) {
-                    alert('User berhasil dibuat.\n\nID User: ' + ((d.user && d.user.id_user) || '-') + '\nUsername: ' + username + '\nPassword sementara: ' + (d.temporary_password || '12345678'));
+                    const mapInfo = d.mapping ? ('\nMapping: ' + (d.mapping.status || '-') + (d.mapping.scope_code ? ' (' + d.mapping.scope_code + ')' : '')) : '';
+                    const profInfo = d.profile_seed ? ('\nProfil: ' + (d.profile_seed.status || '-')) : '';
+                    alert('User berhasil dibuat.\n\nID User: ' + ((d.user && d.user.id_user) || '-') + '\nUsername: ' + username + '\nPassword sementara: ' + (d.temporary_password || '12345678') + mapInfo + profInfo);
                     ['adminCreateIdUser','adminCreateUsername','adminCreateNama','adminCreateIdPkb','adminCreateIdNip','adminCreateNip','adminCreateKodeKec','adminCreateNamaKec','adminCreateKodeDesa','adminCreateNamaDesa','adminCreateJabatan','adminCreateUnit','adminCreateHp','adminCreateEmail','adminCreateCatatan'].forEach(function(id){ const el = document.getElementById(id); if (el) el.value = ''; });
+                    const autoMapEl = document.getElementById('adminCreateAutoMapping'); if (autoMapEl) autoMapEl.checked = true;
+                    const seedProfEl = document.getElementById('adminCreateSeedProfile'); if (seedProfEl) seedProfEl.checked = true;
                     muatTargetResetPasswordAdmin_();
                 } else {
                     alert(d.pesan || d.message || 'Gagal membuat user.');
@@ -1511,7 +1536,10 @@
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
                 const d = await res.json();
                 if (d.status === 'sukses' || d.success === true) {
-                    alert(d.pesan || ('User berhasil di' + (active ? 'aktifkan.' : 'nonaktifkan.')));
+                    let msg = d.pesan || ('User berhasil di' + (active ? 'aktifkan.' : 'nonaktifkan.'));
+                    if (d.mapping_update && d.mapping_update.deactivated_count) msg += '\nMapping dinonaktifkan: ' + d.mapping_update.deactivated_count;
+                    if (active && d.mapping_update && d.mapping_update.status) msg += '\nStatus mapping: ' + d.mapping_update.status;
+                    alert(msg);
                     muatTargetResetPasswordAdmin_();
                 } else {
                     alert(d.pesan || d.message || 'Gagal mengubah status user.');
