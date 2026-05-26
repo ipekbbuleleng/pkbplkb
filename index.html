@@ -362,22 +362,29 @@
 
         <div class="filter-card shadow-sm p-3 mb-3">
             <div class="row g-2 align-items-end">
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <label class="form-label small fw-bold text-muted mb-1">Cari User</label>
-                    <input id="adminResetSearch" class="form-control form-control-sm" placeholder="Nama, username, ID user, NIP, kecamatan, desa">
+                    <input id="adminResetSearch" class="form-control form-control-sm" placeholder="Nama, username, ID user, NIP">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label small fw-bold text-muted mb-1">Role</label>
                     <select id="adminResetRole" class="form-select form-select-sm">
                         <option value="">Semua Role</option>
-                        <option value="PKB">PKB</option>
-                        <option value="PLKB">PLKB</option>
-                        <option value="ADMIN_KECAMATAN">ADMIN_KECAMATAN</option>
-                        <option value="ADMIN_KABUPATEN">ADMIN_KABUPATEN</option>
-                        <option value="ADMIN_PROVINSI">ADMIN_PROVINSI</option>
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted mb-1">Scope</label>
+                    <select id="adminResetScopeMode" class="form-select form-select-sm">
+                        <option value="">Semua Scope</option>
+                        <option value="KECAMATAN">Kecamatan</option>
+                        <option value="DESA">Desa/Kelurahan</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted mb-1">Kode/Nama Scope</label>
+                    <input id="adminResetScopeQuery" class="form-control form-control-sm" placeholder="510809 / TEJAKULA">
+                </div>
+                <div class="col-md-1">
                     <label class="form-label small fw-bold text-muted mb-1">Batas</label>
                     <select id="adminResetLimit" class="form-select form-select-sm">
                         <option value="50">50</option>
@@ -385,7 +392,7 @@
                         <option value="200">200</option>
                     </select>
                 </div>
-                <div class="col-md-2 d-flex gap-2">
+                <div class="col-md-1 d-flex gap-2">
                     <button onclick="muatTargetResetPasswordAdmin_()" class="btn btn-sm btn-primary fw-bold flex-fill">Cari</button>
                     <button onclick="resetFilterAdminPassword_()" class="btn btn-sm btn-outline-secondary fw-bold" title="Reset filter"><i class="bi bi-x-circle"></i></button>
                 </div>
@@ -407,6 +414,7 @@
             <div class="col-md-3"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Status</div><div class="h6 fw-bold mb-0" id="adminResetStatus">-</div></div></div>
         </div>
 
+        <div id="adminUserRoleSummary" class="mb-3"></div>
         <div id="adminResetList"></div>
     </div>
 
@@ -815,7 +823,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.2.12-ADMIN-USER-MANAGEMENT-V1";
+        const EPKB_APP_VERSION = "0.2.13-ADMIN-USER-SUMMARY-SCOPE-V1";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -1225,15 +1233,37 @@
             }
             bukaHalaman('admin-reset-password-page');
             const sub = document.getElementById('adminResetPasswordSubtitle');
-            if (sub) sub.innerText = role === 'SUPER_ADMIN' ? 'Super Admin dapat menambah user, menonaktifkan user, dan mereset password user.' : (role === 'ADMIN_KABUPATEN' ? 'Admin Kabupaten dapat mereset password PKB/PLKB Kabupaten Buleleng.' : 'Admin Kecamatan dapat mereset password PKB/PLKB dalam kecamatannya.');
+            if (sub) sub.innerText = role === 'SUPER_ADMIN' ? 'Super Admin dapat menambah user, menonaktifkan user, dan mereset password user.' : (role === 'ADMIN_KABUPATEN' ? 'Admin Kabupaten dapat mereset password PKB/PLKB dan Admin Kecamatan sesuai kewenangan kabupaten.' : 'Admin Kecamatan dapat melihat PKB/PLKB dan akun Admin Kecamatan dalam kecamatannya.');
             const createPanel = document.getElementById('adminCreateUserPanel');
             if (createPanel) createPanel.classList.toggle('hidden', role !== 'SUPER_ADMIN');
+            setupAdminResetRoleOptions_({ role_akses: role });
+            const summary = document.getElementById('adminUserRoleSummary');
+            if (summary) summary.innerHTML = '';
             muatTargetResetPasswordAdmin_();
+        }
+
+        function setupAdminResetRoleOptions_(actor) {
+            const sel = document.getElementById('adminResetRole');
+            if (!sel) return;
+            const current = sel.value || '';
+            const role = filterText((actor || {}).role_akses || (actor || {}).role).toUpperCase();
+            let allowed = (actor && actor.allowed_role_filters) ? actor.allowed_role_filters.slice() : [];
+            if (!allowed.length) {
+                if (role === 'SUPER_ADMIN') allowed = ['PKB', 'PLKB', 'ADMIN_KECAMATAN', 'ADMIN_KABUPATEN', 'ADMIN_PROVINSI'];
+                else if (role === 'ADMIN_KABUPATEN') allowed = ['PKB', 'PLKB', 'ADMIN_KECAMATAN'];
+                else if (role === 'ADMIN_KECAMATAN') allowed = ['PKB', 'PLKB', 'ADMIN_KECAMATAN'];
+                else allowed = ['PKB', 'PLKB'];
+            }
+            sel.innerHTML = '<option value="">Semua Role</option>' + allowed.map(function(r){ return '<option value="' + escapeHtml(r) + '">' + escapeHtml(r) + '</option>'; }).join('');
+            if (current && allowed.indexOf(current) >= 0) sel.value = current;
+            else sel.value = '';
         }
 
         function resetFilterAdminPassword_() {
             const s = document.getElementById('adminResetSearch'); if (s) s.value = '';
             const r = document.getElementById('adminResetRole'); if (r) r.value = '';
+            const sm = document.getElementById('adminResetScopeMode'); if (sm) sm.value = '';
+            const sq = document.getElementById('adminResetScopeQuery'); if (sq) sq.value = '';
             const l = document.getElementById('adminResetLimit'); if (l) l.value = '100';
             const inactive = document.getElementById('adminIncludeInactive'); if (inactive) inactive.checked = false;
             muatTargetResetPasswordAdmin_();
@@ -1257,6 +1287,8 @@
                 p.append('user_agent', navigator.userAgent || '');
                 p.append('search', document.getElementById('adminResetSearch') ? document.getElementById('adminResetSearch').value : '');
                 p.append('role', document.getElementById('adminResetRole') ? document.getElementById('adminResetRole').value : '');
+                p.append('scope_mode', document.getElementById('adminResetScopeMode') ? document.getElementById('adminResetScopeMode').value : '');
+                p.append('scope_query', document.getElementById('adminResetScopeQuery') ? document.getElementById('adminResetScopeQuery').value : '');
                 p.append('limit', document.getElementById('adminResetLimit') ? document.getElementById('adminResetLimit').value : '100');
                 p.append('include_inactive', document.getElementById('adminIncludeInactive') && document.getElementById('adminIncludeInactive').checked ? 'TRUE' : 'FALSE');
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
@@ -1291,12 +1323,14 @@
                 const role = filterText(a.role_akses).toUpperCase();
                 scope.innerText = role === 'ADMIN_KECAMATAN' ? (a.nama_kecamatan || a.kode_kecamatan || 'Kecamatan') : (role === 'ADMIN_KABUPATEN' ? 'Kabupaten' : (role === 'SUPER_ADMIN' ? 'Semua' : role || '-'));
             }
+            const actor = payload.actor || {};
+            setupAdminResetRoleOptions_(actor);
+            renderAdminUserRoleSummary_(payload.summary_by_role || []);
             if (!list) return;
             if (!records.length) {
                 list.innerHTML = '<div class="card border-0 shadow-sm p-4 rounded-4 text-muted">Tidak ada user sesuai filter.</div>';
                 return;
             }
-            const actor = payload.actor || {};
             const actorRole = filterText(actor.role_akses).toUpperCase();
             const actorId = filterText(actor.id_user);
             list.innerHTML = records.map(function(u) {
@@ -1326,6 +1360,32 @@
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        function renderAdminUserRoleSummary_(summary) {
+            const box = document.getElementById('adminUserRoleSummary');
+            if (!box) return;
+            summary = summary || [];
+            if (!summary.length) {
+                box.innerHTML = '';
+                return;
+            }
+            box.innerHTML = `<div class="card border-0 shadow-sm rounded-4 p-3">
+                <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-2">
+                    <div>
+                        <div class="fw-bold"><i class="bi bi-bar-chart-fill text-primary me-1"></i> Ringkasan User per Role</div>
+                        <div class="small text-muted">Ringkasan mengikuti scope actor dan filter wilayah aktif. Kolom login dihitung dari last_login_at.</div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light"><tr><th>Role</th><th class="text-end">Total</th><th class="text-end">Aktif</th><th class="text-end">Nonaktif</th><th class="text-end">Sudah Login</th><th class="text-end">Belum Login</th><th class="text-end">Wajib Ganti</th></tr></thead>
+                        <tbody>${summary.map(function(r){
+                            return `<tr><td class="fw-bold">${escapeHtml(r.role_akses || '-')}</td><td class="text-end">${Number(r.total || 0)}</td><td class="text-end text-success fw-bold">${Number(r.active || 0)}</td><td class="text-end text-secondary fw-bold">${Number(r.inactive || 0)}</td><td class="text-end">${Number(r.logged_in || 0)}</td><td class="text-end">${Number(r.never_login || 0)}</td><td class="text-end text-warning fw-bold">${Number(r.force_change || 0)}</td></tr>`;
+                        }).join('')}</tbody>
+                    </table>
+                </div>
+            </div>`;
         }
 
         async function resetPasswordUserAdmin_(idUser, namaUser, username) {
