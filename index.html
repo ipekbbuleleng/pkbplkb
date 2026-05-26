@@ -302,6 +302,115 @@
     </div>
 
 
+    <div id="admin-reset-password-page" class="container mt-4 mb-5 hidden">
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+            <div class="d-flex align-items-center">
+                <button onclick="bukaHalaman('dashboard-page')" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
+                <div>
+                    <h4 class="fw-bold m-0">Kelola User & Reset Password</h4>
+                    <div class="small text-muted" id="adminResetPasswordSubtitle">Reset password, tambah user, dan nonaktifkan user sesuai kewenangan.</div>
+                </div>
+            </div>
+            <button onclick="muatTargetResetPasswordAdmin_()" id="btnAdminResetLoad" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
+        </div>
+
+        <div class="alert alert-warning small rounded-4 shadow-sm border-0 mb-3">
+            <div class="fw-bold"><i class="bi bi-shield-lock-fill me-1"></i> Catatan keamanan</div>
+            Reset password akan mengubah password sementara menjadi <b>12345678</b>, mengaktifkan <b>wajib ganti password</b>, menghapus kunci akun sementara, dan mencabut session aktif user target. Super Admin juga dapat menambah user dan menonaktifkan user. Gunakan hanya bila diperlukan.
+        </div>
+
+        <div id="adminCreateUserPanel" class="card border-0 shadow-sm rounded-4 p-3 mb-3 hidden">
+            <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-2">
+                <div>
+                    <div class="fw-bold"><i class="bi bi-person-plus-fill text-primary me-1"></i> Tambah User Baru</div>
+                    <div class="small text-muted">Khusus Super Admin. Akun baru memakai password sementara <b>12345678</b> dan wajib ganti password saat login pertama.</div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAdminCreateUserForm_()"><i class="bi bi-chevron-down"></i> Buka/Tutup</button>
+            </div>
+            <div id="adminCreateUserForm" class="hidden mt-2">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted mb-1">Role</label>
+                        <select id="adminCreateRole" class="form-select form-select-sm" onchange="aturFormTambahUserAdmin_()">
+                            <option value="PKB">PKB</option>
+                            <option value="PLKB">PLKB</option>
+                            <option value="ADMIN_KECAMATAN">ADMIN_KECAMATAN</option>
+                            <option value="ADMIN_KABUPATEN">ADMIN_KABUPATEN</option>
+                            <option value="ADMIN_PROVINSI">ADMIN_PROVINSI</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Username</label><input id="adminCreateUsername" class="form-control form-control-sm" placeholder="Contoh: PKB055"></div>
+                    <div class="col-md-6"><label class="form-label small fw-bold text-muted mb-1">Nama User</label><input id="adminCreateNama" class="form-control form-control-sm" placeholder="Nama lengkap user"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">ID User</label><input id="adminCreateIdUser" class="form-control form-control-sm" placeholder="Kosongkan untuk otomatis"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">ID PKB</label><input id="adminCreateIdPkb" class="form-control form-control-sm" placeholder="Opsional"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">ID NIP</label><input id="adminCreateIdNip" class="form-control form-control-sm" placeholder="Opsional"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">NIP</label><input id="adminCreateNip" class="form-control form-control-sm" placeholder="Opsional"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Kode Kecamatan</label><input id="adminCreateKodeKec" class="form-control form-control-sm" placeholder="Contoh: 510809"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Nama Kecamatan</label><input id="adminCreateNamaKec" class="form-control form-control-sm" placeholder="Contoh: TEJAKULA"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Kode Desa</label><input id="adminCreateKodeDesa" class="form-control form-control-sm" placeholder="Opsional"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Nama Desa</label><input id="adminCreateNamaDesa" class="form-control form-control-sm" placeholder="Opsional"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Jabatan</label><input id="adminCreateJabatan" class="form-control form-control-sm" placeholder="Opsional"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Unit Kerja</label><input id="adminCreateUnit" class="form-control form-control-sm" placeholder="Opsional"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">No. HP</label><input id="adminCreateHp" class="form-control form-control-sm" placeholder="Opsional"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Email</label><input id="adminCreateEmail" class="form-control form-control-sm" placeholder="Opsional"></div>
+                    <div class="col-12"><label class="form-label small fw-bold text-muted mb-1">Catatan</label><input id="adminCreateCatatan" class="form-control form-control-sm" placeholder="Opsional, misalnya dasar pembuatan akun"></div>
+                </div>
+                <div class="alert alert-info small mt-3 mb-2 py-2">Catatan: tambah user membuat akun login di <code>users_login</code>. Untuk PKB/PLKB baru, pastikan mapping wilayah binaan aktif tersedia agar akses operasional berjalan.</div>
+                <button type="button" onclick="tambahUserSuperAdmin_()" id="btnAdminCreateUser" class="btn btn-primary btn-sm fw-bold"><i class="bi bi-person-plus-fill"></i> Buat User</button>
+            </div>
+        </div>
+
+        <div class="filter-card shadow-sm p-3 mb-3">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label small fw-bold text-muted mb-1">Cari User</label>
+                    <input id="adminResetSearch" class="form-control form-control-sm" placeholder="Nama, username, ID user, NIP, kecamatan, desa">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted mb-1">Role</label>
+                    <select id="adminResetRole" class="form-select form-select-sm">
+                        <option value="">Semua Role</option>
+                        <option value="PKB">PKB</option>
+                        <option value="PLKB">PLKB</option>
+                        <option value="ADMIN_KECAMATAN">ADMIN_KECAMATAN</option>
+                        <option value="ADMIN_KABUPATEN">ADMIN_KABUPATEN</option>
+                        <option value="ADMIN_PROVINSI">ADMIN_PROVINSI</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted mb-1">Batas</label>
+                    <select id="adminResetLimit" class="form-select form-select-sm">
+                        <option value="50">50</option>
+                        <option value="100" selected>100</option>
+                        <option value="200">200</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button onclick="muatTargetResetPasswordAdmin_()" class="btn btn-sm btn-primary fw-bold flex-fill">Cari</button>
+                    <button onclick="resetFilterAdminPassword_()" class="btn btn-sm btn-outline-secondary fw-bold" title="Reset filter"><i class="bi bi-x-circle"></i></button>
+                </div>
+            </div>
+            <div class="form-check mt-3">
+                <input class="form-check-input" type="checkbox" value="1" id="adminResetDevice" checked>
+                <label class="form-check-label small" for="adminResetDevice">Lepas binding perangkat juga agar user dapat login ulang dari perangkat aktif berikutnya.</label>
+            </div>
+            <div class="form-check mt-1">
+                <input class="form-check-input" type="checkbox" value="1" id="adminIncludeInactive">
+                <label class="form-check-label small" for="adminIncludeInactive">Tampilkan user nonaktif juga.</label>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-3"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Data tampil</div><div class="h4 fw-bold mb-0" id="adminResetReturnedCount">0</div></div></div>
+            <div class="col-md-3"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Dapat direset</div><div class="h4 fw-bold mb-0" id="adminResetEligibleCount">0</div></div></div>
+            <div class="col-md-3"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Scope</div><div class="h6 fw-bold mb-0" id="adminResetScopeLabel">-</div></div></div>
+            <div class="col-md-3"><div class="card border-0 shadow-sm p-3 rounded-4"><div class="small text-muted">Status</div><div class="h6 fw-bold mb-0" id="adminResetStatus">-</div></div></div>
+        </div>
+
+        <div id="adminResetList"></div>
+    </div>
+
+
     <div id="superadmin-monitor-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center">
@@ -706,7 +815,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.2.10-REKAP-KEGIATAN-PKB-V1-R2";
+        const EPKB_APP_VERSION = "0.2.12-ADMIN-USER-MANAGEMENT-V1";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -981,7 +1090,7 @@
         });
 
         function bukaHalaman(id) {
-            ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page', 'riwayat-tugas-page', 'rekap-kegiatan-page', 'verifikasi-binaan-page', 'superadmin-monitor-page'].forEach(pg => {
+            ['login-page', 'change-password-page', 'dashboard-page', 'detail-profil-page', 'edit-profil-page', 'lapor-tugas-page', 'riwayat-tugas-page', 'rekap-kegiatan-page', 'verifikasi-binaan-page', 'admin-reset-password-page', 'superadmin-monitor-page'].forEach(pg => {
                 const el = document.getElementById(pg); if(el) el.classList.add('hidden');
             });
             const target = document.getElementById(id);
@@ -1100,8 +1209,257 @@
             }).join('');
         }
 
-        function bukaResetPasswordAdmin() {
-            alert('Reset password oleh admin akan dibuat pada paket Admin Account Management. Untuk saat ini, pergantian password mandiri tetap tersedia melalui menu Ganti Password.');
+        function bukaResetPasswordAdmin() { bukaAdminResetPassword_(); }
+
+        function userCanOpenAdminResetPassword_(roleAktif) {
+            const r = filterText(roleAktif).toUpperCase();
+            return ['SUPER_ADMIN', 'ADMIN_KABUPATEN', 'ADMIN_KECAMATAN'].includes(r);
+        }
+
+        function bukaAdminResetPassword_() {
+            const profil = JSON.parse(localStorage.getItem('userPKB') || '{}');
+            const role = filterText(profil.role_akses || profil.role).toUpperCase();
+            if (!userCanOpenAdminResetPassword_(role)) {
+                alert('Role ini tidak memiliki akses reset password. Admin Provinsi bersifat monitoring/supervisi.');
+                return;
+            }
+            bukaHalaman('admin-reset-password-page');
+            const sub = document.getElementById('adminResetPasswordSubtitle');
+            if (sub) sub.innerText = role === 'SUPER_ADMIN' ? 'Super Admin dapat menambah user, menonaktifkan user, dan mereset password user.' : (role === 'ADMIN_KABUPATEN' ? 'Admin Kabupaten dapat mereset password PKB/PLKB Kabupaten Buleleng.' : 'Admin Kecamatan dapat mereset password PKB/PLKB dalam kecamatannya.');
+            const createPanel = document.getElementById('adminCreateUserPanel');
+            if (createPanel) createPanel.classList.toggle('hidden', role !== 'SUPER_ADMIN');
+            muatTargetResetPasswordAdmin_();
+        }
+
+        function resetFilterAdminPassword_() {
+            const s = document.getElementById('adminResetSearch'); if (s) s.value = '';
+            const r = document.getElementById('adminResetRole'); if (r) r.value = '';
+            const l = document.getElementById('adminResetLimit'); if (l) l.value = '100';
+            const inactive = document.getElementById('adminIncludeInactive'); if (inactive) inactive.checked = false;
+            muatTargetResetPasswordAdmin_();
+        }
+
+        async function muatTargetResetPasswordAdmin_() {
+            const session = ambilSession();
+            if (!session || !session.token) { alert('Session tidak ditemukan. Silakan login ulang.'); bukaHalaman('login-page'); return; }
+            const btn = document.getElementById('btnAdminResetLoad');
+            const list = document.getElementById('adminResetList');
+            const status = document.getElementById('adminResetStatus');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Memuat'; }
+            if (status) status.innerText = 'Memuat...';
+            if (list) list.innerHTML = '<div class="card border-0 shadow-sm p-4 rounded-4 text-center text-muted">Memuat daftar user...</div>';
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'listUsersForPasswordReset');
+                p.append('token', session.token);
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                p.append('search', document.getElementById('adminResetSearch') ? document.getElementById('adminResetSearch').value : '');
+                p.append('role', document.getElementById('adminResetRole') ? document.getElementById('adminResetRole').value : '');
+                p.append('limit', document.getElementById('adminResetLimit') ? document.getElementById('adminResetLimit').value : '100');
+                p.append('include_inactive', document.getElementById('adminIncludeInactive') && document.getElementById('adminIncludeInactive').checked ? 'TRUE' : 'FALSE');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status === 'sukses' || d.success === true) {
+                    renderAdminResetPasswordTargets_(d);
+                } else {
+                    if (status) status.innerText = d.code || 'GAGAL';
+                    if (list) list.innerHTML = `<div class="alert alert-danger rounded-4 shadow-sm">${escapeHtml(d.pesan || d.message || 'Gagal memuat user.')}</div>`;
+                }
+            } catch (err) {
+                printLog('Reset password target load error: ' + err, 'red');
+                if (status) status.innerText = 'ERROR';
+                if (list) list.innerHTML = '<div class="alert alert-danger rounded-4 shadow-sm">Koneksi gagal saat memuat target reset password.</div>';
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Muat'; }
+            }
+        }
+
+        function renderAdminResetPasswordTargets_(payload) {
+            const records = payload.records || payload.data || [];
+            const list = document.getElementById('adminResetList');
+            const status = document.getElementById('adminResetStatus');
+            const returned = document.getElementById('adminResetReturnedCount');
+            const eligible = document.getElementById('adminResetEligibleCount');
+            const scope = document.getElementById('adminResetScopeLabel');
+            if (returned) returned.innerText = String(payload.returned_count || records.length || 0);
+            if (eligible) eligible.innerText = String(payload.eligible_count || records.filter(r => r.can_reset).length || 0);
+            if (status) status.innerText = payload.code || 'OK';
+            if (scope) {
+                const a = payload.actor || {};
+                const role = filterText(a.role_akses).toUpperCase();
+                scope.innerText = role === 'ADMIN_KECAMATAN' ? (a.nama_kecamatan || a.kode_kecamatan || 'Kecamatan') : (role === 'ADMIN_KABUPATEN' ? 'Kabupaten' : (role === 'SUPER_ADMIN' ? 'Semua' : role || '-'));
+            }
+            if (!list) return;
+            if (!records.length) {
+                list.innerHTML = '<div class="card border-0 shadow-sm p-4 rounded-4 text-muted">Tidak ada user sesuai filter.</div>';
+                return;
+            }
+            const actor = payload.actor || {};
+            const actorRole = filterText(actor.role_akses).toUpperCase();
+            const actorId = filterText(actor.id_user);
+            list.innerHTML = records.map(function(u) {
+                const can = u.can_reset === true;
+                const bound = u.registered_device_bound ? '<span class="badge bg-info text-dark ms-1">Device bound</span>' : '<span class="badge bg-light text-dark ms-1">Device kosong</span>';
+                const wajib = u.wajib_ganti_password ? '<span class="badge bg-warning text-dark ms-1">Wajib ganti</span>' : '<span class="badge bg-success ms-1">Normal</span>';
+                const inactive = u.is_active ? '' : '<span class="badge bg-secondary ms-1">Nonaktif</span>';
+                const btnReset = can
+                    ? `<button class="btn btn-sm btn-danger fw-bold" onclick="resetPasswordUserAdmin_('${escapeJs(u.id_user)}','${escapeJs(u.nama_user)}','${escapeJs(u.username)}')"><i class="bi bi-key-fill"></i> Reset</button>`
+                    : `<button class="btn btn-sm btn-outline-secondary fw-bold" disabled title="${escapeHtml(u.reset_denied_message || '')}"><i class="bi bi-lock-fill"></i> Tidak bisa</button>`;
+                let btnStatus = '';
+                if (actorRole === 'SUPER_ADMIN' && filterText(u.id_user) !== actorId) {
+                    btnStatus = u.is_active
+                        ? `<button class="btn btn-sm btn-outline-danger fw-bold mt-2" onclick="setUserActiveSuperAdmin_('${escapeJs(u.id_user)}','${escapeJs(u.nama_user)}',false)"><i class="bi bi-person-x-fill"></i> Nonaktifkan</button>`
+                        : `<button class="btn btn-sm btn-outline-success fw-bold mt-2" onclick="setUserActiveSuperAdmin_('${escapeJs(u.id_user)}','${escapeJs(u.nama_user)}',true)"><i class="bi bi-person-check-fill"></i> Aktifkan</button>`;
+                }
+                return `<div class="card border-0 shadow-sm rounded-4 p-3 mb-2">
+                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                        <div>
+                            <div class="fw-bold">${escapeHtml(u.nama_user || '-')}</div>
+                            <div class="small text-muted">${escapeHtml(u.username || '-')} • ${escapeHtml(u.id_user || '-')} • ${escapeHtml(u.role_akses || '-')}</div>
+                            <div class="small text-muted mt-1">${escapeHtml(u.nama_kecamatan || '-')} / ${escapeHtml(u.nama_desa_kelurahan || '-')}</div>
+                            <div class="mt-2">${bound}${wajib}${inactive}</div>
+                            ${!can && u.reset_denied_message ? `<div class="small text-danger mt-2">${escapeHtml(u.reset_denied_message)}</div>` : ''}
+                        </div>
+                        <div class="text-end">${btnReset}<br>${btnStatus}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function resetPasswordUserAdmin_(idUser, namaUser, username) {
+            const session = ambilSession();
+            if (!session || !session.token) { alert('Session tidak ditemukan. Silakan login ulang.'); bukaHalaman('login-page'); return; }
+            const resetDevice = document.getElementById('adminResetDevice') ? document.getElementById('adminResetDevice').checked : true;
+            const label = (namaUser || username || idUser || 'user target');
+            const msg = 'Reset password untuk ' + label + '?\n\nPassword sementara: 12345678\nUser akan wajib mengganti password saat login berikutnya.' + (resetDevice ? '\nBinding perangkat juga akan dilepas.' : '');
+            if (!confirm(msg)) return;
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'adminResetUserPassword');
+                p.append('token', session.token);
+                p.append('target_id_user', idUser);
+                p.append('temporary_password', '12345678');
+                p.append('force_change', 'TRUE');
+                p.append('reset_device', resetDevice ? 'TRUE' : 'FALSE');
+                p.append('confirm', 'RESET_PASSWORD');
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status === 'sukses' || d.success === true) {
+                    alert('Password berhasil direset.\n\nUser: ' + label + '\nPassword sementara: ' + (d.temporary_password || '12345678') + '\nSession aktif dicabut: ' + (d.revoked_sessions || 0));
+                    muatTargetResetPasswordAdmin_();
+                } else {
+                    alert(d.pesan || d.message || 'Gagal reset password.');
+                }
+            } catch (err) {
+                printLog('Reset password error: ' + err, 'red');
+                alert('Koneksi gagal saat reset password.');
+            }
+        }
+
+
+        function toggleAdminCreateUserForm_() {
+            const box = document.getElementById('adminCreateUserForm');
+            if (box) box.classList.toggle('hidden');
+        }
+
+        function aturFormTambahUserAdmin_() {
+            const role = document.getElementById('adminCreateRole') ? document.getElementById('adminCreateRole').value : 'PKB';
+            const jabatan = document.getElementById('adminCreateJabatan');
+            const unit = document.getElementById('adminCreateUnit');
+            if (jabatan && !jabatan.value) {
+                if (role === 'ADMIN_KECAMATAN') jabatan.value = 'Admin Kecamatan';
+                else if (role === 'ADMIN_KABUPATEN') jabatan.value = 'Admin Kabupaten';
+                else if (role === 'ADMIN_PROVINSI') jabatan.value = 'Admin Provinsi';
+            }
+            if (unit && !unit.value && role.indexOf('ADMIN_') === 0) unit.value = 'Dinas PMDPPKB Kabupaten Buleleng';
+        }
+
+        async function tambahUserSuperAdmin_() {
+            const session = ambilSession();
+            if (!session || !session.token) { alert('Session tidak ditemukan. Silakan login ulang.'); bukaHalaman('login-page'); return; }
+            const role = document.getElementById('adminCreateRole') ? document.getElementById('adminCreateRole').value : 'PKB';
+            const username = document.getElementById('adminCreateUsername') ? document.getElementById('adminCreateUsername').value.trim() : '';
+            const nama = document.getElementById('adminCreateNama') ? document.getElementById('adminCreateNama').value.trim() : '';
+            if (!username || !nama) { alert('Username dan nama user wajib diisi.'); return; }
+            if (!confirm('Buat user baru?\n\nNama: ' + nama + '\nUsername: ' + username + '\nRole: ' + role + '\nPassword sementara: 12345678')) return;
+            const btn = document.getElementById('btnAdminCreateUser');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Membuat...'; }
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'superAdminCreateUser');
+                p.append('token', session.token);
+                p.append('confirm', 'CREATE_USER');
+                p.append('role_akses', role);
+                p.append('id_user', document.getElementById('adminCreateIdUser') ? document.getElementById('adminCreateIdUser').value.trim() : '');
+                p.append('username', username);
+                p.append('nama_user', nama);
+                p.append('temporary_password', '12345678');
+                p.append('id_pkb', document.getElementById('adminCreateIdPkb') ? document.getElementById('adminCreateIdPkb').value.trim() : '');
+                p.append('id_nip', document.getElementById('adminCreateIdNip') ? document.getElementById('adminCreateIdNip').value.trim() : '');
+                p.append('nip', document.getElementById('adminCreateNip') ? document.getElementById('adminCreateNip').value.trim() : '');
+                p.append('kode_kecamatan', document.getElementById('adminCreateKodeKec') ? document.getElementById('adminCreateKodeKec').value.trim() : '');
+                p.append('nama_kecamatan', document.getElementById('adminCreateNamaKec') ? document.getElementById('adminCreateNamaKec').value.trim() : '');
+                p.append('kode_desa_kelurahan', document.getElementById('adminCreateKodeDesa') ? document.getElementById('adminCreateKodeDesa').value.trim() : '');
+                p.append('nama_desa_kelurahan', document.getElementById('adminCreateNamaDesa') ? document.getElementById('adminCreateNamaDesa').value.trim() : '');
+                p.append('jabatan', document.getElementById('adminCreateJabatan') ? document.getElementById('adminCreateJabatan').value.trim() : '');
+                p.append('unit_kerja', document.getElementById('adminCreateUnit') ? document.getElementById('adminCreateUnit').value.trim() : '');
+                p.append('no_hp', document.getElementById('adminCreateHp') ? document.getElementById('adminCreateHp').value.trim() : '');
+                p.append('email', document.getElementById('adminCreateEmail') ? document.getElementById('adminCreateEmail').value.trim() : '');
+                p.append('catatan', document.getElementById('adminCreateCatatan') ? document.getElementById('adminCreateCatatan').value.trim() : '');
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status === 'sukses' || d.success === true) {
+                    alert('User berhasil dibuat.\n\nID User: ' + ((d.user && d.user.id_user) || '-') + '\nUsername: ' + username + '\nPassword sementara: ' + (d.temporary_password || '12345678'));
+                    ['adminCreateIdUser','adminCreateUsername','adminCreateNama','adminCreateIdPkb','adminCreateIdNip','adminCreateNip','adminCreateKodeKec','adminCreateNamaKec','adminCreateKodeDesa','adminCreateNamaDesa','adminCreateJabatan','adminCreateUnit','adminCreateHp','adminCreateEmail','adminCreateCatatan'].forEach(function(id){ const el = document.getElementById(id); if (el) el.value = ''; });
+                    muatTargetResetPasswordAdmin_();
+                } else {
+                    alert(d.pesan || d.message || 'Gagal membuat user.');
+                }
+            } catch (err) {
+                printLog('Create user error: ' + err, 'red');
+                alert('Koneksi gagal saat membuat user.');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-person-plus-fill"></i> Buat User'; }
+            }
+        }
+
+        async function setUserActiveSuperAdmin_(idUser, namaUser, active) {
+            const session = ambilSession();
+            if (!session || !session.token) { alert('Session tidak ditemukan. Silakan login ulang.'); bukaHalaman('login-page'); return; }
+            const label = namaUser || idUser || 'user target';
+            const verb = active ? 'aktifkan' : 'nonaktifkan';
+            const note = active ? '' : '\nSession aktif user juga akan dicabut.';
+            if (!confirm('Yakin ingin ' + verb + ' user ' + label + '?' + note)) return;
+            try {
+                const p = new URLSearchParams();
+                p.append('action', 'superAdminSetUserActive');
+                p.append('token', session.token);
+                p.append('target_id_user', idUser);
+                p.append('is_active', active ? 'TRUE' : 'FALSE');
+                p.append('confirm', active ? 'SET_USER_ACTIVE' : 'SET_USER_INACTIVE');
+                p.append('device_id', getDeviceId());
+                p.append('app_version', EPKB_APP_VERSION);
+                p.append('user_agent', navigator.userAgent || '');
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
+                const d = await res.json();
+                if (d.status === 'sukses' || d.success === true) {
+                    alert(d.pesan || ('User berhasil di' + (active ? 'aktifkan.' : 'nonaktifkan.')));
+                    muatTargetResetPasswordAdmin_();
+                } else {
+                    alert(d.pesan || d.message || 'Gagal mengubah status user.');
+                }
+            } catch (err) {
+                printLog('Set user active error: ' + err, 'red');
+                alert('Koneksi gagal saat mengubah status user.');
+            }
         }
 
         async function prosesLogin() {
@@ -1415,6 +1773,7 @@
                 menus = [
                     ['bi-activity', '#dc3545', 'System Monitor', 'bukaSuperAdminMonitor()'],
                     ['bi-shield-lock-fill', '#6f42c1', 'Security Monitor', 'bukaSuperAdminMonitor()'],
+                    ['bi-person-gear', '#fd7e14', 'Kelola User', 'bukaAdminResetPassword_()'],
                     ['bi-speedometer2', '#0d6efd', 'Performance Monitor', 'bukaSuperAdminMonitor()'],
                     ['bi-database-check', '#198754', 'Workbook Health', 'bukaSuperAdminMonitor()'],
                     ['bi-table', '#198754', 'Rekap Kegiatan', 'bukaRekapKegiatanAdmin_()'],
@@ -1431,6 +1790,7 @@
                     ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))'],
                     ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")']
                 ];
+                if (roleAktif === 'ADMIN_KABUPATEN' || roleAktif === 'ADMIN_KECAMATAN') menus.splice(4, 0, ['bi-person-lock', '#fd7e14', 'Reset Password', 'bukaAdminResetPassword_()']);
             } else {
                 menus = [
                     ['bi-journal-check', '#0d6efd', 'Lapor Tugas', 'siapkanLaporTugas()'],
