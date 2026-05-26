@@ -487,14 +487,14 @@
     <div id="rekap-kegiatan-page" class="container mt-4 mb-5 hidden">
         <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
             <div class="d-flex align-items-center">
-                <button onclick="bukaRiwayatTugasSaya()" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
+                <button onclick="kembaliDariRekapKegiatan_()" class="btn btn-light shadow-sm me-3"><i class="bi bi-arrow-left"></i></button>
                 <div>
                     <h4 class="fw-bold m-0" id="rekapKegiatanTitle">Rekap Kegiatan PKB</h4>
                     <div class="small text-muted" id="rekapKegiatanSubtitle">Rekap server-side berdasarkan periode dan filter aktif.</div>
                 </div>
             </div>
             <div class="d-flex gap-2 flex-wrap">
-                <button onclick="bukaRiwayatTugasSaya()" class="btn btn-sm btn-outline-secondary fw-bold"><i class="bi bi-arrow-left"></i> Kembali</button>
+                <button onclick="kembaliDariRekapKegiatan_()" class="btn btn-sm btn-outline-secondary fw-bold"><i class="bi bi-arrow-left"></i> Kembali</button>
                 <button onclick="muatRekapKegiatanPkb_()" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-arrow-clockwise"></i> Muat</button>
                 <button onclick="cetakRekapKegiatanPkb_()" class="btn btn-sm btn-outline-secondary fw-bold"><i class="bi bi-printer"></i> Cetak/PDF</button>
                 <button onclick="exportRekapKegiatanCsv_()" class="btn btn-sm btn-success fw-bold"><i class="bi bi-filetype-csv"></i> CSV</button>
@@ -538,6 +538,23 @@
                 <div class="col-md-2 d-flex gap-2">
                     <button onclick="muatRekapKegiatanPkb_()" class="btn btn-sm btn-primary fw-bold flex-fill">Terapkan</button>
                     <button onclick="resetFilterRekapKegiatan_()" class="btn btn-sm btn-outline-secondary fw-bold" title="Reset filter"><i class="bi bi-x-circle"></i></button>
+                </div>
+            </div>
+            <div id="rekapAdminFilterBlock" class="row g-2 align-items-end mt-2 hidden">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted mb-1">Kecamatan</label>
+                    <select id="filterRekapKecamatan" class="form-select form-select-sm">
+                        <option value="">Semua Kecamatan</option>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label small fw-bold text-muted mb-1">PKB/PLKB</label>
+                    <select id="filterRekapPkb" class="form-select form-select-sm">
+                        <option value="">Semua PKB/PLKB</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div id="rekapAdminScopeNote" class="small text-muted border rounded-3 p-2 bg-light">Scope admin belum dimuat.</div>
                 </div>
             </div>
             <div class="small text-muted mt-2">Default rekap memakai bulan berjalan agar payload tetap ringan. Pilih “Semua Bulan” hanya bila diperlukan.</div>
@@ -689,7 +706,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.2.9-REKAP-KEGIATAN-PKB-V1-R1-R1";
+        const EPKB_APP_VERSION = "0.2.10-REKAP-KEGIATAN-PKB-V1-R2";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -1400,6 +1417,7 @@
                     ['bi-shield-lock-fill', '#6f42c1', 'Security Monitor', 'bukaSuperAdminMonitor()'],
                     ['bi-speedometer2', '#0d6efd', 'Performance Monitor', 'bukaSuperAdminMonitor()'],
                     ['bi-database-check', '#198754', 'Workbook Health', 'bukaSuperAdminMonitor()'],
+                    ['bi-table', '#198754', 'Rekap Kegiatan', 'bukaRekapKegiatanAdmin_()'],
                     ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))']
                 ];
             } else if (isOperationalAdminRoleClient(roleAktif)) {
@@ -1408,6 +1426,7 @@
                     ['bi-shield-check', '#20c997', verifLabel, 'bukaVerifikasiBinaan()'],
                     ['bi-people-fill', '#0d6efd', 'Data PKB', 'alert("Menu Data PKB akan dibuat pada paket administrasi berikutnya.")'],
                     ['bi-card-checklist', '#6f42c1', 'Audit Usulan', 'bukaVerifikasiBinaan()'],
+                    ['bi-table', '#198754', 'Rekap Kegiatan', 'bukaRekapKegiatanAdmin_()'],
                     ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'],
                     ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))'],
                     ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")']
@@ -1416,6 +1435,7 @@
                 menus = [
                     ['bi-journal-check', '#0d6efd', 'Lapor Tugas', 'siapkanLaporTugas()'],
                     ['bi-clock-history', '#0d6efd', 'Riwayat Kegiatan', 'bukaRiwayatTugasSaya()'],
+                    ['bi-table', '#198754', 'Rekap Kegiatan', 'bukaRekapKegiatanPkb_()'],
                     ['bi-person-lines-fill', '#198754', 'Detail Profil', 'bukaHalaman("detail-profil-page")'],
                     ['bi-key-fill', '#fd7e14', 'Ganti Password', 'tampilkanHalamanGantiPassword(JSON.parse(localStorage.getItem("userPKB") || "{}"))'],
                     ['bi-megaphone-fill', '#0dcaf0', 'Informasi', 'alert("Menu Info")'],
@@ -2850,7 +2870,81 @@ ${label}`)) return;
             }
         }
 
+
+        function getCurrentRoleClient_() {
+            try {
+                const session = ambilSession() || {};
+                const u = session.user || JSON.parse(localStorage.getItem('userPKB') || '{}') || {};
+                return filterText(u.role_akses || u.role).toUpperCase();
+            } catch(e) { return ''; }
+        }
+
+        function setRekapKegiatanMode_(mode) {
+            window.__epkbRekapMode = mode || 'SELF';
+            const adminBlock = document.getElementById('rekapAdminFilterBlock');
+            if (adminBlock) adminBlock.classList.toggle('hidden', window.__epkbRekapMode !== 'ADMIN');
+        }
+
+        function kembaliDariRekapKegiatan_() {
+            if (window.__epkbRekapMode === 'ADMIN') bukaHalaman('dashboard-page');
+            else bukaRiwayatTugasSaya();
+        }
+
+        async function bukaRekapKegiatanAdmin_() {
+            setRekapKegiatanMode_('ADMIN');
+            bukaHalaman('rekap-kegiatan-page');
+            siapkanFilterRekapKegiatanOptions_(false);
+            const box = document.getElementById('rekapKegiatanContent');
+            if (box) box.innerHTML = '<div class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm"></span> Memuat target admin...</div>';
+            try {
+                await muatRekapKegiatanAdminTargets_();
+                muatRekapKegiatanPkb_();
+            } catch(e) {
+                if (box) box.innerHTML = `<div class="alert alert-warning">Gagal memuat target admin: ${escapeHtml(e.message || e)}</div>`;
+            }
+        }
+
+        async function muatRekapKegiatanAdminTargets_() {
+            const session = ambilSession();
+            if (!session || !session.token) throw new Error('Session tidak ditemukan. Silakan login ulang.');
+            const p = new URLSearchParams();
+            p.append('action', 'getRekapKegiatanAdminTargets');
+            p.append('token', session.token);
+            p.append('device_id', getDeviceId());
+            p.append('app_version', EPKB_APP_VERSION);
+            const kecEl = document.getElementById('filterRekapKecamatan');
+            const pkbEl = document.getElementById('filterRekapPkb');
+            const noteEl = document.getElementById('rekapAdminScopeNote');
+            if (noteEl) noteEl.innerText = 'Memuat scope admin...';
+            try {
+                const r = await fetch(SCRIPT_URL, { method:'POST', body:p });
+                const d = await r.json();
+                if (!(d.status === 'sukses' || d.status === 'OK')) throw new Error(d.pesan || d.message || d.code || 'Gagal memuat target rekap admin');
+                const role = filterText((d.scope || {}).role || getCurrentRoleClient_()).toUpperCase();
+                const targets = d.pkb_targets || [];
+                const kecs = d.kecamatan_options || [];
+                if (kecEl) {
+                    kecEl.innerHTML = '<option value="">Semua Kecamatan</option>' + kecs.map(k => `<option value="${escapeHtml(k.kode_kecamatan || '')}">${escapeHtml(k.nama_kecamatan || k.kode_kecamatan || '-')}</option>`).join('');
+                    if (role === 'ADMIN_KECAMATAN' && kecs.length === 1) {
+                        kecEl.value = kecs[0].kode_kecamatan || '';
+                        kecEl.disabled = true;
+                    } else {
+                        kecEl.disabled = false;
+                    }
+                }
+                if (pkbEl) {
+                    pkbEl.innerHTML = '<option value="">Semua PKB/PLKB</option>' + targets.map(t => `<option value="${escapeHtml(t.value || t.id_user || '')}" data-kec="${escapeHtml(t.kode_kecamatan || '')}">${escapeHtml((t.nama_pkb || '-') + (t.nama_kecamatan ? ' - ' + t.nama_kecamatan : ''))}</option>`).join('');
+                }
+                if (noteEl) noteEl.innerText = `${(d.scope && d.scope.scope_label) || role || 'Admin'} • Target PKB: ${targets.length}`;
+                window.__epkbRekapAdminTargets = d;
+            } catch(e) {
+                if (noteEl) noteEl.innerText = 'Target admin gagal dimuat.';
+                throw e;
+            }
+        }
+
         function bukaRekapKegiatanPkb_() {
+            setRekapKegiatanMode_('SELF');
             bukaHalaman('rekap-kegiatan-page');
             siapkanFilterRekapKegiatanOptions_(true);
             muatRekapKegiatanPkb_();
@@ -2892,7 +2986,9 @@ ${label}`)) return;
                 bulan: (document.getElementById('filterRekapBulan')?.value || '').trim(),
                 tahun: (document.getElementById('filterRekapTahun')?.value || '').trim(),
                 topik: (document.getElementById('filterRekapTopik')?.value || '').trim(),
-                scope: (document.getElementById('filterRekapScope')?.value || '').trim()
+                scope: (document.getElementById('filterRekapScope')?.value || '').trim(),
+                kode_kecamatan: (document.getElementById('filterRekapKecamatan')?.value || '').trim(),
+                target_identity: (document.getElementById('filterRekapPkb')?.value || '').trim()
             };
         }
 
@@ -2908,6 +3004,10 @@ ${label}`)) return;
             if (tahunEl) tahunEl.value = currentYear;
             if (topikEl) topikEl.value = '';
             if (scopeEl) scopeEl.value = '';
+            const kecEl = document.getElementById('filterRekapKecamatan');
+            const pkbEl = document.getElementById('filterRekapPkb');
+            if (kecEl && !kecEl.disabled) kecEl.value = '';
+            if (pkbEl) pkbEl.value = '';
             muatRekapKegiatanPkb_();
         }
 
@@ -2923,7 +3023,9 @@ ${label}`)) return;
             p.append('tahun', filters.tahun || '');
             p.append('topik', filters.topik || '');
             p.append('scope', filters.scope || '');
-            p.append('limit', '500');
+            p.append('kode_kecamatan', filters.kode_kecamatan || '');
+            p.append('target_id_user', filters.target_identity || '');
+            p.append('limit', window.__epkbRekapMode === 'ADMIN' ? '1000' : '500');
             if (!filters.bulan && !filters.tahun) p.append('all_period', '1');
             const r = await fetch(SCRIPT_URL, { method:'POST', body:p });
             const d = await r.json();
