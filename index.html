@@ -347,8 +347,8 @@
                     <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">NIP</label><input id="adminCreateNip" class="form-control form-control-sm" placeholder="Opsional"></div>
                     <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Kode Kecamatan</label><input id="adminCreateKodeKec" class="form-control form-control-sm" placeholder="Contoh: 510809"></div>
                     <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Nama Kecamatan</label><input id="adminCreateNamaKec" class="form-control form-control-sm" placeholder="Contoh: TEJAKULA"></div>
-                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Kode Desa</label><input id="adminCreateKodeDesa" class="form-control form-control-sm" placeholder="Opsional"></div>
-                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Nama Desa</label><input id="adminCreateNamaDesa" class="form-control form-control-sm" placeholder="Opsional"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Kode Desa <span class="text-danger" id="adminCreateKodeDesaReq">*</span></label><input id="adminCreateKodeDesa" class="form-control form-control-sm" placeholder="Wajib untuk PKB/PLKB"></div>
+                    <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Nama Desa <span class="text-danger" id="adminCreateNamaDesaReq">*</span></label><input id="adminCreateNamaDesa" class="form-control form-control-sm" placeholder="Wajib untuk PKB/PLKB"></div>
                     <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Jabatan</label><input id="adminCreateJabatan" class="form-control form-control-sm" placeholder="Opsional"></div>
                     <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">Unit Kerja</label><input id="adminCreateUnit" class="form-control form-control-sm" placeholder="Opsional"></div>
                     <div class="col-md-3"><label class="form-label small fw-bold text-muted mb-1">No. HP</label><input id="adminCreateHp" class="form-control form-control-sm" placeholder="Opsional"></div>
@@ -837,7 +837,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywBC5dWIESA2CcDoNQncWXfAze7fyvgFxhalt3oXcO7WUH7je9Lfx_fM3VutRn4OY-gw/exec";
-        const EPKB_APP_VERSION = "0.2.14-ADMIN-USER-PROVISIONING-V1";
+        const EPKB_APP_VERSION = "0.2.15-ADMIN-USER-PROVISIONING-R1";
         const EPKB_DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23dbeafe'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%233b82f6' opacity='0.75'/%3E%3Cpath d='M34 136c8-31 83-31 92 0' fill='%231d4ed8' opacity='0.75'/%3E%3Cpath d='M62 95h36l-18 30z' fill='%23ffffff' opacity='0.9'/%3E%3C/svg%3E";
         document.addEventListener('DOMContentLoaded', function(){ const fv = document.getElementById('footer-version'); if (fv) fv.innerText = 'Versi aplikasi: ' + EPKB_APP_VERSION; });
         let dataWilayahGlobal = {}; 
@@ -1445,6 +1445,11 @@
             const role = document.getElementById('adminCreateRole') ? document.getElementById('adminCreateRole').value : 'PKB';
             const jabatan = document.getElementById('adminCreateJabatan');
             const unit = document.getElementById('adminCreateUnit');
+            const desa = document.getElementById('adminCreateKodeDesa');
+            const namaDesa = document.getElementById('adminCreateNamaDesa');
+            const isPkb = role === 'PKB' || role === 'PLKB';
+            if (desa) { desa.required = isPkb; desa.placeholder = isPkb ? 'Wajib untuk PKB/PLKB' : 'Opsional'; }
+            if (namaDesa) { namaDesa.required = isPkb; namaDesa.placeholder = isPkb ? 'Wajib untuk PKB/PLKB' : 'Opsional'; }
             if (jabatan && !jabatan.value) {
                 if (role === 'ADMIN_KECAMATAN') jabatan.value = 'Admin Kecamatan';
                 else if (role === 'ADMIN_KABUPATEN') jabatan.value = 'Admin Kabupaten';
@@ -1464,6 +1469,11 @@
             const seedProfile = document.getElementById('adminCreateSeedProfile') ? document.getElementById('adminCreateSeedProfile').checked : true;
             const kodeKecPreview = document.getElementById('adminCreateKodeKec') ? document.getElementById('adminCreateKodeKec').value.trim() : '';
             const kodeDesaPreview = document.getElementById('adminCreateKodeDesa') ? document.getElementById('adminCreateKodeDesa').value.trim() : '';
+            const namaDesaPreview = document.getElementById('adminCreateNamaDesa') ? document.getElementById('adminCreateNamaDesa').value.trim() : '';
+            if ((role === 'PKB' || role === 'PLKB') && autoMapping && (!kodeKecPreview || !kodeDesaPreview || !namaDesaPreview)) {
+                alert('Untuk PKB/PLKB, Kode Kecamatan, Kode Desa, dan Nama Desa wajib diisi agar mapping_binaan ACTIVE dapat dibuat otomatis.');
+                return;
+            }
             const mappingNote = autoMapping ? ('\nAuto mapping: YA' + (kodeDesaPreview ? ' (DESA ' + kodeDesaPreview + ')' : (kodeKecPreview ? ' (KECAMATAN ' + kodeKecPreview + ')' : ''))) : '\nAuto mapping: TIDAK';
             if (!confirm('Buat user baru?\n\nNama: ' + nama + '\nUsername: ' + username + '\nRole: ' + role + '\nPassword sementara: 12345678' + mappingNote + '\nSeed profil: ' + (seedProfile ? 'YA' : 'TIDAK'))) return;
             const btn = document.getElementById('btnAdminCreateUser');
